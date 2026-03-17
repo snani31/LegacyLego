@@ -1,14 +1,13 @@
-﻿using LegacyLego.Domain.Enums;
+﻿using LegacyLego.Domain.DomainEvents;
+using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
 
 namespace LegacyLego.Domain.Aggregates;
 
-public class Order
+public class Order : AggregateRoot<OrderId>
 {
-    public Guid Id { get; }
-
     public Guid ClientId { get; }
 
     private Price? _frozenTotalPrice;
@@ -40,14 +39,14 @@ public class Order
     public DateTime CreationDateUtc { get; }
 
     private Order(
-        Guid id,
+        OrderId id,
         Guid clientId,
         OrderStatus status,
         List<OrderItem> items,
         OrderAddress address,
-        DateTime creationDateUtc)
+        DateTime creationDateUtc) 
+        : base(id)
     {
-        Id = id;
         ClientId = clientId;
         Status = status;
         _items = new List<OrderItem>(items);
@@ -89,13 +88,18 @@ public class Order
         if (total.Sum <= 0)
             return Result<Order>.Failure(OrderErrors.GetItemsTotalBelowZeroError(total.Sum));
 
+        var createdAt = DateTime.UtcNow;
+        var orderId = OrderId.New();
+
         var order = new Order(
-            Guid.NewGuid(),
+            orderId,
             clientId,
             OrderStatus.PendingPayment,
             items,
             address,
-            DateTime.UtcNow);
+            createdAt);
+
+        order.Raise(new OrderCreated(orderId, clientId, createdAt));
 
         return Result<Order>.Success(order);
 
@@ -112,6 +116,8 @@ public class Order
         Status = nextStatus;
         _frozenTotalPrice = CalculateTotalPrice();
 
+        base.Raise(new OrderPaid(Id,DateTime.UtcNow));
+
         return Result.Success();
     }
 
@@ -126,6 +132,8 @@ public class Order
         Status = nextStatus;
         _frozenTotalPrice = CalculateTotalPrice();
 
+        base.Raise(new OrderCanceled(Id, DateTime.UtcNow));
+
         return Result.Success();
     }
 
@@ -139,6 +147,8 @@ public class Order
 
         Status = nextStatus;
 
+        base.Raise(new OrderExpired(Id, DateTime.UtcNow));
+
         return Result.Success();
     }
 
@@ -151,6 +161,8 @@ public class Order
             return Result.Failure(OrderErrors.GetStatusTransitionFailureError(orderAction, Status, nextStatus));
 
         Status = nextStatus;
+
+        base.Raise(new OrderRefunded(Id, DateTime.UtcNow));
 
         return Result.Success();
     }
