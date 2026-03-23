@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿namespace LegacyLego.Domain.Enums;
 
-namespace LegacyLego.Domain.Enums
+public enum OrderAction : byte
 {
-    public enum OrderAction : byte
-    {
-        Create,
-        Pay,
-        Expire,
-        Cancel,
-        Refund
-    }
+    Create,
+    Pay,
+    Expire,
+    Cancel,
+    Refund
 }

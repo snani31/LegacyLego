@@ -53,4 +53,3 @@ public class Currency : ValueObject
         yield return Code;
     }
 }
-

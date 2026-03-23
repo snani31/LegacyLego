@@ -30,4 +30,3 @@ public class Result
     public static Result Failure(Error error) =>
         new(false, error);
 }
-
