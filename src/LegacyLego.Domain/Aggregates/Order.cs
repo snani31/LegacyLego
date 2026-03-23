@@ -1,8 +1,10 @@
 ﻿using LegacyLego.Domain.DomainEvents;
 using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ExceptionalErrors;
 using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Domain.Exceptions;
 
 namespace LegacyLego.Domain.Aggregates;
 
@@ -21,14 +23,16 @@ public class Order : AggregateRoot<OrderId>
                 OrderStatus.PendingPayment or OrderStatus.Expired
                     => CalculateTotalPrice(),
                 OrderStatus.Paid or OrderStatus.Cancelled or OrderStatus.Refunded
-                    => _frozenTotalPrice ?? throw new InvalidOperationException("Frozen price not initialized"),
-                _ => throw new InvalidOperationException($"Невозможно рассчитать цену для статуса {Status}")
+                    => _frozenTotalPrice ?? throw new InvalidDomainStateException(
+                        OrderExceptionalErrors.GetFrozenTotalPriceNotCalculatedError(Status)),
+                _ => throw new InvalidDomainStateException(
+                        OrderExceptionalErrors.GetWrongOrderStatusToGetTotalPriceError(Status)),
             };
-
         }
     }
 
     public OrderStatus Status { get; private set; }
+
 
     private readonly List<OrderItem> _items;
 
@@ -59,7 +63,6 @@ public class Order : AggregateRoot<OrderId>
         Guid clientId,
         List<OrderItem> items)
     {
-
         if (items is null)
             throw new ArgumentNullException(nameof(items));
 
@@ -171,7 +174,8 @@ public class Order : AggregateRoot<OrderId>
     {
         // при текущих инвариантах это невозможно, но станет актуально в случае, если добавятся функции добавления/удаления позиции товара
         if (_items.Count == 0)
-            throw new InvalidOperationException("Order contains no items");
+            throw new InvariantViolationException(
+                OrderExceptionalErrors.GetOrderContainsNoItemsError());
 
         var currency = Items.First().UnitPrice.Currency;
 

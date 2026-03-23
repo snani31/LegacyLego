@@ -1,4 +1,7 @@
-﻿namespace LegacyLego.Domain.Shared;
+﻿using LegacyLego.Domain.Exceptions;
+using LegacyLego.Domain.ExceptionalErrors;
+
+namespace LegacyLego.Domain.Shared;
 
 public class Result<T> : Result
 {
@@ -6,7 +9,8 @@ public class Result<T> : Result
 
     public T Value => IsSuccess
         ? _value
-        : throw new InvalidOperationException();
+        : throw new InvalidDomainStateException(
+            ResultExceptionalErrors.GetUnexpectedValueAccessError());
 
     private Result(T value)
         : base(true, Error.None)

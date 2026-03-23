@@ -1,4 +1,6 @@
-﻿
+﻿using LegacyLego.Domain.ExceptionalErrors;
+using LegacyLego.Domain.Exceptions;
+
 namespace LegacyLego.Domain.Shared;
 
 public class Result
@@ -13,7 +15,8 @@ public class Result
         {
             case true when error != Error.None:
             case false when error == Error.None:
-                throw new ArgumentException();
+                throw new InvalidDomainStateException(
+                    ResultExceptionalErrors.GetInvalidResultInitializationError(isSuccess, error != Error.None));
             default:
                 IsSuccess = isSuccess;
                 Error = error;

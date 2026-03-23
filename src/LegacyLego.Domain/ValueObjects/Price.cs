@@ -1,5 +1,7 @@
-﻿using LegacyLego.Domain.Errors;
+﻿using LegacyLego.Domain.ExceptionalErrors;
+using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.Exceptions;
 
 namespace LegacyLego.Domain.ValueObjects;
 
@@ -49,8 +51,9 @@ public class Price : ValueObject
     {
         if (!this.Currency.Equals(other.Currency))
         {
-            // TODO DomainException
-            throw new Exception();
+            throw new InvariantViolationException(
+                PriceExceptionalErrors.GetCurrencyMismatchError(
+                    this.Currency.Code,other.Currency.Code));
         }
 
         var sum = this.Sum + other.Sum;
@@ -63,8 +66,8 @@ public class Price : ValueObject
     {
         if (factor < 0)
         {
-            // TODO DomainException
-            throw new Exception();
+            throw new InvariantViolationException(
+                PriceExceptionalErrors.GetMultiplyBelowZeroError(factor));
         }
 
         var sum = this.Sum * factor;
