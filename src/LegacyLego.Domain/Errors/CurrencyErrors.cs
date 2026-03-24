@@ -13,7 +13,7 @@ public static class CurrencyErrors
             Message: $"Код валюты должен состоять ровно из 3 символов. Код {codeString} содержит {actualCodeLength}");
     }
 
-    public static Error GetCurrencyNotSupportedError(string codeString)
+    public static Error GetNotSupportedError(string codeString)
     {
         return new(
             Code: "Currency.NotSupported",

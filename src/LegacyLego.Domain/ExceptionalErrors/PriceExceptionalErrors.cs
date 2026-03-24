@@ -23,4 +23,26 @@ public static class PriceExceptionalErrors
             $"({currencyCode} + {otherCurrencyCode}) считается недопустимой операцией, нарушающей доменную логику"
         );
     }
+
+    public static ExceptionalError GetAdditionSumOverflowError(
+        decimal firstValue,
+        decimal otherValue
+        )
+    {
+        return new(
+            Code: "Price.SumOverflow",
+            Message: $"В результате выполнения математической операции сложения" +
+            $"со значениями цены: {firstValue} и {otherValue} произошел decimal Overflow");
+    }
+
+    public static ExceptionalError GetMultiplySumOverflowError(
+        decimal firstValue,
+        int factor
+        )
+    {
+        return new(
+            Code: "Price.SumOverflow",
+            Message: $"В результате выполнения математической операции умножения " +
+            $"цены: {firstValue} на множитель {factor} произошел decimal Overflow");
+    }
 }
