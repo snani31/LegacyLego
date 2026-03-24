@@ -24,7 +24,7 @@ public class OrderAddress : ValueObject
         PostalCode = postalCode;
     }
 
-    public static Result<OrderAddress> FromCode(
+    public static Result<OrderAddress> Create(
         string country,
         string city,
         string street,

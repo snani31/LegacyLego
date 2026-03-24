@@ -25,12 +25,17 @@ public class OrderItem : ValueObject
         UnitPrice = unitPrice;
     }
 
-    public static Result<OrderItem> FromCode(
+    public static Result<OrderItem> Create(
         string title,
         int quantity,
         Guid productId,
         Price unitPrice)
     {
+        if (unitPrice is null)
+            throw new ArgumentNullException(nameof(unitPrice));
+
+        title = title.Trim();
+
         if (string.IsNullOrWhiteSpace(title))
             return Result<OrderItem>.Failure(OrderItemErrors.GetTitleInvalidError());
 
@@ -50,6 +55,6 @@ public class OrderItem : ValueObject
 
     public Price GetTotalPrice()
     {
-        return UnitPrice.Multiply(Quantity);
+        return UnitPrice.MultiplyByQuantity(Quantity);
     }
 }

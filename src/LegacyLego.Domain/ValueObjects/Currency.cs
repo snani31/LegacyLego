@@ -1,5 +1,8 @@
 ﻿using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Exceptions;
+using LegacyLego.Domain.ExceptionalErrors;
 using LegacyLego.Domain.Shared;
+using System.IO.IsolatedStorage;
 
 namespace LegacyLego.Domain.ValueObjects;
 
@@ -7,15 +10,17 @@ public class Currency : ValueObject
 {
     private static readonly Dictionary<string, Currency> Codes;
 
-    public static readonly Currency Usd = new("USD", "$");
+    public static readonly Currency Usd = new("USD", "$", 2);
 
-    public static readonly Currency Eur = new("EUR", "€");
+    public static readonly Currency Eur = new("EUR", "€", 2);
 
-    public static readonly Currency Rub = new("RUB", "₽");
+    public static readonly Currency Rub = new("RUB", "₽", 2);
 
     public string Code { get; }
 
     public string Symbol { get; }
+
+    public int Scale { get; }
 
     static Currency()
     {
@@ -27,10 +32,16 @@ public class Currency : ValueObject
         };
     }
 
-    private Currency(string code, string symbol)
+    private Currency(string code, string symbol, int scale = 2)
     {
+        if (scale < 0)
+           throw new InvariantViolationException(
+                CurrencyExceptionalErrors.GetInvalidScaleValueError(scale));
+
         Code = code;
         Symbol = symbol;
+        Scale = scale;
+
     }
 
     public static Result<Currency> FromCode(string code)
@@ -43,7 +54,10 @@ public class Currency : ValueObject
 
         if (!Codes.TryGetValue(codeString, out var currency))
             return Result<Currency>.Failure(
-                CurrencyErrors.GetCurrencyNotSupportedError(codeString));
+                CurrencyErrors.GetNotSupportedError(codeString));
+
+        var scale = currency.Scale;
+
 
         return Result<Currency>.Success(currency);
     }

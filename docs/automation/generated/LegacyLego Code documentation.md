@@ -7,7 +7,7 @@
 ---
 ## Версия
 
-Актуальная версия проекта: 1.2.0
+Актуальная версия проекта: 1.3.0
 ## Проекты
 
 Все существующие на данный момент проекты в решении `LegacyLego.slnx`:
@@ -68,6 +68,7 @@
 │       │   ├── OrderItemErrors.cs
 │       │   └── PriceErrors.cs
 │       ├── ExceptionalErrors
+│       │   ├── CurrencyExceptionalErrors.cs
 │       │   ├── OrderExceptionalErrors.cs
 │       │   ├── PriceExceptionalErrors.cs
 │       │   └── ResultExceptionalErrors.cs
@@ -437,7 +438,7 @@ public static class CurrencyErrors
             Message: $"Код валюты должен состоять ровно из 3 символов. Код {codeString} содержит {actualCodeLength}");
     }
 
-    public static Error GetCurrencyNotSupportedError(string codeString)
+    public static Error GetNotSupportedError(string codeString)
     {
         return new(
             Code: "Currency.NotSupported",
@@ -541,6 +542,25 @@ public static class PriceErrors
 
 ### ExceptionalErrors
 
+```cs title="CurrencyExceptionalErrors.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.ExceptionalErrors;
+
+public static class CurrencyExceptionalErrors
+{
+    public static ExceptionalError GetInvalidScaleValueError(int actualScale)
+    {
+        return new(
+            Code: "Currency.InvalidScaleValue",
+            Message: $"Scale валюты не должен опускаться ниже нуля, значение: {actualScale} нарушает целостность системы");
+    }
+}
+```
+
+---
+
 ```cs title="OrderExceptionalErrors.cs"
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Shared;
@@ -603,6 +623,28 @@ public static class PriceExceptionalErrors
             Message: $"Складывать значения различных валют недопустимо: " +
             $"({currencyCode} + {otherCurrencyCode}) считается недопустимой операцией, нарушающей доменную логику"
         );
+    }
+
+    public static ExceptionalError GetAdditionSumOverflowError(
+        decimal firstValue,
+        decimal otherValue
+        )
+    {
+        return new(
+            Code: "Price.SumOverflow",
+            Message: $"В результате выполнения математической операции сложения" +
+            $"со значениями цены: {firstValue} и {otherValue} произошел decimal Overflow");
+    }
+
+    public static ExceptionalError GetMultiplySumOverflowError(
+        decimal firstValue,
+        int factor
+        )
+    {
+        return new(
+            Code: "Price.SumOverflow",
+            Message: $"В результате выполнения математической операции умножения " +
+            $"цены: {firstValue} на множитель {factor} произошел decimal Overflow");
     }
 }
 ```

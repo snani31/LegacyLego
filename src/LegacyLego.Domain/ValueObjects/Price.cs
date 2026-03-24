@@ -1,7 +1,8 @@
-﻿using LegacyLego.Domain.ExceptionalErrors;
+﻿using LegacyLego.Domain.Aggregates;
 using LegacyLego.Domain.Errors;
-using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ExceptionalErrors;
 using LegacyLego.Domain.Exceptions;
+using LegacyLego.Domain.Shared;
 
 namespace LegacyLego.Domain.ValueObjects;
 
@@ -11,40 +12,42 @@ public class Price : ValueObject
 
     public Currency Currency { get; }
 
+    bool IsPositive => Sum > 0;
+
+    bool IsZero => Sum == 0m;
+
     private Price(decimal sum,Currency currency)
     {
-        Sum = sum;
+        Sum = Normalize(sum, currency.Scale);
         Currency = currency;   
+    }
+
+    private static decimal Normalize(decimal value, int scale)
+    {
+        return Math.Round(value, scale, MidpointRounding.ToEven);
     }
 
     public static Price Zero(Currency currency)
     {
-        return new Price(0, currency);
+        return new Price(0m, currency);
     }
 
-    public static Result<Price> FromCode(decimal sum, string currencyCode)
+    public static Result<Price> Create(decimal sum, Currency currency)
     {
         if (sum <= 0)
         {
             return Result<Price>.Failure(PriceErrors.GetSumBelowZeroError(sum));
         }
 
-        var currencyResult = Currency.FromCode(currencyCode);
-
-        if (currencyResult.IsFailure)
-        {
-            return Result<Price>.Failure(currencyResult.Error);
-        }
-
-        var price = new Price(sum, currencyResult.Value);
+        var price = new Price(sum, currency);
 
         return Result<Price>.Success(price);
     }
 
     public override IEnumerable<object> GetAtomicValues()
     {
-        yield return Sum;
         yield return Currency;
+        yield return Sum;
     }
 
     public Price Plus(Price other)
@@ -56,13 +59,24 @@ public class Price : ValueObject
                     this.Currency.Code,other.Currency.Code));
         }
 
-        var sum = this.Sum + other.Sum;
+        decimal sum;
+
+        try
+        {
+            sum = checked(this.Sum + other.Sum);
+        }
+        catch (OverflowException)
+        {
+            throw new InvariantViolationException(
+                PriceExceptionalErrors.GetAdditionSumOverflowError(this.Sum,other.Sum));
+        }
+
         var sumPrice = new Price(sum, this.Currency);
 
         return sumPrice;
     }
 
-    public Price Multiply(int factor)
+    public Price MultiplyByQuantity(int factor)
     {
         if (factor < 0)
         {
@@ -70,7 +84,18 @@ public class Price : ValueObject
                 PriceExceptionalErrors.GetMultiplyBelowZeroError(factor));
         }
 
-        var sum = this.Sum * factor;
+        decimal sum;
+
+        try
+        {
+            sum = checked(this.Sum * factor);
+        }
+        catch (OverflowException)
+        {
+            throw new InvariantViolationException(PriceExceptionalErrors
+                .GetMultiplySumOverflowError(this.Sum, factor));
+        }
+
         var sumPrice = new Price(sum, this.Currency);
 
         return sumPrice;
