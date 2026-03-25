@@ -34,12 +34,17 @@ public class Price : ValueObject
 
     public static Result<Price> Create(decimal sum, Currency currency)
     {
-        if (sum <= 0)
+        if(currency is null)
+            throw new ArgumentNullException(nameof(currency));
+
+        var normalized = Normalize(sum, currency.Scale);
+
+        if (normalized <= 0)
         {
             return Result<Price>.Failure(PriceErrors.GetSumBelowZeroError(sum));
         }
 
-        var price = new Price(sum, currency);
+        var price = new Price(normalized, currency);
 
         return Result<Price>.Success(price);
     }

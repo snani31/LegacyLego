@@ -38,7 +38,7 @@ public class Currency : ValueObject
            throw new InvariantViolationException(
                 CurrencyExceptionalErrors.GetInvalidScaleValueError(scale));
 
-        Code = code;
+        Code = code.ToUpperInvariant();
         Symbol = symbol;
         Scale = scale;
 
@@ -46,6 +46,9 @@ public class Currency : ValueObject
 
     public static Result<Currency> FromCode(string code)
     {
+        if(code is null) 
+            throw new ArgumentNullException(nameof(code));
+
         var codeString = code.ToUpperInvariant();
 
         if (codeString.Length != 3)
