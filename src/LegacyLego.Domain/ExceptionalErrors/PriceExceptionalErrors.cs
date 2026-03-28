@@ -4,11 +4,16 @@ namespace LegacyLego.Domain.ExceptionalErrors;
 
 public static class PriceExceptionalErrors
 {
+
+    public const string MultiplyBelowZeroErrorCode = "Price.SumBelowZero";
+    public const string CurrencyMismatchErrorCode = "Price.CurrencyMismatch";
+    public const string DecimalSumOverflowErrorCode = "Price.DecimalSumOverflow";
+
     public static ExceptionalError GetMultiplyBelowZeroError(
         int factor)
     {
         return new(
-            Code: "Price.MultiplyBelowZero",
+            Code: MultiplyBelowZeroErrorCode,
             Message: $"Множитель стоимости не должен опускаться ниже нуля, текущее значение {factor} нарушает доменную логику"
         );
     }
@@ -18,7 +23,7 @@ public static class PriceExceptionalErrors
         string otherCurrencyCode)
     {
         return new(
-            Code: "Price.CurrencyMismatch",
+            Code: CurrencyMismatchErrorCode,
             Message: $"Складывать значения различных валют недопустимо: " +
             $"({currencyCode} + {otherCurrencyCode}) считается недопустимой операцией, нарушающей доменную логику"
         );
@@ -30,7 +35,7 @@ public static class PriceExceptionalErrors
         )
     {
         return new(
-            Code: "Price.SumOverflow",
+            Code: DecimalSumOverflowErrorCode,
             Message: $"В результате выполнения математической операции сложения" +
             $"со значениями цены: {firstValue} и {otherValue} произошел decimal Overflow");
     }
@@ -41,7 +46,7 @@ public static class PriceExceptionalErrors
         )
     {
         return new(
-            Code: "Price.SumOverflow",
+            Code: DecimalSumOverflowErrorCode,
             Message: $"В результате выполнения математической операции умножения " +
             $"цены: {firstValue} на множитель {factor} произошел decimal Overflow");
     }

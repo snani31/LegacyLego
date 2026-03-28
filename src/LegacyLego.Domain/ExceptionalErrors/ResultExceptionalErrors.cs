@@ -4,10 +4,14 @@ namespace LegacyLego.Domain.ExceptionalErrors;
 
 public static class ResultExceptionalErrors
 {
+    public const string UnexpectedValueAccessErrorCode = "Result.UnexpectedValueAccess";
+
+    public const string InvalidInitializationErrorCode = "Result.InvalidInitialization";
+
     public static ExceptionalError GetUnexpectedValueAccessError()
     {
         return new(
-            Code: "Result.UnexpectedValueAccess",
+            Code: UnexpectedValueAccessErrorCode,
             Message: $"Некорректное обращение к Result.Value в случае, когда IsSuccess = false"
         );
     }
@@ -16,7 +20,7 @@ public static class ResultExceptionalErrors
         bool isSuccess,
         bool isErrorContains)
     {
-        var message = "InvalidResultInitialization";
+        var message = InvalidInitializationErrorCode;
 
         switch (isSuccess)
         {
@@ -28,7 +32,7 @@ public static class ResultExceptionalErrors
         }
 
         return new(
-            Code: "Result.InvalidResultInitialization",
+            Code: InvalidInitializationErrorCode,
             Message: message!
         );
     }

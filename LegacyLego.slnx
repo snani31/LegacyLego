@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/LegacyLego.Domain/LegacyLego.Domain.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LegacyLego.Domain.Tests/LegacyLego.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

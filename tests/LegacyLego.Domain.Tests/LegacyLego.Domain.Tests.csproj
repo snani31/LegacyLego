@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TUnit_Parallel>true</TUnit_Parallel>
+    <TUnit_DefaultTimeout>00:05:00</TUnit_DefaultTimeout>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="0.1.424" />
+    <PackageReference Include="TUnit.Analyzers" Version="0.1.424" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LegacyLego.Domain\LegacyLego.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="OrderTests\" />
+  </ItemGroup>
+
+</Project>
