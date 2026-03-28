@@ -31,13 +31,15 @@ public class OrderItem : ValueObject
         Guid productId,
         Price unitPrice)
     {
-        if (unitPrice is null)
-            throw new ArgumentNullException(nameof(unitPrice));
-
-        title = title.Trim();
+        ArgumentNullException.ThrowIfNull(unitPrice);
 
         if (string.IsNullOrWhiteSpace(title))
             return Result<OrderItem>.Failure(OrderItemErrors.GetTitleInvalidError());
+
+        title = title.Trim();
+
+        if (productId == Guid.Empty)
+            return Result<OrderItem>.Failure(OrderItemErrors.GetProductIDGuidInvalidError(productId));
 
         if (quantity < 1)
             return Result<OrderItem>.Failure(OrderItemErrors.GetQuantityBelowOneError(quantity));

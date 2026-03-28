@@ -49,7 +49,7 @@ public class Currency : ValueObject
         if(code is null) 
             throw new ArgumentNullException(nameof(code));
 
-        var codeString = code.ToUpperInvariant();
+        var codeString = code.Trim().ToUpperInvariant();
 
         if (codeString.Length != 3)
             return Result<Currency>.Failure(

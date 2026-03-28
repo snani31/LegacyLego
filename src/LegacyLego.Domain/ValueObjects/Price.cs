@@ -12,9 +12,9 @@ public class Price : ValueObject
 
     public Currency Currency { get; }
 
-    bool IsPositive => Sum > 0;
+    public bool IsPositive => Sum > 0;
 
-    bool IsZero => Sum == 0m;
+    public bool IsZero => Sum == 0m;
 
     private Price(decimal sum,Currency currency)
     {
@@ -27,15 +27,14 @@ public class Price : ValueObject
         return Math.Round(value, scale, MidpointRounding.ToEven);
     }
 
-    public static Price Zero(Currency currency)
+    internal static Price Zero(Currency currency)
     {
         return new Price(0m, currency);
     }
 
     public static Result<Price> Create(decimal sum, Currency currency)
     {
-        if(currency is null)
-            throw new ArgumentNullException(nameof(currency));
+        ArgumentNullException.ThrowIfNull(currency);
 
         var normalized = Normalize(sum, currency.Scale);
 
