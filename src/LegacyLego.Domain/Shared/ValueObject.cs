@@ -16,6 +16,14 @@ public abstract class ValueObject : IEquatable<ValueObject>
 
     public static bool operator !=(ValueObject? left, ValueObject? right) => !(left == right);
 
+    public override bool Equals(object? obj)
+    {
+        if (obj is not ValueObject other)
+            return false;
+
+        return Equals(other);
+    }
+
     public bool Equals(ValueObject? other)
     {
         if (other is null || other.GetType() != GetType())
@@ -39,4 +47,5 @@ public abstract class ValueObject : IEquatable<ValueObject>
     {
         return GetAtomicValues().SequenceEqual(other.GetAtomicValues());
     }
+
 }
