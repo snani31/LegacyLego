@@ -3,12 +3,9 @@ using LegacyLego.Domain.ExceptionalErrors;
 using LegacyLego.Domain.Exceptions;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
-using TUnit.Assertions;
-using TUnit.Assertions.Exceptions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core;
 
-namespace LegacyLego.Domain.Tests.OrderItemTests.Create;
+namespace LegacyLego.Domain.Tests.OrderItemTests;
 
 public class OrderItemCreateTests
 {
@@ -16,101 +13,77 @@ public class OrderItemCreateTests
     public async Task Create_WithValidValues_ShouldPreserveCurrency()
     {
         var guid = Guid.NewGuid();
-        var tytle = "New Item";
+        var title = "New Item";
         var quantity = 3;
-
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p);
+        var r = OrderItem.Create(title, quantity, guid, p);
 
-        await Assert.That(r.IsSuccess).Is.True();
-        await Assert.That(r.Value).Has.Member(r => r.ProductId).EqualTo(guid)
-            .And.Has.Member(r => r.Title).EqualTo(tytle)
-            .And.Has.Member(r => r.Quantity).EqualTo(quantity)
-            .And.Has.Member(r => r.UnitPrice).EqualTo(p);
+        await Assert.That(r.IsSuccess).IsTrue();
+        await Assert.That(r.Value)
+            .Member(x => x.ProductId, m => m.IsEqualTo(guid))
+            .And.Member(x => x.Title, m => m.IsEqualTo(title))
+            .And.Member(x => x.Quantity, m => m.IsEqualTo(quantity))
+            .And.Member(x => x.UnitPrice, m => m.IsEqualTo(p));
     }
 
     [Test]
-    public async Task Create_WithUntrimmedTitle_ShouldRetutnFailure()
+    public async Task Create_WithUntrimmedTitle_ShouldReturnSuccess()
     {
         var untrimmed = "    untrimmed     ";
         var trimmed = untrimmed.Trim();
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            untrimmed,
-            3,
-            Guid.NewGuid(),
-            p);
+        var r = OrderItem.Create(untrimmed, 3, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsSuccess).Is.True();
-        await Assert.That(r.Value.Title).Is.EqualTo(trimmed);
+        await Assert.That(r.IsSuccess).IsTrue();
+        await Assert.That(r.Value.Title).IsEqualTo(trimmed);
     }
 
     [Test]
-    public async Task Create_WithNullTitle_ShouldRetutnFailureWithTitleInvalid()
+    public async Task Create_WithNullTitle_ShouldReturnFailureWithTitleInvalid()
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            null!,
-            3,
-            Guid.NewGuid(),
-            p);
+        var r = OrderItem.Create(null!, 3, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsFailure).Is.True();
-        await Assert.That(r.Error.Code).Is.EqualTo(OrderItemErrors.TitleInvalidCode);
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.TitleInvalidCode);
     }
 
     [Test]
-    public async Task Create_WithWhiteTitle_ShouldRetutnFailureWithTitleInvalid()
+    public async Task Create_WithWhiteTitle_ShouldReturnFailureWithTitleInvalid()
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            "",
-            3,
-            Guid.NewGuid(),
-            p);
+        var r = OrderItem.Create("", 3, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsFailure).Is.True();
-        await Assert.That(r.Error.Code).Is.EqualTo(OrderItemErrors.TitleInvalidCode);
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.TitleInvalidCode);
     }
 
     [Test]
-    public async Task Create_WithEmpthyGuid_ShouldRetutnFailureWithProductIDGuidInvalid()
+    public async Task Create_WithEmptyGuid_ShouldReturnFailureWithProductIDGuidInvalid()
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            "New Item",
-            3,
-            Guid.Empty,
-            p);
+        var r = OrderItem.Create("New Item", 3, Guid.Empty, p);
 
-        await Assert.That(r.IsFailure).Is.True();
-        await Assert.That(r.Error.Code).Is.EqualTo(OrderItemErrors.ProductIDGuidInvalidCode);
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.ProductIDGuidInvalidCode);
     }
 
-    [DataDrivenTest]
+    [Test]
     [Arguments(0)]
     [Arguments(-10)]
-    public async Task Create_InvalidQuantity_ShouldRetutnFailureWithQuantityBelowOne(int quantity)
+    public async Task Create_InvalidQuantity_ShouldReturnFailureWithQuantityBelowOne(int quantity)
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            "New Item",
-            quantity,
-            Guid.NewGuid(),
-            p);
+        var r = OrderItem.Create("New Item", quantity, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsFailure).Is.True();
-        await Assert.That(r.Error.Code).Is.EqualTo(OrderItemErrors.QuantityBelowOneCode);
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.QuantityBelowOneCode);
     }
 
     [Test]
@@ -118,28 +91,17 @@ public class OrderItemCreateTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p);
+        var r = OrderItem.Create("New Item", 1, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsSuccess).Is.True();
+        await Assert.That(r.IsSuccess).IsTrue();
     }
 
     [Test]
-    public async Task Create_WithMinimalValidQuantity_ShouldThrowArgumentNullException()
+    public async Task Create_WithNullUnitPrice_ShouldThrowArgumentNullException()
     {
-        var exception = Assert.ThrowsAsync<ArgumentNullException>(() =>
-        {
-            var r = OrderItem.Create(
-                "New Item",
-                3,
-                Guid.NewGuid(),
-                null!);
-        });
+        var action = () => OrderItem.Create("New Item", 3, Guid.NewGuid(), null!);
 
-        await Assert.That(exception).Is.Not.Null();
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
     [Test]
@@ -147,13 +109,9 @@ public class OrderItemCreateTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p.MultiplyByQuantity(0));
+        var r = OrderItem.Create("New Item", 1, Guid.NewGuid(), p.MultiplyByQuantity(0));
 
-        await Assert.That(r.IsSuccess).Is.True();
+        await Assert.That(r.IsSuccess).IsTrue();
     }
 
     [Test]
@@ -162,21 +120,11 @@ public class OrderItemCreateTests
         var p = Price.Create(10m, Currency.Usd).Value;
         Guid guid = Guid.NewGuid();
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create("New Item", 1, guid, p).Value;
+        var item2 = OrderItem.Create("New Item", 1, guid, p).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p).Value;
-
-
-        await Assert.That(item1).Is.EqualTo(item2);
-        await Assert.That(ReferenceEquals(item1, item2)).Is.False();
+        await Assert.That(item1).IsEqualTo(item2);
+        await Assert.That(ReferenceEquals(item1, item2)).IsFalse();
     }
 
     [Test]
@@ -185,18 +133,9 @@ public class OrderItemCreateTests
         var p = Price.Create(10m, Currency.Usd).Value;
         Guid guid = Guid.NewGuid();
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create("New Item", 1, guid, p).Value;
+        var item2 = OrderItem.Create("New Item", 1, guid, p).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p).Value;
-
-        await Assert.That(item1.GetHashCode()).Is.EqualTo(item2.GetHashCode());
+        await Assert.That(item1.GetHashCode()).IsEqualTo(item2.GetHashCode());
     }
 }

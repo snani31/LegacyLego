@@ -1,11 +1,8 @@
 ﻿using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
-using TUnit.Assertions;
-using TUnit.Assertions.Exceptions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core;
 
-namespace LegacyLego.Domain.Tests.CurrencyTests.FromCode;
+namespace LegacyLego.Domain.Tests.OrderItemTests;
 
 public class OrderItemEqualityTests
 {
@@ -18,21 +15,12 @@ public class OrderItemEqualityTests
 
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item1 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
-
-        var item2 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create(tytle, quantity, guid, p).Value;
+        var item2 = OrderItem.Create(tytle, quantity, guid, p).Value;
 
 
-        await Assert.That(item1).Is.EqualTo(item2);
-        await Assert.That(ReferenceEquals(item1, item2)).Is.False();
+        await Assert.That(item1).IsEqualTo(item2);
+        await Assert.That(item1).IsNotSameReferenceAs(item2);
     }
 
     [Test]
@@ -44,19 +32,10 @@ public class OrderItemEqualityTests
 
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item1 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create(tytle, quantity, guid, p).Value;
+        var item2 = OrderItem.Create(tytle, quantity, guid, p).Value;
 
-        var item2 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
-
-        await Assert.That(item1 == item2).Is.True();
+        await Assert.That(item1 == item2).IsTrue();
     }
 
     [Test]
@@ -65,19 +44,10 @@ public class OrderItemEqualityTests
         var p1 = Price.Create(10m, Currency.Usd).Value;
         var p2 = Price.Create(100m, Currency.Rub).Value;
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p1).Value;
+        var item1 = OrderItem.Create("New Item", 1, Guid.NewGuid(), p1).Value;
+        var item2 = OrderItem.Create("New Item2", 2, Guid.NewGuid(), p2).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item2",
-            2,
-            Guid.NewGuid(),
-            p2).Value;
-
-        await Assert.That(item1 == item2).Is.False();
+        await Assert.That(item1 == item2).IsFalse();
     }
 
     [Test]
@@ -89,19 +59,10 @@ public class OrderItemEqualityTests
 
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item1 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create(tytle, quantity, guid, p).Value;
+        var item2 = OrderItem.Create(tytle, quantity, guid, p).Value;
 
-        var item2 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
-
-        await Assert.That(item1 != item2).Is.False();
+        await Assert.That(item1 != item2).IsFalse();
     }
 
     [Test]
@@ -110,19 +71,10 @@ public class OrderItemEqualityTests
         var p1 = Price.Create(10m, Currency.Usd).Value;
         var p2 = Price.Create(100m, Currency.Rub).Value;
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p1).Value;
+        var item1 = OrderItem.Create("New Item", 1, Guid.NewGuid(), p1).Value;
+        var item2 = OrderItem.Create("New Item2", 2, Guid.NewGuid(), p2).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item2",
-            2,
-            Guid.NewGuid(),
-            p2).Value;
-
-        await Assert.That(item1 != item2).Is.True();
+        await Assert.That(item1 != item2).IsTrue();
     }
 
     [Test]
@@ -134,19 +86,10 @@ public class OrderItemEqualityTests
 
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item1 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
+        var item1 = OrderItem.Create(tytle, quantity, guid, p).Value;
+        var item2 = OrderItem.Create(tytle, quantity, guid, p).Value;
 
-        var item2 = OrderItem.Create(
-            tytle,
-            quantity,
-            guid,
-            p).Value;
-
-        await Assert.That(ReferenceEquals(item1, item2)).Is.False();
+        await Assert.That(ReferenceEquals(item1, item2)).IsFalse();
     }
 
     [Test]
@@ -154,13 +97,9 @@ public class OrderItemEqualityTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p).Value;
+        var item = OrderItem.Create("New Item", 1, Guid.NewGuid(), p).Value;
 
-        await Assert.That(item.Equals(null)).Is.False();
+        await Assert.That(item.Equals(null)).IsFalse();
     }
 
     [Test]
@@ -168,13 +107,9 @@ public class OrderItemEqualityTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p).Value;
+        var item = OrderItem.Create("New Item", 1, Guid.NewGuid(), p).Value;
 
-        await Assert.That(item == null).Is.False();
+        await Assert.That(item == null).IsFalse();
     }
 
     [Test]
@@ -182,13 +117,9 @@ public class OrderItemEqualityTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p).Value;
+        var item = OrderItem.Create("New Item", 1, Guid.NewGuid(), p).Value;
 
-        await Assert.That(item != null).Is.True();
+        await Assert.That(item != null).IsTrue();
     }
 
     [Test]
@@ -196,13 +127,9 @@ public class OrderItemEqualityTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var item = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p).Value;
+        var item = OrderItem.Create( "New Item", 1, Guid.NewGuid(), p).Value;
 
-        await Assert.That(item.Equals("not a order item")).Is.False();
+        await Assert.That(item.Equals("not a order item")).IsFalse();
     }
 
     [Test]
@@ -211,7 +138,7 @@ public class OrderItemEqualityTests
         OrderItem? a = null;
         OrderItem? b = null;
 
-        await Assert.That(a == b).Is.True();
+        await Assert.That(a == b).IsTrue();
     }
 
     [Test]
@@ -220,20 +147,16 @@ public class OrderItemEqualityTests
         OrderItem? a = null;
         OrderItem? b = null;
 
-        await Assert.That(a != b).Is.False();
+        await Assert.That(a != b).IsFalse();
     }
 
     [Test]
     public async Task Equals_WithSameReference_ShouldBeTrue()
     {
         var p = Price.Create(10m, Currency.Usd).Value;
-        var item = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p).Value;
+        var item = OrderItem.Create("New Item", 1, Guid.NewGuid(), p).Value;
 
-        await Assert.That(item.Equals(item)).Is.True();
+        await Assert.That(item.Equals(item)).IsTrue();
     }
 
     [Test]
@@ -244,21 +167,13 @@ public class OrderItemEqualityTests
 
         Guid guid = Guid.NewGuid();
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p1).Value;
+        var item1 = OrderItem.Create("New Item", 1, guid, p1).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item2",
-            1,
-            guid,
-            p2).Value;
+        var item2 = OrderItem.Create("New Item2", 1, guid, p2).Value;
 
-        await Assert.That(item1).Is.Not.EqualTo(item2);
-        await Assert.That(item1 == item2).Is.False();
-        await Assert.That(item1 != item2).Is.True();
+        await Assert.That(item1).IsNotEqualTo(item2);
+        await Assert.That(item1 == item2).IsFalse();
+        await Assert.That(item1 != item2).IsTrue();
     }
 
     [Test]
@@ -269,21 +184,12 @@ public class OrderItemEqualityTests
 
         Guid guid = Guid.NewGuid();
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p1).Value;
+        var item1 = OrderItem.Create("New Item", 1, guid, p1).Value;
+        var item2 = OrderItem.Create("New Item", 2, guid, p2).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item",
-            2,
-            guid,
-            p2).Value;
-
-        await Assert.That(item1).Is.Not.EqualTo(item2);
-        await Assert.That(item1 == item2).Is.False();
-        await Assert.That(item1 != item2).Is.True();
+        await Assert.That(item1).IsNotEqualTo(item2);
+        await Assert.That(item1 == item2).IsFalse();
+        await Assert.That(item1 != item2).IsTrue();
     }
 
     [Test]
@@ -292,21 +198,12 @@ public class OrderItemEqualityTests
         var p1 = Price.Create(10m, Currency.Usd).Value;
         var p2 = Price.Create(10m, Currency.Usd).Value;
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p1).Value;
+        var item1 = OrderItem.Create("New Item",1,Guid.NewGuid(),p1).Value;
+        var item2 = OrderItem.Create("New Item", 1,Guid.NewGuid(),p2).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item",
-            1,
-            Guid.NewGuid(),
-            p2).Value;
-
-        await Assert.That(item1).Is.Not.EqualTo(item2);
-        await Assert.That(item1 == item2).Is.False();
-        await Assert.That(item1 != item2).Is.True();
+        await Assert.That(item1).IsNotEqualTo(item2);
+        await Assert.That(item1 == item2).IsFalse();
+        await Assert.That(item1 != item2).IsTrue();
     }
 
     [Test]
@@ -317,20 +214,11 @@ public class OrderItemEqualityTests
 
         Guid guid = Guid.NewGuid();
 
-        var item1 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p1).Value;
+        var item1 = OrderItem.Create("New Item",1,guid,p1).Value;
+        var item2 = OrderItem.Create("New Item",1,guid,p2).Value;
 
-        var item2 = OrderItem.Create(
-            "New Item",
-            1,
-            guid,
-            p2).Value;
-
-        await Assert.That(item1).Is.Not.EqualTo(item2);
-        await Assert.That(item1 == item2).Is.False();
-        await Assert.That(item1 != item2).Is.True();
+        await Assert.That(item1).IsNotEqualTo(item2);
+        await Assert.That(item1 == item2).IsFalse();
+        await Assert.That(item1 != item2).IsTrue();
     }
 }
