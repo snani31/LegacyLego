@@ -10,8 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="0.1.424" />
-    <PackageReference Include="TUnit.Analyzers" Version="0.1.424" PrivateAssets="all" />
+    <PackageReference Include="TUnit" Version="1.22.3" />
   </ItemGroup>
 
   <ItemGroup>
