@@ -1,11 +1,8 @@
 ﻿using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.ValueObjects;
-using TUnit.Assertions;
-using TUnit.Assertions.Exceptions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core;
 
-namespace LegacyLego.Domain.Tests.CurrencyTests.FromCode;
+namespace LegacyLego.Domain.Tests.CurrencyTests;
 
 public class CurrencyFromCodeTests
 {
@@ -14,9 +11,9 @@ public class CurrencyFromCodeTests
     {
         var result =  Currency.FromCode("USD");
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value).Is.EqualTo(Currency.Usd);
-        await Assert.That(result.Value).Is.SameReference(Currency.Usd);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Currency.Usd);
+        await Assert.That(result.Value).IsSameReferenceAs(Currency.Usd);
     }
 
     [Test]
@@ -24,9 +21,8 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode("ABC");
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error)
-            .Has.Member(error => error.Code).EqualTo(CurrencyErrors.NotSupportedCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error).Member(error => error.Code,name => name.EqualTo(CurrencyErrors.NotSupportedCode));
     }
 
     [Test]
@@ -34,8 +30,8 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode("");
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error.Code).Is.EqualTo(CurrencyErrors.WrongCodeLengthCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code).IsEqualTo(CurrencyErrors.WrongCodeLengthCode);
     }
 
     [Test]
@@ -43,22 +39,18 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode("USDDD");
 
-        await Assert.That(result.IsFailure).Is.True();
+        await Assert.That(result.IsFailure).IsTrue();
         await Assert.That(result.Error)
-            .Has.Member(error => error.Code).EqualTo(CurrencyErrors.WrongCodeLengthCode);
+            .Member(error => error.Code, code => code.EqualTo(CurrencyErrors.WrongCodeLengthCode));
     }
 
     [Test]
     public async Task FromCode_WithNullCode_ShouldThrowArgumentNullException()
     {
-        var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        {
-            Currency.FromCode(null!);
-        });
-
+        var exception = await Assert.That(() => Currency.FromCode(null!)).ThrowsExactly<ArgumentNullException>();
     }
 
-    [DataDrivenTest]
+    [Test]
     [Arguments("usd")]
     [Arguments("Usd")]
     [Arguments("uSd")]
@@ -68,9 +60,9 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode(inputLowerCode);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value).Is.EqualTo(Currency.Usd);
-        await Assert.That(result.Value).Is.SameReference(Currency.Usd);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Currency.Usd);
+        await Assert.That(result.Value).IsSameReferenceAs(Currency.Usd);
     }
 
     [Test]
@@ -78,9 +70,9 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode("    USD  ");
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value).Is.EqualTo(Currency.Usd);
-        await Assert.That(result.Value).Is.SameReference(Currency.Usd);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Currency.Usd);
+        await Assert.That(result.Value).IsSameReferenceAs(Currency.Usd);
     }
 
     [Test]
@@ -88,22 +80,22 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode("    USDDDDD  ");
 
-        await Assert.That(result.IsSuccess).Is.False();
-        await Assert.That(result.Error.Code).Is.EqualTo(CurrencyErrors.WrongCodeLengthCode);
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Error.Code).IsEqualTo(CurrencyErrors.WrongCodeLengthCode);
     }
 
-    [DataDrivenTest]
+    [Test]
     [Arguments("U")]
     [Arguments("US")]
     public async Task FromCode_WithShortCode_ShouldReturnWrongCodeLengthError(string code)
     {
         var result = Currency.FromCode(code);
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error.Code).Is.EqualTo(CurrencyErrors.WrongCodeLengthCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code).IsEqualTo(CurrencyErrors.WrongCodeLengthCode);
     }
 
-    [DataDrivenTest]
+    [Test]
     [Arguments("USD", "$", 2)]
     [Arguments("RUB", "₽", 2)]
     [Arguments("EUR", "€", 2)]
@@ -111,8 +103,8 @@ public class CurrencyFromCodeTests
     {
         var result = Currency.FromCode(code);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value.Symbol).Is.EqualTo(symbol);
-        await Assert.That(result.Value.Scale).Is.EqualTo(scale);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Symbol).IsEqualTo(symbol);
+        await Assert.That(result.Value.Scale).IsEqualTo(scale);
     }
 }

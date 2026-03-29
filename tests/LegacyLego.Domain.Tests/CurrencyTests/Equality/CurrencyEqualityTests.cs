@@ -1,11 +1,8 @@
 ﻿using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
-using TUnit.Assertions;
-using TUnit.Assertions.Exceptions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core;
 
-namespace LegacyLego.Domain.Tests.CurrencyTests.FromCode;
+namespace LegacyLego.Domain.Tests.CurrencyTests;
 
 public class CurrencyEqualityTests
 {
@@ -15,7 +12,7 @@ public class CurrencyEqualityTests
         var c1 = Currency.FromCode("USD").Value;
         var c2 = Currency.FromCode("usd").Value;
 
-        await Assert.That(c1.Equals(c2)).Is.True();
+        await Assert.That(c1.Equals(c2)).IsTrue();
     }
 
     [Test]
@@ -24,7 +21,7 @@ public class CurrencyEqualityTests
         var usd = Currency.FromCode("USD").Value;
         var rub = Currency.FromCode("RUB").Value;
 
-        await Assert.That(usd.Equals(rub)).Is.False();
+        await Assert.That(usd.Equals(rub)).IsFalse();
     }
 
     [Test]
@@ -33,7 +30,7 @@ public class CurrencyEqualityTests
         var c1 = Currency.FromCode("USD").Value;
         var c2 = Currency.FromCode("USD").Value;
 
-        await Assert.That(c1 == c2).Is.True();
+        await Assert.That(c1 == c2).IsTrue();
     }
 
     [Test]
@@ -42,7 +39,7 @@ public class CurrencyEqualityTests
         var c1 = Currency.FromCode("USD").Value;
         var c2 = Currency.FromCode("RUB").Value;
 
-        await Assert.That(c1 != c2).Is.True();
+        await Assert.That(c1 != c2).IsTrue();
     }
 
     [Test]
@@ -51,7 +48,7 @@ public class CurrencyEqualityTests
         var c1 = Currency.FromCode("USD").Value;
         var c2 = Currency.FromCode("usd").Value;
 
-        await Assert.That(c1.GetHashCode()).Is.EqualTo(c2.GetHashCode());
+        await Assert.That(c1.GetHashCode()).IsEqualTo(c2.GetHashCode());
     }
 
     [Test]
@@ -59,6 +56,6 @@ public class CurrencyEqualityTests
     {
         var usd = Currency.FromCode("USD").Value;
 
-        await Assert.That(usd.Code).Is.EqualTo("USD");
+        await Assert.That(usd.Code).IsEqualTo("USD");
     }
 }
