@@ -1,11 +1,8 @@
 ﻿using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.ValueObjects;
-using TUnit.Assertions;
-using TUnit.Assertions.Exceptions;
-using TUnit.Assertions.Extensions;
 using TUnit.Core;
 
-namespace LegacyLego.Domain.Tests.CurrencyTests.FromCode;
+namespace LegacyLego.Domain.Tests.PriceTests;
 
 public class PriceCreateTests
 {
@@ -14,16 +11,14 @@ public class PriceCreateTests
     {
         var result = Price.Create(10m, Currency.Eur);
 
-        await Assert.That(result.Value.Currency).Is.EqualTo(Currency.Eur);
+        await Assert.That(result.Value.Currency).IsEqualTo(Currency.Eur);
     }
 
     [Test]
-    public void Create_WithNullCurrency_ShouldThrowArgumentNullException()
+    public async Task Create_WithNullCurrency_ShouldThrowArgumentNullException()
     {
-        var exception = Assert.ThrowsAsync<ArgumentNullException>(() =>
-        {
-            Price.Create(100m, null!);
-        });
+        await Assert.That(() => Price.Create(100m, null!))
+            .ThrowsExactly<ArgumentNullException>();
     }
 
     [Test]
@@ -32,9 +27,9 @@ public class PriceCreateTests
         var currency = Currency.Usd;
         var result = Price.Create(100m, currency);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value.Sum).Is.EqualTo(100m);
-        await Assert.That(result.Value.Currency).Is.EqualTo(currency);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Sum).IsEqualTo(100m);
+        await Assert.That(result.Value.Currency).IsEqualTo(currency);
     }
 
     [Test]
@@ -43,8 +38,8 @@ public class PriceCreateTests
         var currency = Currency.Usd;
         var result = Price.Create(-100m, currency);
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error.Code).Is.EqualTo(PriceErrors.SumBelowZeroCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code).IsEqualTo(PriceErrors.SumBelowZeroCode);
     }
 
     [Test]
@@ -53,8 +48,8 @@ public class PriceCreateTests
         var currency = Currency.Usd;
         var result = Price.Create(0m, currency);
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error.Code).Is.EqualTo(PriceErrors.SumBelowZeroCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code).IsEqualTo(PriceErrors.SumBelowZeroCode);
     }
 
     [Test]
@@ -63,8 +58,8 @@ public class PriceCreateTests
         var currency = Currency.Usd;
         var result = Price.Create(0.0004m, currency);
 
-        await Assert.That(result.IsFailure).Is.True();
-        await Assert.That(result.Error.Code).Is.EqualTo(PriceErrors.SumBelowZeroCode);
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code).IsEqualTo(PriceErrors.SumBelowZeroCode);
     }
 
     [Test]
@@ -73,9 +68,9 @@ public class PriceCreateTests
         var currency = Currency.Usd;
         var result = Price.Create(decimal.MaxValue, currency);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value.Sum).Is.EqualTo(decimal.MaxValue);
-        await Assert.That(result.Value.Currency).Is.EqualTo(currency);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Sum).IsEqualTo(decimal.MaxValue);
+        await Assert.That(result.Value.Currency).IsEqualTo(currency);
     }
 
     [Test]
@@ -86,8 +81,8 @@ public class PriceCreateTests
         // 10.555 → 10.56 (banker's rounding)
         var result = Price.Create(10.555m, currency);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value.Sum).Is.EqualTo(10.56m);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Sum).IsEqualTo(10.56m);
     }
 
     [Test]
@@ -97,8 +92,8 @@ public class PriceCreateTests
 
         var result = Price.Create(0.01m, currency);
 
-        await Assert.That(result.IsSuccess).Is.True();
-        await Assert.That(result.Value.Sum).Is.EqualTo(0.01m);
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Sum).IsEqualTo(0.01m);
     }
 
     [Test]
@@ -109,8 +104,8 @@ public class PriceCreateTests
         var p1 = Price.Create(10m, currency).Value;
         var p2 = Price.Create(10m, currency).Value;
 
-        await Assert.That(p1).Is.EqualTo(p2);
-        await Assert.That(ReferenceEquals(p1, p2)).Is.False();
+        await Assert.That(p1).IsEqualTo(p2);
+        await Assert.That(ReferenceEquals(p1, p2)).IsFalse();
     }
 
     [Test]
@@ -121,6 +116,6 @@ public class PriceCreateTests
         var p1 = Price.Create(10m, currency).Value;
         var p2 = Price.Create(10m, currency).Value;
 
-        await Assert.That(p1.GetHashCode()).Is.EqualTo(p2.GetHashCode());
+        await Assert.That(p1.GetHashCode()).IsEqualTo(p2.GetHashCode());
     }
 }
