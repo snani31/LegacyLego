@@ -31,10 +31,8 @@ public class OrderItem : ValueObject
         Guid productId,
         Price unitPrice)
     {
-        ArgumentNullException.ThrowIfNull(unitPrice);
-
-        if (string.IsNullOrWhiteSpace(title))
-            return Result<OrderItem>.Failure(OrderItemErrors.GetTitleInvalidError());
+        ArgumentException.ThrowIfNullOrWhiteSpace(title, nameof(title));
+        ArgumentNullException.ThrowIfNull(unitPrice, nameof(unitPrice));
 
         title = title.Trim();
 

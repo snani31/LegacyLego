@@ -1,13 +1,9 @@
-﻿using LegacyLego.Domain.Shared;
-using LegacyLego.Domain.ValueObjects;
-using TUnit.Core;
-
-namespace LegacyLego.Domain.Tests.OrderItemTests;
+﻿namespace LegacyLego.Domain.Tests.OrderItemTests;
 
 public class OrderItemEqualityTests
 {
     [Test]
-    public async Task Create_WithSameParameters_ShouldReturnEqualButDifferentInstances()
+    public async Task Equals_WithSameParameters_ShouldReturnEqualButDifferentInstances()
     {
         var guid = Guid.NewGuid();
         var tytle = "New Item";
@@ -78,7 +74,7 @@ public class OrderItemEqualityTests
     }
 
     [Test]
-    public async Task Create_WithSameParameters_ShouldReturnDifferentInstances()
+    public async Task Equals_WithSameParameters_ShouldNotBeSameReference()
     {
         var guid = Guid.NewGuid();
         var tytle = "New Item";
@@ -89,7 +85,7 @@ public class OrderItemEqualityTests
         var item1 = OrderItem.Create(tytle, quantity, guid, p).Value;
         var item2 = OrderItem.Create(tytle, quantity, guid, p).Value;
 
-        await Assert.That(ReferenceEquals(item1, item2)).IsFalse();
+        await Assert.That(item1).IsNotSameReferenceAs(item2);
     }
 
     [Test]
@@ -113,7 +109,7 @@ public class OrderItemEqualityTests
     }
 
     [Test]
-    public async Task NotEqualsOperator_WithNull_ShouldBeFalse()
+    public async Task NotEqualsOperator_WithNull_ShouldBeTrue()
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 

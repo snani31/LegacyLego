@@ -1,11 +1,4 @@
-﻿using LegacyLego.Domain.Errors;
-using LegacyLego.Domain.ExceptionalErrors;
-using LegacyLego.Domain.Exceptions;
-using LegacyLego.Domain.Shared;
-using LegacyLego.Domain.ValueObjects;
-using TUnit.Core;
-
-namespace LegacyLego.Domain.Tests.OrderItemTests;
+﻿namespace LegacyLego.Domain.Tests.OrderItemTests;
 
 public class OrderItemCreateTests
 {
@@ -45,10 +38,9 @@ public class OrderItemCreateTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create(null!, 3, Guid.NewGuid(), p);
+        var action = () => OrderItem.Create(null!, 3, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsFailure).IsTrue();
-        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.TitleInvalidCode);
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
     [Test]
@@ -56,10 +48,9 @@ public class OrderItemCreateTests
     {
         var p = Price.Create(10m, Currency.Usd).Value;
 
-        var r = OrderItem.Create("", 3, Guid.NewGuid(), p);
+        var action = () => OrderItem.Create("", 3, Guid.NewGuid(), p);
 
-        await Assert.That(r.IsFailure).IsTrue();
-        await Assert.That(r.Error.Code).IsEqualTo(OrderItemErrors.TitleInvalidCode);
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
     }
 
     [Test]
