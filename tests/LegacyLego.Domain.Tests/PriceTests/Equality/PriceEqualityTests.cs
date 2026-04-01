@@ -1,8 +1,4 @@
-﻿using LegacyLego.Domain.Shared;
-using LegacyLego.Domain.ValueObjects;
-using TUnit.Core;
-
-namespace LegacyLego.Domain.Tests.PriceTests;
+﻿namespace LegacyLego.Domain.Tests.PriceTests;
 
 public class PriceEqualityTests
 {

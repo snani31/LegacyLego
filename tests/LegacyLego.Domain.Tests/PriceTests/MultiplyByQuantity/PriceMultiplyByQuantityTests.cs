@@ -1,10 +1,4 @@
-﻿using TUnit.Core;
-using LegacyLego.Domain.Shared;
-using LegacyLego.Domain.ValueObjects;
-using LegacyLego.Domain.Exceptions;
-using LegacyLego.Domain.ExceptionalErrors;
-
-namespace LegacyLego.Domain.Tests.PriceTests;
+﻿namespace LegacyLego.Domain.Tests.PriceTests;
 
 public class PriceMultiplyByQuantityTests
 {

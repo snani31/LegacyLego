@@ -10,6 +10,7 @@ public static class OrderErrors
     public const string ItemsCountInvalidCode = "Order.ItemsCountInvalid";
     public const string ItemsCurrenciesMismatchCode = "Order.ItemsCurrenciesMismatch";
     public const string ItemsTotalBelowZeroCode = "Order.ItemsTotalBelowZero";
+    public const string ClientIdGuidInvalidCode = "Order.ClientIdGuidInvalid";
 
     public static Error GetStatusTransitionFailureError(
         OrderAction action,
@@ -40,5 +41,13 @@ public static class OrderErrors
         return new(
             Code: ItemsTotalBelowZeroCode,
             Message: $"Общая стоимость всех позиций заказа не должна быть меньше 0, {total} не подходит");
+    }
+
+    public static Error GetClientIdGuidInvalidError(Guid guid)
+    {
+        return new(
+            Code: ClientIdGuidInvalidCode,
+            Message: $"Полученный ProductId GUID: {guid} Не прошел валидацию"
+        );
     }
 }

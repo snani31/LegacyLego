@@ -21,7 +21,7 @@ public class Order : AggregateRoot<OrderId>
             return Status switch
             {
                 OrderStatus.PendingPayment or OrderStatus.Expired
-                    => CalculateTotalPrice(),
+                    => CalculateTotalPrice(Items),
                 OrderStatus.Paid or OrderStatus.Cancelled or OrderStatus.Refunded
                     => _frozenTotalPrice ?? throw new InvalidDomainStateException(
                         OrderExceptionalErrors.GetFrozenTotalPriceNotCalculatedError(Status)),
@@ -36,7 +36,7 @@ public class Order : AggregateRoot<OrderId>
 
     private readonly List<OrderItem> _items;
 
-    public IReadOnlyList<OrderItem> Items => _items;
+    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
     public OrderAddress Address { get; }
 
@@ -63,29 +63,26 @@ public class Order : AggregateRoot<OrderId>
         Guid clientId,
         List<OrderItem> items)
     {
-        if (items is null)
-            throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items,nameof(items));
+        ArgumentNullException.ThrowIfNull(address, nameof(address));
+
+        if (items.Any(x => x is null))
+            throw new ArgumentException("Items collection contains null");
+
+        if (clientId == Guid.Empty)
+            return Result<Order>.Failure(OrderErrors.GetClientIdGuidInvalidError(clientId));
 
         var itemsCount = items.Count;
-
         // общее количество позиций не меньше одной
         if (itemsCount < 1)
             return Result<Order>.Failure(OrderErrors.GetItemsCountInvalidError(itemsCount));
 
-        var distinctCurrenciesCount = items.Select(x => x.UnitPrice.Currency).Distinct().Count();
+        var firstCurrency = items.First().UnitPrice.Currency;
 
-        //  позиций заказа не представлены разными валютами
-        if (distinctCurrenciesCount != 1)
+        if (items.Any(x => !x.UnitPrice.Currency.Equals(firstCurrency)))
             return Result<Order>.Failure(OrderErrors.GetItemsCurrenciesMismatchError());
 
-        var currency = items.First().UnitPrice.Currency;
-
-        var total = Price.Zero(currency);
-
-        foreach (var item in items)
-        {
-            total = total.Plus(item.GetTotalPrice());
-        }
+        var total = CalculateTotalPrice(items);
 
         // общая стоимость всех позиций заказа больше нуля
         if (total.Sum <= 0)
@@ -117,7 +114,7 @@ public class Order : AggregateRoot<OrderId>
             return Result.Failure(OrderErrors.GetStatusTransitionFailureError(orderAction, Status, nextStatus));
 
         Status = nextStatus;
-        _frozenTotalPrice = CalculateTotalPrice();
+        _frozenTotalPrice = CalculateTotalPrice(Items);
 
         base.Raise(new OrderPaid(Id,DateTime.UtcNow));
 
@@ -133,7 +130,7 @@ public class Order : AggregateRoot<OrderId>
             return Result.Failure(OrderErrors.GetStatusTransitionFailureError(orderAction, Status, nextStatus));
 
         Status = nextStatus;
-        _frozenTotalPrice = CalculateTotalPrice();
+        _frozenTotalPrice = CalculateTotalPrice(Items);
 
         base.Raise(new OrderCanceled(Id, DateTime.UtcNow));
 
@@ -170,18 +167,18 @@ public class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
-    private Price CalculateTotalPrice()
+    private static Price CalculateTotalPrice(IReadOnlyList<OrderItem> items)
     {
         // при текущих инвариантах это невозможно, но станет актуально в случае, если добавятся функции добавления/удаления позиции товара
-        if (_items.Count == 0)
+        if (items.Count == 0)
             throw new InvariantViolationException(
                 OrderExceptionalErrors.GetOrderContainsNoItemsError());
 
-        var currency = Items.First().UnitPrice.Currency;
+        var currency = items.First().UnitPrice.Currency;
 
         var total = Price.Zero(currency);
 
-        foreach (var item in Items)
+        foreach (var item in items)
             total = total.Plus(item.GetTotalPrice());
 
         return total;

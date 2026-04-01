@@ -1,8 +1,4 @@
-﻿using LegacyLego.Domain.Errors;
-using LegacyLego.Domain.ValueObjects;
-using TUnit.Core;
-
-namespace LegacyLego.Domain.Tests.CurrencyTests;
+﻿namespace LegacyLego.Domain.Tests.CurrencyTests;
 
 public class CurrencyFromCodeTests
 {
