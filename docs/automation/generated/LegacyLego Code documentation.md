@@ -7,16 +7,16 @@
 ---
 ## Версия
 
-Актуальная версия проекта: 1.4.1
+Актуальная версия проекта: 1.5.0
 ## Проекты
 
 Все существующие на данный момент проекты в решении `LegacyLego.slnx`:
 
 1) **LegacyLego.Domain** - Содержит доменную логику проекта, является ядром всей системы и существует, чтобы описывать бизнес-логику на уровне кода;
-2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**. На данной версии проект пустой (ещё не содержит реализации тестов).
+2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**.
+3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры.
 
 ---
-
 
 ## Древовидная структура решения
 
@@ -50,7 +50,25 @@
 │           ├── SolutionStructureTreeDiagram.drawio
 │           └── StoreOrderingSystemDiagram.drawio
 ├── src
+│   ├── LegacyLego.Application
+│   │   ├── Abstractions
+│   │   │   ├── Data
+│   │   │   │   └── IUnitOfWork.cs
+│   │   │   └── Messaging
+│   │   │       ├── Command
+│   │   │       │   ├── IBaseCommand.cs
+│   │   │       │   ├── ICommand.cs
+│   │   │       │   └── ICommandHandler.cs
+│   │   │       ├── Event
+│   │   │       │   └── Domain
+│   │   │       │       └── IDomainEventHandler.cs
+│   │   │       └── Query
+│   │   │           ├── IQuery.cs
+│   │   │           └── IQueryHandler.cs
+│   │   └── LegacyLego.Application.csproj
 │   └── LegacyLego.Domain
+│       ├── Abstractions
+│       │   └── IOrderRepository.cs
 │       ├── Aggregates
 │       │   └── Order.cs
 │       ├── DomainEvents
@@ -116,9 +134,13 @@
 │       │   │   └── OrderCreateTests.cs
 │       │   ├── StateTransitions
 │       │   │   ├── Cancel
+│       │   │   │   └── OrderCancelTests.cs
 │       │   │   ├── Expire
+│       │   │   │   └── OrderExpireTests.cs
 │       │   │   ├── Pay
+│       │   │   │   └── OrderPayTests.cs
 │       │   │   └── Refund
+│       │   │       └── OrderRefundTests.cs
 │       │   └── TotalPrice
 │       │       └── OrderTotalPriceTests.cs
 │       ├── PriceTests
@@ -137,11 +159,135 @@
 ├── LegacyLego.slnx
 └── README.md
 ```
-
 ---
 
 # Кодовая база
 
+## LegacyLego.Application
+
+```xml title="LegacyLego.Application.csproj"
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LegacyLego.Domain\LegacyLego.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Orders\Commands\Cancel\" />
+    <Folder Include="Orders\Commands\Refund\" />
+    <Folder Include="Orders\Queries\GetByID\" />
+    <Folder Include="Orders\Queries\GetByClientID\" />
+  </ItemGroup>
+
+</Project>
+```
+
+---
+
+### Abstractions
+
+#### Data
+
+```cs title="IUnitOfWork.cs"
+namespace LegacyLego.Application.Abstractions.Data;
+
+public interface IUnitOfWork
+{
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}
+```
+
+---
+#### Messaging
+
+##### Command
+
+```cs title="IBaseCommand.cs"
+namespace LegacyLego.Application.Abstractions.Messaging.Command;
+
+public interface IBaseCommand;
+```
+
+---
+
+```cs title="ICommand.cs"
+namespace LegacyLego.Application.Abstractions.Messaging.Command;
+
+public interface ICommand : IBaseCommand;
+
+public interface ICommand<TResponse> : IBaseCommand;
+```
+
+---
+
+```cs title="ICommandHandler.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging.Command;
+
+public interface ICommandHandler<in TCommand>
+    where TCommand : ICommand
+{
+    public Task<Result> HandleAsync(TCommand command,CancellationToken cancellationToken);
+}
+
+public interface ICommandHandler<in TCommand, TResponse>
+    where TCommand : ICommand<TResponse>
+{
+    public Task<Result<TResponse>> HandleAsync(TCommand command, CancellationToken cancellationToken);
+}
+```
+
+---
+
+##### Event
+
+###### Domain
+
+```cs title="IDomainEventHandler.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+
+public interface IDomainEventHandler<in TDomainEvent>
+    where TDomainEvent : IDomainEvent
+{
+    public Task HandleAsync(TDomainEvent notification, CancellationToken cancellationToken);
+}
+```
+
+---
+
+##### Query
+
+```cs title="IQuery.cs"
+namespace LegacyLego.Application.Abstractions.Messaging.Query;
+
+public interface IQuery<TResponse>;
+```
+
+---
+
+```cs title="IQueryHandler.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging.Query;
+
+public interface IQueryHandler<in TQuery, TResponse>
+    where TQuery : IQuery<TResponse>
+{
+    public Task<Result<TResponse>> Handle(TQuery query,CancellationToken cancellationToken);
+}
+```
+
+---
 ## LegacyLego.Domain
 
 ```xml title="LegacyLego.Domain.csproj"
@@ -154,6 +300,26 @@
   </PropertyGroup>
 
 </Project>
+```
+
+---
+
+### Abstractions
+
+```cs title="IOrderRepository.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.Abstractions;
+
+public interface IOrderRepository
+{
+    public Task<Order?> GetByIdAsync(OrderId id, CancellationToken cancellationToken = default);
+
+    public Task<IReadOnlyList<Order>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
+
+    public void Add(Order order);
+}
 ```
 
 ---
@@ -503,6 +669,7 @@ public static class OrderErrors
     public const string ItemsCurrenciesMismatchCode = "Order.ItemsCurrenciesMismatch";
     public const string ItemsTotalBelowZeroCode = "Order.ItemsTotalBelowZero";
     public const string ClientIdGuidInvalidCode = "Order.ClientIdGuidInvalid";
+    public const string NotFoundByOrderId = "Order.NotFoundByOrderId";
 
     public static Error GetStatusTransitionFailureError(
         OrderAction action,
@@ -540,6 +707,14 @@ public static class OrderErrors
         return new(
             Code: ClientIdGuidInvalidCode,
             Message: $"Полученный ProductId GUID: {guid} Не прошел валидацию"
+        );
+    }
+
+    public static Error GetNotFoundByOrderIdError(OrderId orderId)
+    {
+        return new(
+            Code: NotFoundByOrderId,
+            Message: $"Не удалось найти заказ по заданному первичному ключу: {orderId.Value}"
         );
     }
 }

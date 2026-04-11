@@ -15,7 +15,7 @@ function Get-FormattedTree {
     if (Get-Command eza -ErrorAction SilentlyContinue) {
         # Добавляем TestResults в список игнорирования для eza
         $ignoreString = "bin|obj|.git|.vs|.idea|node_modules|dist|TestResults"
-        return (eza --tree --level 5 --ignore-glob $ignoreString --color=never --group-directories-first | Out-String).Trim()
+        return (eza --tree --level 8 --ignore-glob $ignoreString --color=never --group-directories-first | Out-String).Trim()
     }
     return "eza not found."
 }
