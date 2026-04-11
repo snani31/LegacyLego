@@ -11,6 +11,7 @@ public static class OrderErrors
     public const string ItemsCurrenciesMismatchCode = "Order.ItemsCurrenciesMismatch";
     public const string ItemsTotalBelowZeroCode = "Order.ItemsTotalBelowZero";
     public const string ClientIdGuidInvalidCode = "Order.ClientIdGuidInvalid";
+    public const string NotFoundByOrderId = "Order.NotFoundByOrderId";
 
     public static Error GetStatusTransitionFailureError(
         OrderAction action,
@@ -48,6 +49,14 @@ public static class OrderErrors
         return new(
             Code: ClientIdGuidInvalidCode,
             Message: $"Полученный ProductId GUID: {guid} Не прошел валидацию"
+        );
+    }
+
+    public static Error GetNotFoundByOrderIdError(OrderId orderId)
+    {
+        return new(
+            Code: NotFoundByOrderId,
+            Message: $"Не удалось найти заказ по заданному первичному ключу: {orderId.Value}"
         );
     }
 }
