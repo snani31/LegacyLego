@@ -7,7 +7,7 @@
 ---
 ## Версия
 
-Актуальная версия проекта: 1.5.0
+Актуальная версия проекта: 1.6.1
 ## Проекты
 
 Все существующие на данный момент проекты в решении `LegacyLego.slnx`:
@@ -17,6 +17,7 @@
 3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры.
 
 ---
+
 
 ## Древовидная структура решения
 
@@ -54,36 +55,116 @@
 │   │   ├── Abstractions
 │   │   │   ├── Data
 │   │   │   │   └── IUnitOfWork.cs
+│   │   │   ├── ExternalServices
+│   │   │   │   ├── IBackgroundJobService.cs
+│   │   │   │   └── IPaymentProvider.cs
 │   │   │   └── Messaging
 │   │   │       ├── Command
 │   │   │       │   ├── IBaseCommand.cs
 │   │   │       │   ├── ICommand.cs
 │   │   │       │   └── ICommandHandler.cs
 │   │   │       ├── Event
-│   │   │       │   └── Domain
-│   │   │       │       └── IDomainEventHandler.cs
-│   │   │       └── Query
-│   │   │           ├── IQuery.cs
-│   │   │           └── IQueryHandler.cs
+│   │   │       │   ├── Domain
+│   │   │       │   │   └── IDomainEventHandler.cs
+│   │   │       │   └── Integration
+│   │   │       │       ├── IIntegrationEvent.cs
+│   │   │       │       └── IIntegrationEventPublisher.cs
+│   │   │       ├── Query
+│   │   │       │   ├── IQuery.cs
+│   │   │       │   └── IQueryHandler.cs
+│   │   │       ├── ICommandDispatcher.cs
+│   │   │       └── IEventPublisher.cs
+│   │   ├── Common
+│   │   ├── Errors
+│   │   │   └── PaymentProviderErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   └── UnitOfWorkExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InfrastructureException.cs
+│   │   │   ├── PersistenceException.cs
+│   │   │   └── UniqueConstraintViolation.cs
+│   │   ├── Orders
+│   │   │   ├── Commands
+│   │   │   │   ├── Cancel
+│   │   │   │   │   ├── CancelletionOrderDetails.cs
+│   │   │   │   │   ├── CancelOrderCommand.cs
+│   │   │   │   │   └── CancelOrderCommandHandler.cs
+│   │   │   │   ├── Create
+│   │   │   │   │   ├── CreateOrderCommand.cs
+│   │   │   │   │   ├── CreateOrderCommandHandler.cs
+│   │   │   │   │   └── CreateOrderDomainEventHandler.cs
+│   │   │   │   ├── Expire
+│   │   │   │   │   ├── ExpirationOrderDetails.cs
+│   │   │   │   │   ├── ExpireOrderCommand.cs
+│   │   │   │   │   └── ExpireOrderCommandHandler.cs
+│   │   │   │   ├── Pay
+│   │   │   │   │   ├── PayOrderCommand.cs
+│   │   │   │   │   ├── PayOrderCommandHandler.cs
+│   │   │   │   │   └── PayOrderDetails.cs
+│   │   │   │   └── Refund
+│   │   │   │       ├── CancelletionOrderDetails.cs
+│   │   │   │       ├── CancelOrderCommand.cs
+│   │   │   │       └── CancelOrderCommandHandler.cs
+│   │   │   ├── Common
+│   │   │   │   ├── Mappers
+│   │   │   │   ├── OrderAddressDto.cs
+│   │   │   │   └── OrderItemDto.cs
+│   │   │   └── Queries
+│   │   │       ├── GetByClientID
+│   │   │       └── GetByID
+│   │   ├── Payments
+│   │   │   ├── Commands
+│   │   │   │   ├── PocessPaymentWebhook
+│   │   │   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
+│   │   │   │   │   ├── ProcessPaymentDetails.cs
+│   │   │   │   │   ├── ProcessPaymentErrors.cs
+│   │   │   │   │   ├── ProcessPaymentWebhookCommand.cs
+│   │   │   │   │   └── ProcessPaymentWebhookCommandHandler.cs
+│   │   │   │   ├── RefundRequested
+│   │   │   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
+│   │   │   │   └── StartPayment
+│   │   │   │       ├── StartOrderPaymentCommand.cs
+│   │   │   │       ├── StartOrderPaymentCommandHandler.cs
+│   │   │   │       ├── StartOrderPaymentDetails.cs
+│   │   │   │       └── StartOrderPaymentErrors.cs
+│   │   │   ├── Common
+│   │   │   │   ├── PaymentIntegrationEventMapper.cs
+│   │   │   │   ├── PaymentSession.cs
+│   │   │   │   └── PaymentWebhook.cs
+│   │   │   ├── IntegrationEvents
+│   │   │   │   └── RefundPaymentRequestedIntegrationEvent.cs
+│   │   │   └── Services
+│   │   │       └── PaymentLookup.cs
 │   │   └── LegacyLego.Application.csproj
 │   └── LegacyLego.Domain
 │       ├── Abstractions
-│       │   └── IOrderRepository.cs
+│       │   ├── IOrderRepository.cs
+│       │   └── IPaymentRepository.cs
 │       ├── Aggregates
-│       │   └── Order.cs
+│       │   ├── Order.cs
+│       │   └── OrderPayment.cs
 │       ├── DomainEvents
 │       │   ├── OrderCanceled.cs
 │       │   ├── OrderCreated.cs
 │       │   ├── OrderExpired.cs
 │       │   ├── OrderPaid.cs
+│       │   ├── OrderPaymentCreated.cs
+│       │   ├── OrderPaymentFailed.cs
+│       │   ├── OrderPaymentRefunded.cs
+│       │   ├── OrderPaymentRefundedWithoutSuccess.cs
+│       │   ├── OrderPaymentRefundRequested.cs
+│       │   ├── OrderPaymentSucceeded.cs
 │       │   └── OrderRefunded.cs
 │       ├── Enums
 │       │   ├── OrderAction.cs
-│       │   └── OrderStatus.cs
+│       │   ├── OrderStatus.cs
+│       │   ├── PaymentAction.cs
+│       │   └── PaymentStatus.cs
 │       ├── Errors
 │       │   ├── CurrencyErrors.cs
 │       │   ├── OrderErrors.cs
 │       │   ├── OrderItemErrors.cs
+│       │   ├── OrderPaymentErrors.cs
 │       │   └── PriceErrors.cs
 │       ├── ExceptionalErrors
 │       │   ├── CurrencyExceptionalErrors.cs
@@ -105,9 +186,11 @@
 │       │   └── ValueObject.cs
 │       ├── ValueObjects
 │       │   ├── Currency.cs
+│       │   ├── ExternalSession.cs
 │       │   ├── OrderAddress.cs
 │       │   ├── OrderId.cs
 │       │   ├── OrderItem.cs
+│       │   ├── OrderPaymentId.cs
 │       │   └── Price.cs
 │       └── LegacyLego.Domain.csproj
 ├── tests
@@ -159,6 +242,7 @@
 ├── LegacyLego.slnx
 └── README.md
 ```
+
 ---
 
 # Кодовая база
@@ -179,8 +263,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Orders\Commands\Cancel\" />
-    <Folder Include="Orders\Commands\Refund\" />
+    <Folder Include="Common\" />
+    <Folder Include="Orders\Common\Mappers\" />
     <Folder Include="Orders\Queries\GetByID\" />
     <Folder Include="Orders\Queries\GetByClientID\" />
   </ItemGroup>
@@ -204,7 +288,77 @@ public interface IUnitOfWork
 ```
 
 ---
+
+#### ExternalServices
+
+```cs title="IBackgroundJobService.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+
+namespace LegacyLego.Application.Abstractions.ExternalServices;
+
+public interface IBackgroundJobService
+{
+    public void Schedule(IBaseCommand command, TimeSpan delay);
+}
+```
+
+---
+
+```cs title="IPaymentProvider.cs"
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.ExternalServices;
+
+public interface IPaymentProvider
+{
+    public Task<Result<PaymentSession>> CreatePaymentSessionAsync(
+        Guid paymentId,
+        decimal amount,
+        string currency,
+        CancellationToken ct);
+
+    public Task<Result<PaymentSession>> GetExistingSessionAsync(
+        Guid paymentId,
+        CancellationToken ct);
+}
+```
+
+---
+
 #### Messaging
+
+```cs title="ICommandDispatcher.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging;
+
+public interface ICommandDispatcher
+{
+    public Task<Result<TResult>> DispatchAsync<TCommand, TResult>(TCommand command, CancellationToken ct = default)
+        where TCommand : ICommand<TResult>;
+
+    public Task<Result> DispatchAsync<TCommand>(TCommand command, CancellationToken ct = default)
+        where TCommand : ICommand;
+}
+```
+
+---
+
+```cs title="IEventPublisher.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging;
+
+public interface IEventPublisher
+{
+    public Task PublishAsync<TEvent>(TEvent domainEvent, CancellationToken ct = default)
+        where TEvent : IDomainEvent;
+}
+```
+
+---
 
 ##### Command
 
@@ -265,6 +419,30 @@ public interface IDomainEventHandler<in TDomainEvent>
 
 ---
 
+###### Integration
+
+```cs title="IIntegrationEvent.cs"
+namespace LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+
+public interface IIntegrationEvent
+{
+    public DateTime OccurredOnUtc { get; }
+}
+```
+
+---
+
+```cs title="IIntegrationEventPublisher.cs"
+namespace LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+
+public interface IIntegrationEventPublisher
+{
+    public Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken ct);
+}
+```
+
+---
+
 ##### Query
 
 ```cs title="IQuery.cs"
@@ -288,6 +466,1473 @@ public interface IQueryHandler<in TQuery, TResponse>
 ```
 
 ---
+
+### Errors
+
+```cs title="PaymentProviderErrors.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class PaymentProviderErrors
+{
+    public const string SessionNotFoundCode = "PaymentProvider.SessionNotFoundByPaymentId";
+
+    public static Error GetSessionNotFoundByPaymentIdError(Guid paymentId)
+    {
+        return new(
+            Code: SessionNotFoundCode,
+            Message: $"По следующему OrderPayment Id: {paymentId} не было найдено ни одной активной сессии оплаты");
+    }
+
+}
+```
+
+---
+
+### ExceptionalErrors
+
+```cs title="UnitOfWorkExceptionalErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.ExceptionalErrors;
+
+public static class UnitOfWorkExceptionalErrors
+{
+    public const string DatabaseSaveErrorCode = "UnitOfWork.SaveError";
+
+    public static ExceptionalError GetDatabaseSaveError(Guid orderId, string internalMessage)
+    {
+        return new(
+            Code: DatabaseSaveErrorCode,
+            Message: $"Критическая ошибка при сохранении заказа {orderId}. Внутренняя ошибка: {internalMessage}"
+        );
+    }
+}
+```
+
+---
+
+### Exceptions
+
+```cs title="InfrastructureException.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Exceptions;
+
+public abstract class InfrastructureException : Exception
+{
+    public ExceptionalError Error { get; }
+
+    protected InfrastructureException(ExceptionalError error)
+        : base(error.Code + ": " + error.Message)
+    {
+        Error = error;
+    }
+}
+```
+
+---
+
+```cs title="PersistenceException.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Exceptions;
+
+public class PersistenceException : InfrastructureException
+{
+    public PersistenceException(ExceptionalError error) : base(error) { }
+}
+```
+
+---
+
+```cs title="UniqueConstraintViolation.cs"
+using LegacyLego.Domain.Shared;
+namespace LegacyLego.Application.Exceptions;
+
+public class UniqueConstraintViolation : InfrastructureException
+{
+    public UniqueConstraintViolation(ExceptionalError error) : base(error) { }
+}
+```
+
+---
+
+### Orders
+
+#### Commands
+
+##### Cancel
+
+```cs title="CancelletionOrderDetails.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed record CancelletionOrderDetails
+{
+    public const string AlreadyCancelledDetailsCode = "Order.Cancelletion.AlreadyCancelled";
+    public const string CancelledSuccessfullyCode = "Order.Cancelletion.CancelledSuccessfully";
+    public const string WrongStatusTransitionCode = "Order.Cancelletion.WrongStatusTransition";
+
+    public readonly string Code;
+    public readonly Guid OrderId;
+    public readonly string Message;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
+
+    private CancelletionOrderDetails(string Code,
+    Guid OrderId,
+    string Message,
+    string CurrentStatus,
+    bool StateChanged)
+    {
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
+    }
+
+    internal static CancelletionOrderDetails GetAlreadyCancelledDetails(Guid orderId)
+    {
+        return new CancelletionOrderDetails(
+            Code: AlreadyCancelledDetailsCode,
+            OrderId: orderId,
+            Message: $"Order with id: {orderId} is already cancelled",
+            CurrentStatus: OrderStatus.Cancelled.ToString(),
+            false);
+    }
+
+    internal static CancelletionOrderDetails GetCancelledSuccessfullyDetails(Guid orderId)
+    {
+        return new CancelletionOrderDetails(
+            Code: CancelledSuccessfullyCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} is successfully cancelled",
+            CurrentStatus: OrderStatus.Cancelled.ToString(),
+            true);
+    }
+
+    internal static CancelletionOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
+    {
+        return new CancelletionOrderDetails(
+            Code: WrongStatusTransitionCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for cancelletion",
+            CurrentStatus: currentStatus.ToString(),
+            false);
+    }
+}
+```
+
+---
+
+```cs title="CancelOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed record CancelOrderCommand(Guid OrderId) : ICommand<CancelletionOrderDetails>;
+```
+
+---
+
+```cs title="CancelOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed class CancelOrderCommandHandler(
+IOrderRepository orderRepository,
+IUnitOfWork unitOfWork) : ICommandHandler<CancelOrderCommand, CancelletionOrderDetails>
+{
+    public async Task<Result<CancelletionOrderDetails>> HandleAsync(CancelOrderCommand command, CancellationToken ct)
+    {
+        var orderIdGuid = command.OrderId;
+        var orderId = OrderId.From(orderIdGuid);
+
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return Result<CancelletionOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var result = order.Cancel();
+        if (result.IsFailure && order.Status is OrderStatus.Cancelled)
+            return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetAlreadyCancelledDetails(orderIdGuid));
+        else if (result.IsFailure)
+            return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetCancelledSuccessfullyDetails(orderIdGuid));
+    }
+}
+```
+
+---
+
+##### Create
+
+```cs title="CreateOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Common;
+
+namespace LegacyLego.Application.Orders.Commands.Create;
+
+public sealed record CreateOrderCommand(
+    Guid ClientId,
+    string CurrencyCode,
+    OrderAddressDto OrderAddress,
+    List<OrderItemDto> Items) : ICommand<Guid>;
+```
+
+---
+
+```cs title="CreateOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Create;
+
+public sealed class CreateOrderCommandHandler(
+    IOrderRepository orderRepository,
+    IUnitOfWork unitOfWork) : ICommandHandler<CreateOrderCommand, Guid>
+{
+    public async Task<Result<Guid>> HandleAsync(CreateOrderCommand command, CancellationToken ct)
+    {
+        var currencyResult = Currency.FromCode(command.CurrencyCode);
+        if (currencyResult.IsFailure) return Result<Guid>.Failure(currencyResult.Error);
+        var currency = currencyResult.Value;
+
+        var addressResult = OrderAddress.Create(
+            command.OrderAddress.Country,
+            command.OrderAddress.City,
+            command.OrderAddress.Street,
+            command.OrderAddress.PostalCode);
+        if (addressResult.IsFailure) return Result<Guid>.Failure(addressResult.Error);
+        var address = addressResult.Value;
+
+        var itemsResult = CreateItems(command.Items, currency);
+        if (itemsResult.IsFailure) return Result<Guid>.Failure(itemsResult.Error);
+        var items = itemsResult.Value;
+       
+        var orderResult = Order.Create(address, command.ClientId, items);
+        if (orderResult.IsFailure) return Result<Guid>.Failure(orderResult.Error);
+        var order = orderResult.Value;
+
+        orderRepository.Add(order);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return Result<Guid>.Success(orderResult.Value.Id.Value);
+    }
+
+    private static Result<List<OrderItem>> CreateItems(IEnumerable<OrderItemDto> requests, Currency currency)
+    {
+        var items = new List<OrderItem>();
+        foreach (var request in requests)
+        {
+            var priceResult = Price.Create(request.UnitPriceAmount, currency);
+            if (priceResult.IsFailure) return Result<List<OrderItem>>.Failure(priceResult.Error);
+
+            var itemResult = OrderItem.Create(request.Title, request.Quantity, request.ProductId, priceResult.Value);
+            if (itemResult.IsFailure) return Result<List<OrderItem>>.Failure(itemResult.Error);
+
+            items.Add(itemResult.Value);
+        }
+        return Result<List<OrderItem>>.Success(items);
+    }
+}
+```
+
+---
+
+```cs title="CreateOrderDomainEventHandler.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+using LegacyLego.Application.Orders.Commands.Expire;
+using LegacyLego.Domain.DomainEvents;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Orders.Commands.Create;
+
+public class CreateOrderDomainEventHandler(IBackgroundJobService jobService)
+: IDomainEventHandler<OrderCreated>
+{
+    public Task HandleAsync(OrderCreated notification, CancellationToken ct)
+    {
+        jobService.Schedule(new ExpireOrderCommand(notification.OrderId.Value), TimeSpan.FromMinutes(10));
+        return Task.CompletedTask;
+    }
+}
+```
+
+---
+
+##### Expire
+
+```cs title="ExpirationOrderDetails.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Commands.Expire;
+
+public sealed record ExpirationOrderDetails
+{
+    public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
+    public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
+    public const string WrongStatusTransitionCode = "Order.Expiretion.WrongStatusTransition";
+
+    public readonly string Code;
+    public readonly Guid OrderId;
+    public readonly string Message;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
+
+    private ExpirationOrderDetails(string Code,
+    Guid OrderId,
+    string Message,
+    string CurrentStatus,
+    bool StateChanged)
+    {
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
+    }
+
+    internal static ExpirationOrderDetails GetAlreadyExpiredDetails(Guid orderId)
+    {
+        return new ExpirationOrderDetails(
+            Code: AlreadyExpiredDetailsCode,
+            OrderId: orderId,
+            Message: $"Order with id: {orderId} is already expired",
+            CurrentStatus: OrderStatus.Expired.ToString(),
+            false);
+    }
+
+    internal static ExpirationOrderDetails GetExpiredSuccessfullyDetails(Guid orderId)
+    {
+        return new ExpirationOrderDetails(
+            Code: ExpiredSuccessfullyCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} is successfully expired",
+            CurrentStatus: OrderStatus.Expired.ToString(),
+            true);
+    }
+
+    internal static ExpirationOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
+    {
+        return new ExpirationOrderDetails(
+            Code: WrongStatusTransitionCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for expiration",
+            CurrentStatus: currentStatus.ToString(),
+            false);
+    }
+}
+```
+
+---
+
+```cs title="ExpireOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+
+namespace LegacyLego.Application.Orders.Commands.Expire;
+
+public sealed record ExpireOrderCommand(Guid OrderId) : ICommand<ExpirationOrderDetails>;
+```
+
+---
+
+```cs title="ExpireOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Commands.Pay;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Expire;
+
+public sealed class ExpireOrderCommandHandler(
+IOrderRepository orderRepository,
+IUnitOfWork unitOfWork) : ICommandHandler<ExpireOrderCommand, ExpirationOrderDetails>
+{
+    public async Task<Result<ExpirationOrderDetails>> HandleAsync(ExpireOrderCommand command, CancellationToken ct)
+    {
+        var orderIdGuid = command.OrderId;
+        var orderId = OrderId.From(orderIdGuid);
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return Result<ExpirationOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var result = order.Expire();
+        if (result.IsFailure && order.Status is OrderStatus.Expired) 
+            return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetAlreadyExpiredDetails(orderIdGuid));
+        else if (result.IsFailure)
+            return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetExpiredSuccessfullyDetails(orderIdGuid));
+    }
+}
+```
+
+---
+
+##### Pay
+
+```cs title="PayOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Commands.Cancel;
+using LegacyLego.Application.Orders.Common;
+
+namespace LegacyLego.Application.Orders.Commands.Pay;
+
+public sealed record PayOrderCommand(Guid OrderId) : ICommand<PayOrderDetails>;
+```
+
+---
+
+```cs title="PayOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.ExceptionalErrors;
+using LegacyLego.Application.Exceptions;
+using LegacyLego.Application.Orders.Commands.Cancel;
+using LegacyLego.Application.Orders.Commands.Pay;
+using LegacyLego.Application.Orders.Commands.Refund;
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Pay;
+
+public sealed class PayOrderCommandHandler(
+    IOrderRepository orderRepository,
+    IUnitOfWork unitOfWork) : ICommandHandler<PayOrderCommand, PayOrderDetails>
+{
+    public async Task<Result<PayOrderDetails>> HandleAsync(PayOrderCommand command, CancellationToken ct)
+    {
+        var orderIdGuid = command.OrderId;
+        var orderId = OrderId.From(orderIdGuid);
+
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return Result<PayOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var result = order.Pay();
+        if (result.IsFailure && order.Status is OrderStatus.Paid)
+            return Result<PayOrderDetails>.Success(PayOrderDetails.GetAlreadyPaidDetails(orderIdGuid));
+        else if (result.IsFailure)
+            return Result<PayOrderDetails>.Success(PayOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result<PayOrderDetails>.Success(PayOrderDetails.GetPaidSuccessfullyDetails(orderIdGuid));
+    }
+
+}
+```
+
+---
+
+```cs title="PayOrderDetails.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed record PayOrderDetails
+{
+    public const string AlreadyPaidDetailsCode = "Order.Payment.AlreadyPaid";
+    public const string PaidSuccessfullyCode = "Order.Payment.PaidSuccessfully";
+    public const string WrongStatusTransitionCode = "Order.Payment.WrongStatusTransition";
+
+    public readonly string Code;
+    public readonly Guid OrderId;
+    public readonly string Message;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
+
+    private PayOrderDetails(string Code,
+    Guid OrderId,
+    string Message,
+    string CurrentStatus,
+    bool StateChanged)
+    {
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
+    }
+
+    internal static PayOrderDetails GetAlreadyPaidDetails(Guid orderId)
+    {
+        return new PayOrderDetails(
+            Code: AlreadyPaidDetailsCode,
+            OrderId: orderId,
+            Message: $"Order with id: {orderId} is already paid",
+            CurrentStatus: OrderStatus.Cancelled.ToString(),
+            false);
+    }
+
+    internal static PayOrderDetails GetPaidSuccessfullyDetails(Guid orderId)
+    {
+        return new PayOrderDetails(
+            Code: PaidSuccessfullyCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} is successfully paid",
+            CurrentStatus: OrderStatus.Cancelled.ToString(),
+            true);
+    }
+
+    internal static PayOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
+    {
+        return new PayOrderDetails(
+            Code: WrongStatusTransitionCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for payment",
+            CurrentStatus: currentStatus.ToString(),
+            false);
+    }
+}
+```
+
+---
+
+##### Refund
+
+```cs title="CancelletionOrderDetails.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Commands.Refund;
+
+public sealed record RefundOrderDetails
+{
+    public const string AlreadyRefundedDetailsCode = "Order.Refund.AlreadyRefunded";
+    public const string RefundedSuccessfullyCode = "Order.Refund.RefundedSuccessfully";
+    public const string WrongStatusTransitionCode = "Order.Refund.WrongStatusTransition";
+
+    public readonly string Code;
+    public readonly Guid OrderId;
+    public readonly string Message;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
+
+    private RefundOrderDetails(string Code,
+    Guid OrderId,
+    string Message,
+    string CurrentStatus,
+    bool StateChanged)
+    {
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
+    }
+
+    internal static RefundOrderDetails GetAlreadyRefundedDetails(Guid orderId)
+    {
+        return new RefundOrderDetails(
+            Code: AlreadyRefundedDetailsCode,
+            OrderId: orderId,
+            Message: $"Order with id: {orderId} is already refunded",
+            CurrentStatus: OrderStatus.Refunded.ToString(),
+            false);
+    }
+
+    internal static RefundOrderDetails GetRefundedSuccessfullyDetails(Guid orderId)
+    {
+        return new RefundOrderDetails(
+            Code: RefundedSuccessfullyCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} is successfully refunded",
+            CurrentStatus: OrderStatus.Cancelled.ToString(),
+            true);
+    }
+
+    internal static RefundOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
+    {
+        return new RefundOrderDetails(
+            Code: WrongStatusTransitionCode,
+            OrderId: orderId,
+            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for refund",
+            CurrentStatus: currentStatus.ToString(),
+            false);
+    }
+}
+```
+
+---
+
+```cs title="CancelOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+
+namespace LegacyLego.Application.Orders.Commands.Refund;
+
+public sealed record RefundOrderCommand(Guid OrderId) : ICommand<RefundOrderDetails>;
+```
+
+---
+
+```cs title="CancelOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Commands.Refund;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed class RefundOrderCommandHandler(
+IOrderRepository orderRepository,
+IUnitOfWork unitOfWork) : ICommandHandler<RefundOrderCommand, RefundOrderDetails>
+{
+    public async Task<Result<RefundOrderDetails>> HandleAsync(RefundOrderCommand command, CancellationToken ct)
+    {
+        var orderIdGuid = command.OrderId;
+        var orderId = OrderId.From(orderIdGuid);
+
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return Result<RefundOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var result = order.Refund();
+        if (result.IsFailure && order.Status is OrderStatus.Refunded)
+            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetAlreadyRefundedDetails(orderIdGuid));
+        else if (result.IsFailure)
+            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetRefundedSuccessfullyDetails(orderIdGuid));
+    }
+}
+```
+
+---
+
+#### Common
+
+```cs title="OrderAddressDto.cs"
+namespace LegacyLego.Application.Orders.Common;
+
+public sealed record OrderAddressDto(
+    string Country,
+    string City,
+    string Street,
+    string PostalCode);
+```
+
+---
+
+```cs title="OrderItemDto.cs"
+namespace LegacyLego.Application.Orders.Common;
+
+public sealed record OrderItemDto(
+    string Title,
+    int Quantity,
+    Guid ProductId,
+    decimal UnitPriceAmount);
+```
+
+---
+
+### Payments
+
+#### Commands
+
+##### PocessPaymentWebhook
+
+```cs title="OrderPaymentSucceededDomainEventHandler.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+using LegacyLego.Application.Orders.Commands.Expire;
+using LegacyLego.Application.Orders.Commands.Pay;
+using LegacyLego.Domain.DomainEvents;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public class OrderPaymentSucceededDomainEventHandler(ICommandDispatcher dispatcher)
+: IDomainEventHandler<OrderPaymentSucceeded>
+{
+    public async Task HandleAsync(OrderPaymentSucceeded notification, CancellationToken ct)
+    {
+        var command = new PayOrderCommand(notification.OrderId.Value);
+
+        await dispatcher.DispatchAsync(command, ct);
+    }
+}
+```
+
+---
+
+```cs title="ProcessPaymentDetails.cs"
+using LegacyLego.Application.Orders.Commands.Expire;
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public sealed record ProcessPaymentDetails
+{
+    public const string AlreadyProcessedWithTransactionIdCode = "OrderPayment.AlreadyProcessedWithTransactionId";
+    public const string AlreadyProcessedCode = "OrderPayment.AlreadyProcessed";
+
+    public const string SetSuccessedCode = "OrderPayment.SuccessfullySuccessed";
+    public const string SetFailedCode = "OrderPayment.SuccessfullyFailed";
+    public const string SetRefundedCode = "OrderPayment.SuccessfullyRefunded";
+
+    public readonly string Code;
+    public readonly string Message;
+    public readonly Guid OrderId;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
+
+    private ProcessPaymentDetails(string Code,
+    Guid OrderId,
+    string Message,
+    string CurrentStatus,
+    bool StateChanged)
+    {
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
+    }
+
+    internal static ProcessPaymentDetails GetAlreadyProcessedWithTransactionIdDetails(string transactionId, Guid orderId)
+    {
+        return new ProcessPaymentDetails(
+            Code: AlreadyProcessedWithTransactionIdCode,
+            OrderId: orderId,
+            Message: $"Payment with transactionId: {transactionId} is already processed",
+            CurrentStatus: PaymentStatus.Succeeded.ToString(),
+            false);
+    }
+
+    internal static ProcessPaymentDetails GetAlreadyProcessedDetails(string transactionId, PaymentStatus status, Guid orderId)
+    {
+        return new ProcessPaymentDetails(
+            Code: AlreadyProcessedCode,
+            OrderId: orderId,
+            Message: $"Payment with transactionId: {transactionId} is already processed with {status.ToString()} state earlier",
+            CurrentStatus: status.ToString(),
+            false);
+    }
+
+    internal static ProcessPaymentDetails GetSetSuccessedDetails(string transactionId, Guid orderId)
+    {
+        return new ProcessPaymentDetails(
+            Code: SetSuccessedCode,
+            OrderId: orderId,
+            Message: $"Payment with transactionId:{transactionId} was set Successed",
+            CurrentStatus: PaymentStatus.Succeeded.ToString(),
+            true);
+    }
+
+    internal static ProcessPaymentDetails GetSetFailedDetails(string transactionId, Guid orderId)
+    {
+        return new ProcessPaymentDetails(
+            Code: SetFailedCode,
+            OrderId: orderId,
+            Message: $"Payment with transactionId:{transactionId} was set Failed",
+            CurrentStatus: PaymentStatus.Failed.ToString(),
+            true);
+    }
+
+    internal static ProcessPaymentDetails GetSetRefundedDetails(string transactionId, Guid orderId)
+    {
+        return new ProcessPaymentDetails(
+            Code: SetRefundedCode,
+            OrderId: orderId,
+            Message: $"Payment with transactionId:{transactionId} was set Refunded",
+            CurrentStatus: PaymentStatus.Refunded.ToString(),
+            true);
+    }
+}
+```
+
+---
+
+```cs title="ProcessPaymentErrors.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public static class ProcessPaymentErrors
+{
+    public const string InvalidAmountCode = "Payment.InvalidAmount";
+    public const string TotalPricesMismatchCode = "ProcessPayment.TotalPricesMismatch";
+    public const string UnknownStatusCode = "ProcessPayment.UnknownStatus";
+    public const string TransactionConflictCode = "ProcessPayment.TransactionConflict";
+
+    public static Error GetInvalidAmountCodeError(decimal amount)
+    {
+        return new(
+            Code: InvalidAmountCode,
+            Message: $"Amount must be greater than zero, but it was {amount}");
+    }
+
+    public static Error GetTotalPricesMismatchError(decimal webhookAmount, decimal orderTotal)
+    {
+        return new(
+            Code: TotalPricesMismatchCode,
+            Message: $"Webhook amount:{webhookAmount} must be equivalent to order's total price: {orderTotal}");
+    }
+
+    public static Error GetUnknownStatusError(PaymentStatus unknownStatus)
+    {
+        return new(
+            Code: UnknownStatusCode,
+            Message: $"{unknownStatus} is unknown status");
+    }
+
+    public static Error GetTransactionConflictError(string TransactionId, string webhookTransactionId)
+    {
+        return new(
+            Code: TransactionConflictCode,
+            Message: $"For successed payment system get more then one different transactions by {TransactionId} and {webhookTransactionId} transactionId's");
+    }
+
+}
+```
+
+---
+
+```cs title="ProcessPaymentWebhookCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Payments.Common;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public sealed record ProcessPaymentWebhookCommand(PaymentWebhook Webhook) : ICommand<ProcessPaymentDetails>;
+```
+
+---
+
+```cs title="ProcessPaymentWebhookCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Application.Payments.Services;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public sealed class ProcessPaymentWebhookCommandHandler(
+    PaymentLookup paymentLookup,
+    IOrderRepository orderRepository,
+    IUnitOfWork unitOfWork) : ICommandHandler<ProcessPaymentWebhookCommand, ProcessPaymentDetails>
+{
+    public async Task<Result<ProcessPaymentDetails>> HandleAsync(ProcessPaymentWebhookCommand command, CancellationToken ct)
+    {
+        var webhook = command.Webhook;
+
+        var orderId = OrderId.From(webhook.OrderId);
+
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null)
+            return Result<ProcessPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var payment = await paymentLookup.GetOrCreateAsync(webhook.TransactionId, orderId, ct);
+
+        var result = webhook.Status switch
+        {
+            PaymentStatus.Refunded => HandleRefunded(payment, webhook.TransactionId),
+
+            PaymentStatus.Failed => HandleFailed(payment),
+
+            PaymentStatus.Succeeded => HandleSucceeded(payment, webhook, order),
+
+            _ => Result<ProcessPaymentDetails>.Failure(ProcessPaymentErrors.GetUnknownStatusError(webhook.Status))
+        };
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return result;
+    }
+    
+    private static Result<ProcessPaymentDetails> HandleFailed(
+        OrderPayment payment)
+    {
+        if (payment.Status is PaymentStatus.Failed)
+        {
+            return Result<ProcessPaymentDetails>.Success(
+                ProcessPaymentDetails.GetAlreadyProcessedDetails(payment.TransactionId!, payment.Status, payment.OrderId.Value));
+        }
+
+        var paymentResult = payment.MarkAsFailed();
+        if (paymentResult.IsFailure)
+            return Result<ProcessPaymentDetails>.Failure(paymentResult.Error);
+
+        return Result<ProcessPaymentDetails>.Success(
+            ProcessPaymentDetails.GetSetFailedDetails(payment.TransactionId!, payment.OrderId.Value));
+    }
+
+    private static Result<ProcessPaymentDetails> HandleRefunded(
+        OrderPayment payment, string transactionId)
+    {
+        if (payment.Status is PaymentStatus.Refunded)
+        {
+            return Result<ProcessPaymentDetails>.Success(
+                ProcessPaymentDetails.GetAlreadyProcessedDetails(payment.TransactionId!, payment.Status, payment.OrderId.Value));
+        }
+
+        var paymentResult = payment.MarkAsRefunded(transactionId);
+        if (paymentResult.IsFailure)
+            return Result<ProcessPaymentDetails>.Failure(paymentResult.Error);
+
+        return Result<ProcessPaymentDetails>.Success(
+            ProcessPaymentDetails.GetSetRefundedDetails(payment.TransactionId!, payment.OrderId.Value));
+    }
+
+    private static Result<ProcessPaymentDetails> HandleSucceeded(
+        OrderPayment payment, 
+        PaymentWebhook webhook, 
+        Order order)
+    {
+        if (payment.Status is PaymentStatus.Succeeded && payment.TransactionId != webhook.TransactionId)
+        {
+            return Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetTransactionConflictError(payment.TransactionId!, webhook.TransactionId));
+        }
+        else if (payment.Status is PaymentStatus.Succeeded)
+        {
+            return Result<ProcessPaymentDetails>.Success(
+                ProcessPaymentDetails.GetAlreadyProcessedDetails(payment.TransactionId!, payment.Status, payment.OrderId.Value));
+        }
+
+        var amountCheck = ValidateAmount(webhook.Currency, webhook.Amount, order);
+        if (amountCheck.IsFailure)
+        {
+            var refundRequestResult = payment.MarkAsRefundRequested();
+            if (refundRequestResult.IsFailure) return Result<ProcessPaymentDetails>.Failure(refundRequestResult.Error);
+
+            return Result<ProcessPaymentDetails>.Failure(amountCheck.Error);
+        }
+
+        var paymentResult = payment.MarkAsSucceeded(webhook.TransactionId);
+        if (paymentResult.IsFailure)
+            return Result<ProcessPaymentDetails>.Failure(paymentResult.Error);
+
+        return Result<ProcessPaymentDetails>.Success(ProcessPaymentDetails.GetSetSuccessedDetails(payment.TransactionId!, payment.OrderId.Value));
+    }
+
+    private static Result ValidateAmount(string code, decimal amount, Order order)
+    {
+        if (amount <= 0)
+            return Result.Failure(ProcessPaymentErrors.GetInvalidAmountCodeError(amount));
+
+        var currency = Currency.FromCode(code);
+
+        if (currency.IsFailure)
+            return currency;
+
+        var webhookAmountPrice = Price.Create(amount, currency.Value);
+
+        if (webhookAmountPrice.IsFailure)
+            return webhookAmountPrice;
+
+        if (order.TotalPrice != webhookAmountPrice.Value)
+            return Result.Failure(ProcessPaymentErrors.GetTotalPricesMismatchError(amount, order.TotalPrice.Sum));
+
+        return Result.Success();
+    }
+}
+```
+
+---
+
+##### RefundRequested
+
+```cs title="RefundRequestedOrderPaymentDomainEventHandler.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Domain.DomainEvents;
+
+namespace LegacyLego.Application.Orders.Commands.Create;
+
+public class RefundRequestedOrderPaymentDomainEventHandler(IIntegrationEventPublisher eventPublisher)
+: IDomainEventHandler<OrderPaymentRefundRequested>
+{
+    public async Task HandleAsync(OrderPaymentRefundRequested notification, CancellationToken ct)
+    {
+        var ivent = PaymentIntegrationEventMapper.Map(notification);
+        await eventPublisher.PublishAsync(ivent, ct);
+    }
+}
+```
+
+---
+
+##### StartPayment
+
+```cs title="StartOrderPaymentCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+namespace LegacyLego.Application.Payments.Commands.StartPayment;
+
+public sealed record StartOrderPaymentCommand(Guid OrderId) : ICommand<StartOrderPaymentDetails>;
+```
+
+---
+
+```cs title="StartOrderPaymentCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Exceptions;
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Payments.Commands.StartPayment;
+
+public sealed class StartOrderPaymentCommandHandler(
+    IOrderRepository orderRepository,
+    IPaymentRepository paymentRepository,
+    IPaymentProvider paymentProvider,
+    IUnitOfWork unitOfWork) : ICommandHandler<StartOrderPaymentCommand, StartOrderPaymentDetails>
+{
+    private enum ConstraintCheckTimeline : byte
+    {
+        AfterConstraintCheck,
+        BeforeConstraintCheck
+    }
+
+    public async Task<Result<StartOrderPaymentDetails>> HandleAsync(StartOrderPaymentCommand command, CancellationToken ct)
+    {
+        var orderId = OrderId.From(command.OrderId);
+
+        var order = await orderRepository.GetByIdAsync(orderId);
+        if (order is null)
+            return Result<StartOrderPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        if (order.Status != OrderStatus.PendingPayment)
+            return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetOrderIsNotInPendingPaymentError(command.OrderId, order.Status));
+
+        if (await paymentRepository.ExistsSucceeded(orderId))
+            return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetForOrderIsAlreadyExistsSuccessedPaymentError(command.OrderId));
+
+        var existingBeforeCheckUniqConstraint = await paymentRepository.GetPendingByOrderIdAsync(orderId, ct);
+
+        if (existingBeforeCheckUniqConstraint is not null)
+        {
+            return await EnsureSession(
+                existingBeforeCheckUniqConstraint,
+                order,
+                paymentProvider,
+                unitOfWork,
+                ConstraintCheckTimeline.BeforeConstraintCheck,
+                ct);
+        }
+
+        var paymentResult = OrderPayment.Create(orderId);
+        if(paymentResult.IsFailure)
+            return Result<StartOrderPaymentDetails>.Failure(paymentResult.Error);
+
+        var payment = paymentResult.Value;
+
+        paymentRepository.Add(payment);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (UniqueConstraintViolation)
+        {
+            var existingAfterCheckUniqConstraint = await paymentRepository.GetPendingByOrderIdAsync(orderId, ct);
+
+            if (existingAfterCheckUniqConstraint is null)
+                return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetCanNotFindPendingPaymentAfterCheckConstraintError(command.OrderId));
+
+            return await EnsureSession(
+                existingAfterCheckUniqConstraint,
+                order,
+                paymentProvider,
+                unitOfWork,
+                ConstraintCheckTimeline.AfterConstraintCheck,
+                ct);
+        }
+
+        var sessionResult = await paymentProvider.CreatePaymentSessionAsync(
+                    payment.Id.Value,
+                    order.TotalPrice.Sum,
+                    order.TotalPrice.Currency.Code,
+                    ct);
+
+        if (sessionResult.IsFailure)
+            return Result<StartOrderPaymentDetails>.Failure(sessionResult.Error);
+
+        var session = sessionResult.Value;
+
+        var extrernalSessionResult = ExternalSession.Create(
+            session.ExternalSessionId,
+            session.CheckoutUrl,
+            session.ExpiresAtUtc);
+        if (extrernalSessionResult.IsFailure)
+            return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
+
+        payment.AttachSession(extrernalSessionResult.Value);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return Result<StartOrderPaymentDetails>.Success(
+            StartOrderPaymentDetails.GetNewPaymentWithNewSessionDetails(session, orderId.Value));
+    }
+
+    private static async Task<Result<StartOrderPaymentDetails>> EnsureSession(
+        OrderPayment payment,
+        Order order,
+        IPaymentProvider paymentProvider,
+        IUnitOfWork unitOfWork,
+        ConstraintCheckTimeline timeline,
+        CancellationToken ct = default)
+    {
+        PaymentSession session;
+
+        if (payment.HasSession && !payment.ExternalSession!.IsExpired(DateTime.UtcNow))
+        {
+            session = new PaymentSession(
+                payment.Id.Value,
+                payment.ExternalSession.ExternalId,
+                payment.ExternalSession.CheckoutUrl,
+                payment.ExternalSession.ExpiresAtUtc);
+
+
+            return timeline switch
+            {
+                ConstraintCheckTimeline.BeforeConstraintCheck => Result<StartOrderPaymentDetails>.Success(
+                    StartOrderPaymentDetails.GetExistingPaymentWithExistingSessionBeforeCheckConstraintDetails(session, order.Id.Value)),
+
+                ConstraintCheckTimeline.AfterConstraintCheck => Result<StartOrderPaymentDetails>.Success(
+                    StartOrderPaymentDetails.GetExistingPaymentWithExistingSessionAfterCheckConstraintDetails(session, order.Id.Value)),
+
+                _ => throw new InvalidOperationException($"Unknown CheckConstraint timeline in StartOrderPaymentCommandHandler.EnsureSession. It was {timeline}")
+            };
+        }
+
+        var newSessionResult = await paymentProvider.CreatePaymentSessionAsync(
+                payment.Id.Value,
+                order.TotalPrice.Sum,
+                order.TotalPrice.Currency.Code,
+                ct);
+
+        if (newSessionResult.IsFailure)
+            return Result<StartOrderPaymentDetails>.Failure(newSessionResult.Error);
+
+        session = newSessionResult.Value;
+
+        var extrernalSessionResult = ExternalSession.Create(
+            session.ExternalSessionId,
+            session.CheckoutUrl,
+            session.ExpiresAtUtc);
+
+        if (extrernalSessionResult.IsFailure)
+            return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
+
+
+        payment.AttachSession(extrernalSessionResult.Value);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return timeline switch
+        {
+            ConstraintCheckTimeline.BeforeConstraintCheck => Result<StartOrderPaymentDetails>.Success(
+                StartOrderPaymentDetails.GetExistingPaymentWithNewSessionBeforeCheckConstraintDetails(session, order.Id.Value)),
+
+            ConstraintCheckTimeline.AfterConstraintCheck => Result<StartOrderPaymentDetails>.Success(
+                StartOrderPaymentDetails.GetExistingPaymentWithNewSessionAfterCheckConstraintDetails(session, order.Id.Value)),
+
+            _ => throw new InvalidOperationException($"Unknown CheckConstraint timeline in StartOrderPaymentCommandHandler.EnsureSession. It was {timeline}")
+        };
+    }
+}
+```
+
+---
+
+```cs title="StartOrderPaymentDetails.cs"
+using LegacyLego.Application.Payments.Common;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public sealed record StartOrderPaymentDetails
+{
+    public const string NewPaymentWithNewSessionCode = "StartOrderPayment.NewPaymentWithNewSession";
+
+    public const string ExistingPaymentWithNewSessionBeforeCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithNewSessionBeforeCheckConstraint";
+    public const string ExistingPaymentWithNewSessionAfterCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithNewSessionAfterCheckConstraint";
+
+    public const string ExistingPaymentWithExistingSessionAfterCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionAfterCheckConstraint";
+    public const string ExistingPaymentWithExistingSessionBeforeCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionBeforeCheckConstraint";
+
+    public readonly string Code;
+    public readonly string Message;
+    public readonly Guid OrderId;
+    public readonly PaymentSession Session;
+
+    private StartOrderPaymentDetails(string code,
+    string message,
+    PaymentSession session,
+    Guid orderId)
+    {
+        Code = code;
+        OrderId = orderId;
+        Message = message;
+        Session = session;
+    }
+
+    internal static StartOrderPaymentDetails GetNewPaymentWithNewSessionDetails(PaymentSession session, Guid orderId)
+    {
+        return new StartOrderPaymentDetails(
+            code: NewPaymentWithNewSessionCode,
+            orderId: orderId,
+            session: session,
+            message: $"For Order with OrderId: {orderId} " +
+            $"created new Payment with PaymentId: {session.PaymentId} " +
+            $"and session with ExternalSessionId: {session.ExternalSessionId}");
+    }
+
+    internal static StartOrderPaymentDetails GetExistingPaymentWithNewSessionBeforeCheckConstraintDetails(PaymentSession session, Guid orderId)
+    {
+        return new StartOrderPaymentDetails(
+            code: ExistingPaymentWithNewSessionBeforeCheckConstraintCode,
+            orderId: orderId,
+            session: session,
+            message: $"For Order with OrderId: {orderId} " +
+            $"already exists Payment with PaymentId: {session.PaymentId} " +
+            $"and created new session with ExternalSessionId: {session.ExternalSessionId}");
+    }
+
+    internal static StartOrderPaymentDetails GetExistingPaymentWithNewSessionAfterCheckConstraintDetails(PaymentSession session, Guid orderId)
+    {
+        return new StartOrderPaymentDetails(
+            code: ExistingPaymentWithNewSessionAfterCheckConstraintCode,
+            orderId: orderId,
+            session: session,
+            message: $"For Order with OrderId: {orderId} " +
+            $"already exists Payment with PaymentId: {session.PaymentId} " +
+            $"and created new session with ExternalSessionId: {session.ExternalSessionId}");
+    }
+
+    internal static StartOrderPaymentDetails GetExistingPaymentWithExistingSessionBeforeCheckConstraintDetails(PaymentSession session, Guid orderId)
+    {
+        return new StartOrderPaymentDetails(
+            code: ExistingPaymentWithExistingSessionBeforeCheckConstraintCode,
+            orderId: orderId,
+            session: session,
+            message: $"For Order with OrderId: {orderId} " +
+            $"already exists Payment with PaymentId: {session.PaymentId} " +
+            $"and already exists session with ExternalSessionId: {session.ExternalSessionId}");
+    }
+
+    internal static StartOrderPaymentDetails GetExistingPaymentWithExistingSessionAfterCheckConstraintDetails(PaymentSession session, Guid orderId)
+    {
+        return new StartOrderPaymentDetails(
+            code: ExistingPaymentWithExistingSessionAfterCheckConstraintCode,
+            orderId: orderId,
+            session: session,
+            message: $"For Order with OrderId: {orderId} " +
+            $"already exists Payment with PaymentId: {session.PaymentId} " +
+            $"and already exists session with ExternalSessionId: {session.ExternalSessionId}");
+    }
+}
+```
+
+---
+
+```cs title="StartOrderPaymentErrors.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+
+public static class StartOrderPaymentErrors
+{
+    public const string OrderIsNotInPendingPaymentCode = "StartOrderPatyment.OrderIsNotInPendingPayment";
+    public const string ForOrderIsAlreadyExistsSuccessedPaymentCode = "StartOrderPatyment.ForOrderIsAlreadyExistsSuccessedPayment";
+    public const string CanNotFindPendingPaymentAfterCheckConstraintCode = "StartOrderPatyment.CanNotFindPendingPaymentAfterCheckConstraint";
+
+    public static Error GetOrderIsNotInPendingPaymentError(Guid orderId, OrderStatus status)
+    {
+        return new(
+            Code: OrderIsNotInPendingPaymentCode,
+            Message: $"The order being processed with OrderId: {orderId} is not waiting payment. Its in {status} status now");
+    }
+
+    public static Error GetForOrderIsAlreadyExistsSuccessedPaymentError(Guid orderId)
+    {
+        return new(
+            Code: ForOrderIsAlreadyExistsSuccessedPaymentCode,
+            Message: $"For order being processed with OrderId: {orderId} is already exists successed payment");
+    }
+
+    public static Error GetCanNotFindPendingPaymentAfterCheckConstraintError(Guid orderId)
+    {
+        return new(
+            Code: CanNotFindPendingPaymentAfterCheckConstraintCode,
+            Message: $"For order being processed with OrderId: {orderId} can not find existing pending payment after ConstraintCheck");
+    }
+}
+```
+
+---
+
+#### Common
+
+```cs title="PaymentIntegrationEventMapper.cs"
+using LegacyLego.Application.Payments.IntegrationEvents;
+using LegacyLego.Domain.DomainEvents;
+
+namespace LegacyLego.Application.Payments.Common;
+
+public static class PaymentIntegrationEventMapper
+{
+    public static RefundPaymentRequestedIntegrationEvent Map(OrderPaymentRefundRequested domainEvent)
+    {
+        return new RefundPaymentRequestedIntegrationEvent(
+            domainEvent.TransactionId
+        );
+    }
+}
+```
+
+---
+
+```cs title="PaymentSession.cs"
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace LegacyLego.Application.Payments.Common;
+
+public sealed record PaymentSession(
+    Guid PaymentId,
+    string ExternalSessionId,
+    string CheckoutUrl,
+    DateTime? ExpiresAtUtc = null);
+```
+
+---
+
+```cs title="PaymentWebhook.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Payments.Common;
+
+public record PaymentWebhook(
+    string TransactionId,
+    Guid OrderId,
+    decimal Amount,
+    string Currency,
+    PaymentStatus Status);
+```
+
+---
+
+#### IntegrationEvents
+
+```cs title="RefundPaymentRequestedIntegrationEvent.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+
+namespace LegacyLego.Application.Payments.IntegrationEvents;
+
+public sealed record RefundPaymentRequestedIntegrationEvent(string TransactionId) : IIntegrationEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}
+```
+
+---
+
+#### Services
+
+```cs title="PaymentLookup.cs"
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Payments.Services;
+
+public sealed class PaymentLookup
+{
+    private readonly IPaymentRepository _paymentRepository;
+
+    public PaymentLookup(IPaymentRepository paymentRepository)
+    {
+        _paymentRepository = paymentRepository;
+    }
+
+    public async Task<OrderPayment> GetOrCreateAsync(
+        string transactionId,
+        OrderId orderId,
+        CancellationToken ct)
+    {
+        var payment = await _paymentRepository
+            .GetByTransactionIdAsync(transactionId, ct);
+
+        if (payment is not null)
+            return payment;
+
+        payment = await _paymentRepository
+            .GetByOrderIdAsync(orderId, ct);
+
+        if (payment is not null)
+            return payment;
+
+        var createResult = OrderPayment.Create(orderId);
+
+        if (createResult.IsFailure)
+            throw new InvalidOperationException(
+                $"Failed to create OrderPayment: {createResult.Error}");
+
+        payment = createResult.Value;
+
+        _paymentRepository.Add(payment);
+
+        return payment;
+    }
+}
+```
+
+---
+
 ## LegacyLego.Domain
 
 ```xml title="LegacyLego.Domain.csproj"
@@ -319,6 +1964,30 @@ public interface IOrderRepository
     public Task<IReadOnlyList<Order>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
 
     public void Add(Order order);
+}
+```
+
+---
+
+```cs title="IPaymentRepository.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.Abstractions;
+
+public interface IPaymentRepository
+{
+    public Task<OrderPayment?> GetByTransactionIdAsync(string id, CancellationToken cancellationToken = default);
+
+    public Task<OrderPayment?> GetByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
+
+    public Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
+
+    public Task<bool> ExistsSucceeded(OrderId orderId);
+
+    public Task<OrderPayment?> GetByIdAsync(OrderPaymentId orderId, CancellationToken cancellationToken = default);
+
+    public void Add(OrderPayment payment);
 }
 ```
 
@@ -517,6 +2186,150 @@ public class Order : AggregateRoot<OrderId>
 
 ---
 
+```cs title="OrderPayment.cs"
+using LegacyLego.Domain.DomainEvents;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.Aggregates;
+
+public class OrderPayment : AggregateRoot<OrderPaymentId>
+{
+    public string? TransactionId { get; private set; }
+
+    public OrderId OrderId { get; }
+
+    public PaymentStatus Status { get; private set; }
+
+    public DateTime CreatedAtUtc { get; }
+
+    public ExternalSession? ExternalSession { get; private set; }
+
+    public bool HasSession => ExternalSession is not null;
+
+    public bool IsRefundRequested => Status is PaymentStatus.RefundRequested;
+
+    private OrderPayment(
+        OrderPaymentId id,
+        OrderId orderId,
+        DateTime createdAtUtc,
+        PaymentStatus status) : base(id)
+    {
+        OrderId = orderId;
+        Status = status;
+        CreatedAtUtc = createdAtUtc;
+    }
+
+    public static Result<OrderPayment> Create(OrderId orderId)
+    {
+        var createdAt = DateTime.UtcNow;
+        var status = PaymentStatus.Pending;
+        var id = OrderPaymentId.New();
+
+        var payment = new OrderPayment(id, orderId, createdAt, status);
+
+        payment.Raise(new OrderPaymentCreated(id, orderId, createdAt));
+
+        return Result<OrderPayment>.Success(payment);
+    }
+
+    public Result AttachSession(ExternalSession externalSession)
+    {
+        ExternalSession = externalSession;
+
+        return Result.Success();
+    }
+
+    public Result MarkAsSucceeded(string transactionId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+
+        if (Status == PaymentStatus.Succeeded && TransactionId == transactionId)
+            return Result.Success();
+
+        if (TransactionId != null && TransactionId != transactionId)
+            return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
+
+        var paymentAction = PaymentAction.Success;
+        var nextStatus = PaymentStatus.Succeeded;
+
+        if (Status is not PaymentStatus.Pending)
+            return Result.Failure(OrderPaymentErrors.GetStatusTransitionFailureError(paymentAction, Status, nextStatus));
+
+        Status = nextStatus;
+        TransactionId = transactionId;
+
+        base.Raise(new OrderPaymentSucceeded(Id, OrderId, TransactionId!));
+
+        return Result.Success();
+    }
+
+    public Result MarkAsFailed()
+    {
+        var paymentAction = PaymentAction.Fail;
+        var nextStatus = PaymentStatus.Failed;
+
+        if (Status is not PaymentStatus.Pending)
+            return Result.Failure(OrderPaymentErrors.GetStatusTransitionFailureError(paymentAction, Status, nextStatus));
+
+        Status = nextStatus;
+
+        base.Raise(new OrderPaymentFailed(Id));
+
+        return Result.Success();
+    }
+
+    public Result MarkAsRefundRequested()
+    {
+        var paymentAction = PaymentAction.RefundRequest;
+        var nextStatus = PaymentStatus.RefundRequested;
+
+        if (Status is not PaymentStatus.Succeeded)
+            return Result.Failure(OrderPaymentErrors.GetStatusTransitionFailureError(paymentAction, Status, nextStatus));
+
+        Status = nextStatus;
+
+        base.Raise(new OrderPaymentRefundRequested(Id, TransactionId!));
+
+        return Result.Success();
+    }
+
+    public Result MarkAsRefunded(string transactionId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+
+        if (Status == PaymentStatus.Refunded && TransactionId == transactionId)
+            return Result.Success();
+
+        if (TransactionId != null && TransactionId != transactionId)
+            return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
+
+        var paymentAction = PaymentAction.Refund;
+        var nextStatus = PaymentStatus.Refunded;
+
+        if (Status is not PaymentStatus.RefundRequested
+            && Status is not PaymentStatus.Succeeded
+            && Status is not PaymentStatus.Pending)
+        {
+            return Result.Failure(
+                OrderPaymentErrors.GetStatusTransitionFailureError(
+                    paymentAction, Status, nextStatus));
+        }
+
+        TransactionId ??= transactionId;
+        Status = nextStatus;
+
+        base.Raise(new OrderPaymentRefunded(Id, TransactionId!));
+
+        return Result.Success();
+    }
+}
+```
+
+---
+
 ### DomainEvents
 
 ```cs title="OrderCanceled.cs"
@@ -576,6 +2389,85 @@ public sealed record OrderPaid(
 
 ---
 
+```cs title="OrderPaymentCreated.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentCreated(
+    OrderPaymentId Paymentid,
+    OrderId OrderId,
+    DateTime CreatedAt) : IDomainEvent;
+```
+
+---
+
+```cs title="OrderPaymentFailed.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentFailed(
+    OrderPaymentId Paymentid) : IDomainEvent;
+```
+
+---
+
+```cs title="OrderPaymentRefunded.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentRefunded(
+    OrderPaymentId Paymentid,
+    string TransactionId) : IDomainEvent;
+```
+
+---
+
+```cs title="OrderPaymentRefundedWithoutSuccess.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentRefundedWithoutSuccess(
+    OrderPaymentId Paymentid,
+    string TransactionId) : IDomainEvent;
+```
+
+---
+
+```cs title="OrderPaymentRefundRequested.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentRefundRequested(
+    OrderPaymentId Paymentid,
+    string TransactionId) : IDomainEvent;
+```
+
+---
+
+```cs title="OrderPaymentSucceeded.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record OrderPaymentSucceeded(
+    OrderPaymentId Paymentid,
+    OrderId OrderId,
+    string TransactionId) : IDomainEvent;
+```
+
+---
+
 ```cs title="OrderRefunded.cs"
 using LegacyLego.Domain.Aggregates;
 using LegacyLego.Domain.Shared;
@@ -617,6 +2509,35 @@ public enum OrderStatus : byte
     Cancelled,
     Expired,
     Refunded
+}
+```
+
+---
+
+```cs title="PaymentAction.cs"
+namespace LegacyLego.Domain.Enums;
+
+public enum PaymentAction : byte
+{
+    Success,
+    Fail,
+    Refund,
+    RefundRequest
+}
+```
+
+---
+
+```cs title="PaymentStatus.cs"
+namespace LegacyLego.Domain.Enums;
+
+public enum PaymentStatus : byte
+{
+    Pending,
+    Succeeded,
+    Failed,
+    Refunded,
+    RefundRequested
 }
 ```
 
@@ -757,6 +2678,39 @@ public static class OrderItemErrors
                      $"Значение {quantity} не соответствует правилам валидации"
         );
     }
+}
+```
+
+---
+
+```cs title="OrderPaymentErrors.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class OrderPaymentErrors
+{
+    public const string StatusTransitionFailureCode = "OrderPayment.StatusTransitionFailure";
+    public const string WrongTransactionIdExchangeCode = "OrderPayment.WrongTransactionIdExchange";
+
+    public static Error GetStatusTransitionFailureError(
+        PaymentAction action,
+        PaymentStatus actualStatus,
+        PaymentStatus nextStatus)
+    {
+        return new(
+            Code: StatusTransitionFailureCode,
+            Message: $"Action {action.ToString()} не позволяет перевести OrderPayment из статуса {actualStatus.ToString()} в {nextStatus.ToString()}");
+    }
+
+    public static Error GetWrongTransactionIdExchangeError(string currentId,string nextId)
+    {
+        return new(
+            Code: WrongTransactionIdExchangeCode,
+            Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId} в MarkAsSucceeded операции");
+    }
+
 }
 ```
 
@@ -1313,6 +3267,52 @@ public class Currency : ValueObject
 
 ---
 
+```cs title="ExternalSession.cs"
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using static System.Net.WebRequestMethods;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed class ExternalSession : ValueObject
+{
+    public string ExternalId { get; }
+    public string CheckoutUrl { get; }
+    public DateTime? ExpiresAtUtc { get; }
+
+    private ExternalSession(string externalId, string checkoutUrl, DateTime? expiresAtUtc)
+    {
+        ExternalId = externalId;
+        CheckoutUrl = checkoutUrl;
+        ExpiresAtUtc = expiresAtUtc;
+    }
+
+    public static Result<ExternalSession> Create(string externalId, string checkoutUrl, DateTime? expiresAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalId, nameof(externalId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(checkoutUrl, nameof(checkoutUrl));
+
+        return Result<ExternalSession>.Success(new ExternalSession(externalId, checkoutUrl, expiresAtUtc));
+    }
+
+    public bool IsExpired(DateTime nowUtc)
+    {
+        if (ExpiresAtUtc is null) return false;
+
+        return ExpiresAtUtc.Value <= nowUtc;
+    }
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return ExternalId;
+        yield return CheckoutUrl;
+        if (ExpiresAtUtc.HasValue) yield return ExpiresAtUtc.Value;
+    }
+}
+```
+
+---
+
 ```cs title="OrderAddress.cs"
 using LegacyLego.Domain.Shared;
 
@@ -1452,6 +3452,36 @@ public class OrderItem : ValueObject
     public Price GetTotalPrice()
     {
         return UnitPrice.MultiplyByQuantity(Quantity);
+    }
+}
+```
+
+---
+
+```cs title="OrderPaymentId.cs"
+using LegacyLego.Domain.Shared;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed class OrderPaymentId : ValueObject
+{
+    public Guid Value { get; }
+
+    public OrderPaymentId(Guid value)
+    {
+        Value = value;
+    }
+
+    public static OrderPaymentId New() => new(Guid.NewGuid());
+
+    public static OrderPaymentId From(Guid value) => new(value);
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return Value;
     }
 }
 ```
