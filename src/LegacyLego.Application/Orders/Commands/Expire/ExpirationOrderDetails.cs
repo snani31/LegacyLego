@@ -7,12 +7,12 @@ public sealed record ExpirationOrderDetails
     public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
     public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
     public const string WrongStatusTransitionCode = "Order.Expiretion.WrongStatusTransition";
-    
-    private readonly string code;
-    private readonly Guid orderId;
-    private readonly string message;
-    private readonly string currentStatus;
-    private readonly bool stateChanged;
+
+    public readonly string Code;
+    public readonly Guid OrderId;
+    public readonly string Message;
+    public readonly string CurrentStatus;
+    public readonly bool StateChanged;
 
     private ExpirationOrderDetails(string Code,
     Guid OrderId,
@@ -20,11 +20,11 @@ public sealed record ExpirationOrderDetails
     string CurrentStatus,
     bool StateChanged)
     {
-        code = Code;
-        orderId = OrderId;
-        message = Message;
-        currentStatus = CurrentStatus;
-        stateChanged = StateChanged;
+        this.Code = Code;
+        this.OrderId = OrderId;
+        this.Message = Message;
+        this.CurrentStatus = CurrentStatus;
+        this.StateChanged = StateChanged;
     }
 
     internal static ExpirationOrderDetails GetAlreadyExpiredDetails(Guid orderId)
