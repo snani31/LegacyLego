@@ -7,7 +7,7 @@
 ---
 ## Версия
 
-Актуальная версия проекта: 1.6.1
+Актуальная версия проекта: 1.6.2
 ## Проекты
 
 Все существующие на данный момент проекты в решении `LegacyLego.slnx`:
@@ -107,11 +107,27 @@
 │   │   │   │       └── CancelOrderCommandHandler.cs
 │   │   │   ├── Common
 │   │   │   │   ├── Mappers
+│   │   │   │   ├── Projections
+│   │   │   │   │   └── OrderProjections.cs
 │   │   │   │   ├── OrderAddressDto.cs
-│   │   │   │   └── OrderItemDto.cs
+│   │   │   │   ├── OrderItemDto.cs
+│   │   │   │   └── OrderSummaryDto.cs
 │   │   │   └── Queries
-│   │   │       ├── GetByClientID
-│   │   │       └── GetByID
+│   │   │       ├── ActiveOrders
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetActiveOrdersQuery.cs
+│   │   │       │   └── GetActiveOrdersQueryHandler.cs
+│   │   │       ├── OrderDetails
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetOrderDetailsQuery.cs
+│   │   │       │   ├── GetOrderDetailsQueryHandler.cs
+│   │   │       │   └── OrderDetailsDto.cs
+│   │   │       └── OrdersHistory
+│   │   │           ├── GetOrdersHistoryQuery.cs
+│   │   │           ├── GetOrdersHistoryQueryHandler.cs
+│   │   │           ├── OrderHistoryRequest.cs
+│   │   │           ├── OrderHistorySpecification.cs
+│   │   │           └── OrdersHistoryResponse.cs
 │   │   ├── Payments
 │   │   │   ├── Commands
 │   │   │   │   ├── PocessPaymentWebhook
@@ -183,6 +199,7 @@
 │       │   ├── IDomainEvent.cs
 │       │   ├── Result.cs
 │       │   ├── ResultT.cs
+│       │   ├── Specification.cs
 │       │   └── ValueObject.cs
 │       ├── ValueObjects
 │       │   ├── Currency.cs
@@ -263,10 +280,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Orders\Common\Mappers\" />
-    <Folder Include="Orders\Queries\GetByID\" />
-    <Folder Include="Orders\Queries\GetByClientID\" />
+    <Folder Include="Orders\Commands\Cancel\" />
+    <Folder Include="Orders\Commands\Refund\" />
   </ItemGroup>
 
 </Project>
@@ -461,7 +476,7 @@ namespace LegacyLego.Application.Abstractions.Messaging.Query;
 public interface IQueryHandler<in TQuery, TResponse>
     where TQuery : IQuery<TResponse>
 {
-    public Task<Result<TResponse>> Handle(TQuery query,CancellationToken cancellationToken);
+    public Task<Result<TResponse>> HandleAsync(TQuery query,CancellationToken cancellationToken);
 }
 ```
 
@@ -1155,6 +1170,343 @@ public sealed record OrderItemDto(
     int Quantity,
     Guid ProductId,
     decimal UnitPriceAmount);
+```
+
+---
+
+```cs title="OrderSummaryDto.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Common;
+
+public sealed record OrderSummaryDto(
+    Guid OrderId,
+    OrderStatus Status,
+    decimal TotalAmount,
+    string Currency,
+    DateTime CreatedAt,
+    int ItemsCount
+);
+```
+
+---
+
+##### Projections
+
+```cs title="OrderProjections.cs"
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+using LegacyLego.Domain.Aggregates;
+using System.Linq.Expressions;
+
+namespace LegacyLego.Application.Orders.Common.Projections;
+
+public static class OrderProjections
+{
+    public static Expression<Func<Order,OrderSummaryDto>> Summary =>
+        order => new OrderSummaryDto(
+            order.Id.Value,
+            order.Status,
+            order.Items.Sum(x => x.UnitPrice.Sum),
+            order.Items.FirstOrDefault()!.UnitPrice.Currency.Code,
+            order.CreationDateUtc,
+            order.Items.Count
+        );
+
+    public static Expression<Func<Order, OrderDetailsDto>> Details =>
+            order => new OrderDetailsDto(
+                order.Id.Value,
+                order.Status,
+                order.CreationDateUtc,
+                new AddressDetailsDto(
+                    order.Address.Country,
+                    order.Address.City,
+                    order.Address.Street,
+                    order.Address.PostalCode),
+                order.Items.Select(item => new OrderItemDetailsDto(
+                    item.ProductId,
+                    item.Title,
+                    item.Quantity,
+                    item.UnitPrice.Sum,
+                    item.UnitPrice.Sum * item.Quantity)).ToList(),
+                order.TotalPrice.Sum,
+                order.Items.First().UnitPrice.Currency.Code
+            );
+}
+```
+
+---
+
+#### Queries
+
+##### ActiveOrders
+
+```cs title="ActiveOrderSpecification.cs"
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Application.Orders.Common.Projections;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public class ActiveOrderSpecification : Specification<Order, OrderId, OrderSummaryDto>
+{
+    public ActiveOrderSpecification(Guid clientId) : base(OrderProjections.Summary)
+    {
+        AddFilter(order => order.ClientId == clientId);
+        AddFilter(order => order.Status == OrderStatus.PendingPayment);
+    }
+}
+```
+
+---
+
+```cs title="GetActiveOrdersQuery.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Domain.Aggregates;
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public sealed record GetActiveOrdersQuery(Guid UserId) : IQuery<IReadOnlyList<OrderSummaryDto>>;
+```
+
+---
+
+```cs title="GetActiveOrdersQueryHandler.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Application.Orders.Queries.Common;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public class GetActiveOrdersQueryHandler(IOrderRepository repository) : IQueryHandler<GetActiveOrdersQuery, IReadOnlyList<OrderSummaryDto>>
+{
+    public async Task<Result<IReadOnlyList<OrderSummaryDto>>> HandleAsync(GetActiveOrdersQuery query, CancellationToken ct)
+    {
+        var specification = new ActiveOrderSpecification(query.UserId);
+
+        var result = await repository.GetOrders(specification, ct);
+
+        return Result<IReadOnlyList<OrderSummaryDto>>.Success(result);
+    }
+}
+```
+
+---
+
+##### OrderDetails
+
+```cs title="ActiveOrderSpecification.cs"
+using LegacyLego.Application.Orders.Common.Projections;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Queries.OrderDetails;
+
+public class OrderDetailsSpecification : Specification<Order, OrderId, OrderDetailsDto>
+{
+    public OrderDetailsSpecification(Guid clientId, Guid orderId) : base(OrderProjections.Details)
+    {
+        AddFilter(order => order.ClientId == clientId);
+        AddFilter(order => order.Id.Value == orderId);
+    }
+}
+```
+
+---
+
+```cs title="GetOrderDetailsQuery.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public sealed record GetOrderDetailsQuery(Guid UserId, Guid OrderId) : IQuery<OrderDetailsDto>;
+```
+
+---
+
+```cs title="GetOrderDetailsQueryHandler.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Queries.OrderDetails;
+
+public class GetOrderDetailsQueryHandler(IOrderRepository repository) : IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto>
+{
+    public async Task<Result<OrderDetailsDto>> HandleAsync(GetOrderDetailsQuery query, CancellationToken ct)
+    {
+        var specification = new OrderDetailsSpecification(query.UserId, query.OrderId);
+        var order = await repository.GetOrder(specification, ct);
+
+        if (order is null)
+            return Result<OrderDetailsDto>.Failure(OrderErrors.GetNotFoundByOrderIdError(OrderId.From(query.OrderId)));
+
+        return Result<OrderDetailsDto>.Success(order);
+    }
+}
+```
+
+---
+
+```cs title="OrderDetailsDto.cs"
+using LegacyLego.Domain.Enums;
+
+namespace LegacyLego.Application.Orders.Queries.OrderDetails;
+
+public sealed record OrderDetailsDto(
+    Guid OrderId,
+    OrderStatus Status,
+    DateTime CreatedAt,
+    AddressDetailsDto DeliveryAddress,
+    IReadOnlyList<OrderItemDetailsDto> Items,
+    decimal TotalAmount,
+    string Currency
+);
+
+public sealed record OrderItemDetailsDto(
+    Guid ProductId,
+    string Title,
+    int Quantity,
+    decimal UnitPrice,
+    decimal TotalPrice
+);
+
+public sealed record AddressDetailsDto(
+    string Country,
+    string City,
+    string Street,
+    string PostalCode
+);
+```
+
+---
+
+##### OrdersHistory
+
+```cs title="GetOrdersHistoryQuery.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
+
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public sealed record GetOrdersHistoryQuery(Guid UserId, OrderHistoryRequest Filter) : IQuery<OrdersHistoryResponse>;
+```
+
+---
+
+```cs title="GetOrdersHistoryQueryHandler.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
+
+public class GetOrdersHistoryQueryHandler(IOrderRepository repository) : IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>
+{
+    public async Task<Result<OrdersHistoryResponse>> HandleAsync(GetOrdersHistoryQuery query, CancellationToken ct)
+    {
+        var specification = new OrderHistorySpecification(query.UserId,query.Filter);
+        var orders = await repository.GetOrders(specification, ct);
+
+        specification.DropPagination();
+        var count = await repository.GetOrdersCount(specification, ct);
+
+        var result = new OrdersHistoryResponse(orders,count);
+
+        return Result<OrdersHistoryResponse>.Success(result);
+    }
+}
+```
+
+---
+
+```cs title="OrderHistoryRequest.cs"
+namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
+
+public record OrderHistoryRequest(
+    int SkipRecords,
+    int TakeRecords,
+    decimal? MinPrice = null,
+    string? SortBy = null,
+    bool SortDescending = true);
+```
+
+---
+
+```cs title="OrderHistorySpecification.cs"
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Application.Orders.Common.Projections;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+using System.Linq.Expressions;
+
+namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
+
+public class OrderHistorySpecification : Specification<Order, OrderId, OrderSummaryDto>
+{
+    public OrderHistorySpecification(Guid clientId, OrderHistoryRequest filter)
+        : base(OrderProjections.Summary)
+    {
+        AddFilter(o => o.ClientId == clientId);
+
+        var historyStatuses = new[] { OrderStatus.Paid, OrderStatus.Cancelled, OrderStatus.Refunded };
+        AddFilter(o => historyStatuses.Contains(o.Status));
+
+        if (filter.MinPrice.HasValue)
+            AddFilter(o => o.TotalPrice.Sum >= filter.MinPrice.Value);
+
+        ApplySorting(filter.SortBy, filter.SortDescending);
+
+        SetSkipNum(filter.SkipRecords);
+        SetLimitNum(filter.TakeRecords);
+    }
+
+    private void ApplySorting(string? sortBy, bool isDescending)
+    {
+        Expression<Func<Order, object>> expression = sortBy?.ToLower() switch
+        {
+            "price" => o => o.TotalPrice.Sum,
+            "date" => o => o.CreationDateUtc,
+            _ => o => o.CreationDateUtc 
+        };
+
+        if (isDescending) AddOrderByDescending(expression);
+        else AddOrderBy(expression);
+    }
+
+    public void DropPagination()
+    {
+        DropLimit();
+        DropSkip();
+    }
+}
+```
+
+---
+
+```cs title="OrdersHistoryResponse.cs"
+using LegacyLego.Application.Orders.Common;
+
+namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
+
+public sealed record OrdersHistoryResponse(
+    IReadOnlyList<OrderSummaryDto> Orders,
+    int OrdersCount);
 ```
 
 ---
@@ -1953,6 +2305,7 @@ public sealed class PaymentLookup
 
 ```cs title="IOrderRepository.cs"
 using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
 
 namespace LegacyLego.Domain.Abstractions;
@@ -1962,6 +2315,12 @@ public interface IOrderRepository
     public Task<Order?> GetByIdAsync(OrderId id, CancellationToken cancellationToken = default);
 
     public Task<IReadOnlyList<Order>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
+
+    public Task<IReadOnlyList<TResult>> GetOrders<TResult>(Specification<Order,OrderId, TResult> specification, CancellationToken cancellationToken = default);
+
+    public Task<TResult?> GetOrder<TResult>(Specification<Order, OrderId, TResult> specification, CancellationToken cancellationToken = default);
+
+    public Task<int> GetOrdersCount(Specification<Order, OrderId> specification, CancellationToken cancellationToken = default);
 
     public void Add(Order order);
 }
@@ -3127,6 +3486,70 @@ public class Result<T> : Result
     {
         return new Result<T>(error);
     }
+}
+```
+
+---
+
+```cs title="Specification.cs"
+using System.Linq.Expressions;
+
+namespace LegacyLego.Domain.Shared;
+
+public abstract class Specification<TEntity, TId, TResult> : Specification<TEntity, TId>
+    where TEntity : Entity<TId>
+    where TId : ValueObject
+{
+    public Expression<Func<TEntity, TResult>> Selector { get; }
+
+    protected Specification(
+        Expression<Func<TEntity, TResult>> selector)
+    {
+        Selector = selector;
+    }
+}
+
+public abstract class Specification<TEntity, TId>
+    where TEntity : Entity<TId>
+    where TId : ValueObject
+{
+    public int? SkipNum { get; private set; }
+
+    public int? LimitNum { get; private set; }
+
+    public List<Expression<Func<TEntity, bool>>> FilterExpressions { get; } = new();
+
+    public List<Expression<Func<TEntity, object>>> IncludeExpressions { get; } = new();
+
+    public List<Expression<Func<TEntity, object>>> OrderByExpressions { get; } = new();
+
+    public List<Expression<Func<TEntity, object>>> OrderByDescendingExpressions { get; } = new();
+
+    protected Specification() { }
+
+    protected void AddFilter(Expression<Func<TEntity, bool>> filterExpression) =>
+        FilterExpressions.Add(filterExpression);
+
+    protected void AddInclude(Expression<Func<TEntity, object>> includeExpression) =>
+        IncludeExpressions.Add(includeExpression);
+
+    protected void AddOrderBy(Expression<Func<TEntity, object>> orderByExpression) =>
+        OrderByExpressions.Add(orderByExpression);
+
+    protected void AddOrderByDescending(Expression<Func<TEntity, object>> orderByDescendingExpression) =>
+        OrderByDescendingExpressions.Add(orderByDescendingExpression);
+
+    protected void SetSkipNum(int skipNum) =>
+        SkipNum = skipNum;
+
+    protected void SetLimitNum(int limitNum) =>
+        LimitNum = limitNum;
+
+    protected void DropSkip() =>
+        SkipNum = null;
+
+    protected void DropLimit() =>
+        LimitNum = null;
 }
 ```
 

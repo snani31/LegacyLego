@@ -13,8 +13,6 @@
   <ItemGroup>
     <Folder Include="Orders\Commands\Cancel\" />
     <Folder Include="Orders\Commands\Refund\" />
-    <Folder Include="Orders\Queries\GetByID\" />
-    <Folder Include="Orders\Queries\GetByClientID\" />
   </ItemGroup>
 
 </Project>
