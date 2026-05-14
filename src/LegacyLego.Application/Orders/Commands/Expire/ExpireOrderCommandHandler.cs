@@ -22,10 +22,10 @@ IUnitOfWork unitOfWork) : ICommandHandler<ExpireOrderCommand, ExpirationOrderDet
         if (order is null) return Result<ExpirationOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
 
         var result = order.Expire();
-        if (result.IsFailure && order.Status is OrderStatus.Expired) 
+        if (result.IsFailure && order.Status is OrderStatus.Expired)
             return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetAlreadyExpiredDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<ExpirationOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetExpiredSuccessfullyDetails(orderIdGuid));

@@ -24,7 +24,7 @@ IUnitOfWork unitOfWork) : ICommandHandler<CancelOrderCommand, CancelletionOrderD
         if (result.IsFailure && order.Status is OrderStatus.Cancelled)
             return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetAlreadyCancelledDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<CancelletionOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetCancelledSuccessfullyDetails(orderIdGuid));

@@ -1,6 +1,5 @@
 ﻿using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Orders.Common;
-using LegacyLego.Application.Orders.Queries.Common;
 using LegacyLego.Domain.Abstractions;
 using LegacyLego.Domain.Shared;
 

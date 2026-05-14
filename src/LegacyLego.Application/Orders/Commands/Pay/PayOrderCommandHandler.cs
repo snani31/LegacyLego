@@ -32,7 +32,7 @@ public sealed class PayOrderCommandHandler(
         if (result.IsFailure && order.Status is OrderStatus.Paid)
             return Result<PayOrderDetails>.Success(PayOrderDetails.GetAlreadyPaidDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<PayOrderDetails>.Success(PayOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<PayOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<PayOrderDetails>.Success(PayOrderDetails.GetPaidSuccessfullyDetails(orderIdGuid));

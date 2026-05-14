@@ -6,7 +6,6 @@ public sealed record ExpirationOrderDetails
 {
     public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
     public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Expiretion.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -45,15 +44,5 @@ public sealed record ExpirationOrderDetails
             Message: $"Order with id:{orderId} is successfully expired",
             CurrentStatus: OrderStatus.Expired.ToString(),
             true);
-    }
-
-    internal static ExpirationOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new ExpirationOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for expiration",
-            CurrentStatus: currentStatus.ToString(),
-            false);
     }
 }

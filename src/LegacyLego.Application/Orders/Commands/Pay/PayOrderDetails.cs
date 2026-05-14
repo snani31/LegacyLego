@@ -6,7 +6,6 @@ public sealed record PayOrderDetails
 {
     public const string AlreadyPaidDetailsCode = "Order.Payment.AlreadyPaid";
     public const string PaidSuccessfullyCode = "Order.Payment.PaidSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Payment.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -45,15 +44,5 @@ public sealed record PayOrderDetails
             Message: $"Order with id:{orderId} is successfully paid",
             CurrentStatus: OrderStatus.Cancelled.ToString(),
             true);
-    }
-
-    internal static PayOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new PayOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for payment",
-            CurrentStatus: currentStatus.ToString(),
-            false);
     }
 }

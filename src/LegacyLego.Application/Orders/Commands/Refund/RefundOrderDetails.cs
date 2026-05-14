@@ -6,7 +6,6 @@ public sealed record RefundOrderDetails
 {
     public const string AlreadyRefundedDetailsCode = "Order.Refund.AlreadyRefunded";
     public const string RefundedSuccessfullyCode = "Order.Refund.RefundedSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Refund.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -45,15 +44,5 @@ public sealed record RefundOrderDetails
             Message: $"Order with id:{orderId} is successfully refunded",
             CurrentStatus: OrderStatus.Cancelled.ToString(),
             true);
-    }
-
-    internal static RefundOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new RefundOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for refund",
-            CurrentStatus: currentStatus.ToString(),
-            false);
     }
 }

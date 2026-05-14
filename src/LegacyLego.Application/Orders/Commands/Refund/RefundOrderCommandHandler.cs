@@ -25,7 +25,7 @@ IUnitOfWork unitOfWork) : ICommandHandler<RefundOrderCommand, RefundOrderDetails
         if (result.IsFailure && order.Status is OrderStatus.Refunded)
             return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetAlreadyRefundedDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<RefundOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetRefundedSuccessfullyDetails(orderIdGuid));
