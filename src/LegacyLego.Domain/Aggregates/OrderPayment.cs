@@ -1,6 +1,7 @@
 ﻿using LegacyLego.Domain.DomainEvents;
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Exceptions;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
 
@@ -33,9 +34,15 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         CreatedAtUtc = createdAtUtc;
     }
 
-    public static Result<OrderPayment> Create(OrderId orderId)
+    public static Result<OrderPayment> Create(OrderId orderId, DateTime createdAt)
     {
-        var createdAt = DateTime.UtcNow;
+        ArgumentNullException.ThrowIfNull(orderId, nameof(orderId));
+        if (createdAt == default) throw new ArgumentException("Date must be provided.", nameof(createdAt));
+
+        if (createdAt.Kind is not DateTimeKind.Utc)
+            return Result<OrderPayment>.Failure(
+                OrderPaymentErrors.GetCreationTimeWasNotUtcError(createdAt.Kind));
+
         var status = PaymentStatus.Pending;
         var id = OrderPaymentId.New();
 
@@ -46,9 +53,28 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         return Result<OrderPayment>.Success(payment);
     }
 
-    public Result AttachSession(ExternalSession externalSession)
+    public Result AttachSession(ExternalSession newSession, DateTime nowUtc)
     {
-        ExternalSession = externalSession;
+        ArgumentNullException.ThrowIfNull(newSession, nameof(newSession));
+
+        if (nowUtc.Kind is not DateTimeKind.Utc)
+            return Result.Failure(
+                OrderPaymentErrors.GetNowTimeWasNotUtcForAttachSessionError(nowUtc.Kind));
+
+        if (HasSession && !ExternalSession!.IsExpired(nowUtc))
+            return Result.Failure(
+                OrderPaymentErrors.GetEnsuredSessionIsNotExpiredTransitionFailureError(
+                    ExternalSession.ExternalId,
+                    newSession.ExternalId,
+                    Id));
+
+        if (Status is not PaymentStatus.Pending)
+            return Result.Failure(
+                OrderPaymentErrors.GetWrongStatusForExternalSessionTransitionError(Id,
+                    Status,
+                    newSession.ExternalId));
+
+        ExternalSession = newSession;
 
         return Result.Success();
     }
@@ -56,9 +82,6 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
     public Result MarkAsSucceeded(string transactionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
-
-        if (Status == PaymentStatus.Succeeded && TransactionId == transactionId)
-            return Result.Success();
 
         if (TransactionId != null && TransactionId != transactionId)
             return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
@@ -92,14 +115,20 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         return Result.Success();
     }
 
-    public Result MarkAsRefundRequested()
+    public Result MarkAsRefundRequested(string transactionId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+
+        if (TransactionId != null && TransactionId != transactionId)
+            return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
+
         var paymentAction = PaymentAction.RefundRequest;
         var nextStatus = PaymentStatus.RefundRequested;
 
-        if (Status is not PaymentStatus.Succeeded)
+        if (Status is not PaymentStatus.Pending && Status is not PaymentStatus.Succeeded)
             return Result.Failure(OrderPaymentErrors.GetStatusTransitionFailureError(paymentAction, Status, nextStatus));
 
+        TransactionId ??= transactionId;
         Status = nextStatus;
 
         base.Raise(new OrderPaymentRefundRequested(Id, TransactionId!));
@@ -110,9 +139,6 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
     public Result MarkAsRefunded(string transactionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
-
-        if (Status == PaymentStatus.Refunded && TransactionId == transactionId)
-            return Result.Success();
 
         if (TransactionId != null && TransactionId != transactionId)
             return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));

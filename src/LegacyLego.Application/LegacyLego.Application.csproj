@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <Folder Include="Orders\Commands\Cancel\" />
-    <Folder Include="Orders\Commands\Refund\" />
   </ItemGroup>
 
 </Project>

@@ -7,10 +7,12 @@ namespace LegacyLego.Application.Payments.Services;
 public sealed class PaymentLookup
 {
     private readonly IPaymentRepository _paymentRepository;
+    private readonly TimeProvider _timeProvider;
 
-    public PaymentLookup(IPaymentRepository paymentRepository)
+    public PaymentLookup(IPaymentRepository paymentRepository, TimeProvider timeProvider)
     {
         _paymentRepository = paymentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<OrderPayment> GetOrCreateAsync(
@@ -30,7 +32,8 @@ public sealed class PaymentLookup
         if (payment is not null)
             return payment;
 
-        var createResult = OrderPayment.Create(orderId);
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        var createResult = OrderPayment.Create(orderId, now);
 
         if (createResult.IsFailure)
             throw new InvalidOperationException(

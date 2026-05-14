@@ -96,7 +96,7 @@ public sealed class ProcessPaymentWebhookCommandHandler(
         var amountCheck = ValidateAmount(webhook.Currency, webhook.Amount, order);
         if (amountCheck.IsFailure)
         {
-            var refundRequestResult = payment.MarkAsRefundRequested();
+            var refundRequestResult = payment.MarkAsRefundRequested(webhook.TransactionId);
             if (refundRequestResult.IsFailure) return Result<ProcessPaymentDetails>.Failure(refundRequestResult.Error);
 
             return Result<ProcessPaymentDetails>.Failure(amountCheck.Error);

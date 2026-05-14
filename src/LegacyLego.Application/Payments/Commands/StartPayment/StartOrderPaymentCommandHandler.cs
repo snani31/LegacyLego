@@ -17,6 +17,7 @@ public sealed class StartOrderPaymentCommandHandler(
     IOrderRepository orderRepository,
     IPaymentRepository paymentRepository,
     IPaymentProvider paymentProvider,
+    TimeProvider timeProvider,
     IUnitOfWork unitOfWork) : ICommandHandler<StartOrderPaymentCommand, StartOrderPaymentDetails>
 {
     private enum ConstraintCheckTimeline : byte
@@ -48,11 +49,14 @@ public sealed class StartOrderPaymentCommandHandler(
                 order,
                 paymentProvider,
                 unitOfWork,
+                timeProvider,
                 ConstraintCheckTimeline.BeforeConstraintCheck,
                 ct);
         }
 
-        var paymentResult = OrderPayment.Create(orderId);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var paymentResult = OrderPayment.Create(orderId, now);
+
         if(paymentResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(paymentResult.Error);
 
@@ -76,6 +80,7 @@ public sealed class StartOrderPaymentCommandHandler(
                 order,
                 paymentProvider,
                 unitOfWork,
+                timeProvider,
                 ConstraintCheckTimeline.AfterConstraintCheck,
                 ct);
         }
@@ -98,7 +103,7 @@ public sealed class StartOrderPaymentCommandHandler(
         if (extrernalSessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
 
-        payment.AttachSession(extrernalSessionResult.Value);
+        payment.AttachSession(extrernalSessionResult.Value, timeProvider.GetUtcNow().UtcDateTime);
 
         await unitOfWork.SaveChangesAsync(ct);
 
@@ -111,6 +116,7 @@ public sealed class StartOrderPaymentCommandHandler(
         Order order,
         IPaymentProvider paymentProvider,
         IUnitOfWork unitOfWork,
+        TimeProvider timeProvider,
         ConstraintCheckTimeline timeline,
         CancellationToken ct = default)
     {
@@ -157,7 +163,7 @@ public sealed class StartOrderPaymentCommandHandler(
             return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
 
 
-        payment.AttachSession(extrernalSessionResult.Value);
+        payment.AttachSession(extrernalSessionResult.Value, timeProvider.GetUtcNow().UtcDateTime);
 
         await unitOfWork.SaveChangesAsync(ct);
 
