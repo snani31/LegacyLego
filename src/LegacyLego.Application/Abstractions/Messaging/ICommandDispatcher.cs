@@ -5,9 +5,7 @@ namespace LegacyLego.Application.Abstractions.Messaging;
 
 public interface ICommandDispatcher
 {
-    public Task<Result<TResult>> DispatchAsync<TCommand, TResult>(TCommand command, CancellationToken ct = default)
-        where TCommand : ICommand<TResult>;
+    public Task<Result<TResult>> DispatchAsync<TResult>(ICommand<TResult> command, CancellationToken ct = default);
 
-    public Task<Result> DispatchAsync<TCommand>(TCommand command, CancellationToken ct = default)
-        where TCommand : ICommand;
+    public Task<Result> DispatchAsync(ICommand command, CancellationToken ct = default);
 }
