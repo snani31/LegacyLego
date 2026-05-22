@@ -1,22 +1,27 @@
 # Введение
+
 ## Назначение
 
 **LegacyLego** - Пет-проект, разрабатываемый для практики веб-разработки middle уровня с использованием DDD + Clean Architecture подхода.
 В данном документе будут описаны листинги кода проекта на его актуальной версии.
 
 ---
+
 ## Версия
 
-Актуальная версия проекта: 1.6.2
+Актуальная версия проекта: 1.7.0
+
 ## Проекты
 
 Все существующие на данный момент проекты в решении `LegacyLego.slnx`:
 
 1) **LegacyLego.Domain** - Содержит доменную логику проекта, является ядром всей системы и существует, чтобы описывать бизнес-логику на уровне кода;
-2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**.
-3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры.
+2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**;
+3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры;
+4) **LegacyLego.Infrastructure** - Предназначается в первую очередь для описания персистентной модели, реализации базовых контрактов доменных и уровня приложения. Сопряжения с внешними сервисами (внешней инфраструктурой). 
 
 ---
+
 
 
 ## Древовидная структура решения
@@ -29,6 +34,8 @@
 │   └── docker-compose.yaml
 ├── docs
 │   ├── architecture
+│   │   ├── 'Order ER-scheme.docx'
+│   │   ├── 'OrderPayment ER-scheme.docx'
 │   │   └── 'state transition matrix.docx'
 │   ├── automation
 │   │   ├── generated
@@ -40,16 +47,26 @@
 │   │   └── 0001-automation-of-code-listings.md
 │   └── diagrams
 │       ├── out
+│       │   ├── ER
+│       │   │   ├── 'ER Diagram.jpg'
+│       │   │   ├── OrderAggregateErScheme.jpg
+│       │   │   └── OrderPaymentAggregateErScheme.jpg
 │       │   ├── ActivityDiagramOrderLifeCycle_v2.jpg
 │       │   ├── OrderClassDiagram.jpg
 │       │   ├── OrderClassDiagram_v1.jpg
 │       │   ├── SolutionStructureTreeDiagram.jpg
 │       │   └── StoreOrderingSystemDiagram_v2.jpg
 │       └── src
+│           ├── ER
+│           │   ├── 'ER Diagram.drawio'
+│           │   ├── 'Order Aggregate ER-Scheme.drawio'
+│           │   └── 'OrderPayment Aggregate ER-Scheme.drawio'
 │           ├── ActivityDiagramOrderLifeCycle.drawio
 │           ├── OrderClassDiagram.drawio
 │           ├── SolutionStructureTreeDiagram.drawio
 │           └── StoreOrderingSystemDiagram.drawio
+├── LegacyLego.Infrastructure
+│   └── LegacyLego.Infrastructure.csproj
 ├── src
 │   ├── LegacyLego.Application
 │   │   ├── Abstractions
@@ -102,9 +119,9 @@
 │   │   │   │   │   ├── PayOrderCommandHandler.cs
 │   │   │   │   │   └── PayOrderDetails.cs
 │   │   │   │   └── Refund
-│   │   │   │       ├── CancelletionOrderDetails.cs
-│   │   │   │       ├── CancelOrderCommand.cs
-│   │   │   │       └── CancelOrderCommandHandler.cs
+│   │   │   │       ├── RefundOrderCommand.cs
+│   │   │   │       ├── RefundOrderCommandHandler.cs
+│   │   │   │       └── RefundOrderDetails.cs
 │   │   │   ├── Common
 │   │   │   │   ├── Mappers
 │   │   │   │   ├── Projections
@@ -178,12 +195,14 @@
 │       │   └── PaymentStatus.cs
 │       ├── Errors
 │       │   ├── CurrencyErrors.cs
+│       │   ├── ExternalSessionErrors.cs
 │       │   ├── OrderErrors.cs
 │       │   ├── OrderItemErrors.cs
 │       │   ├── OrderPaymentErrors.cs
 │       │   └── PriceErrors.cs
 │       ├── ExceptionalErrors
 │       │   ├── CurrencyExceptionalErrors.cs
+│       │   ├── ExternalSessionExceptionalErrors.cs
 │       │   ├── OrderExceptionalErrors.cs
 │       │   ├── PriceExceptionalErrors.cs
 │       │   └── ResultExceptionalErrors.cs
@@ -216,12 +235,20 @@
 │       │   ├── Builders
 │       │   │   └── OrderBuilder.cs
 │       │   └── Factories
-│       │       └── OrderDataFactory.cs
+│       │       ├── OrderDataFactory.cs
+│       │       └── OrderPaymentDataFactory.cs
 │       ├── CurrencyTests
 │       │   ├── Equality
 │       │   │   └── CurrencyEqualityTests.cs
 │       │   └── FromCode
 │       │       └── CurrencyFromCodeTests.cs
+│       ├── ExternalSessionTests
+│       │   ├── Create
+│       │   │   └── ExternalSessionCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── ExternalSessionEqualityTests.cs
+│       │   └── IsExpired
+│       │       └── ExternalSessionCreateTests.cs
 │       ├── OrderItemTests
 │       │   ├── Create
 │       │   │   └── OrderItemCreateTests.cs
@@ -229,6 +256,20 @@
 │       │   │   └── OrderItemEqualityTests.cs
 │       │   └── GetTotalPriceTests
 │       │       └── OrderItemGetTotalPriceTests.cs
+│       ├── OrderPaymentTests
+│       │   ├── AttachSession
+│       │   │   └── OrderPaymentAttachSessionTests.cs
+│       │   ├── Create
+│       │   │   └── OrderPaymentCreateTests.cs
+│       │   └── StateTransitions
+│       │       ├── MarkAsFailed
+│       │       │   └── OrderPaymentMarkAsFailedTests.cs
+│       │       ├── MarkAsRefunded
+│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
+│       │       ├── MarkAsRefundRequested
+│       │       │   └── OrderPaymentMarkAsRefundRequestedTests.cs
+│       │       └── MarkAsSucceeded
+│       │           └── OrderPaymentMarkAsSucceededTests.cs
 │       ├── OrderTests
 │       │   ├── Create
 │       │   │   └── OrderCreateTests.cs
@@ -281,7 +322,6 @@
 
   <ItemGroup>
     <Folder Include="Orders\Commands\Cancel\" />
-    <Folder Include="Orders\Commands\Refund\" />
   </ItemGroup>
 
 </Project>
@@ -351,11 +391,9 @@ namespace LegacyLego.Application.Abstractions.Messaging;
 
 public interface ICommandDispatcher
 {
-    public Task<Result<TResult>> DispatchAsync<TCommand, TResult>(TCommand command, CancellationToken ct = default)
-        where TCommand : ICommand<TResult>;
+    public Task<Result<TResult>> DispatchAsync<TResult>(ICommand<TResult> command, CancellationToken ct = default);
 
-    public Task<Result> DispatchAsync<TCommand>(TCommand command, CancellationToken ct = default)
-        where TCommand : ICommand;
+    public Task<Result> DispatchAsync(ICommand command, CancellationToken ct = default);
 }
 ```
 
@@ -591,7 +629,6 @@ public sealed record CancelletionOrderDetails
 {
     public const string AlreadyCancelledDetailsCode = "Order.Cancelletion.AlreadyCancelled";
     public const string CancelledSuccessfullyCode = "Order.Cancelletion.CancelledSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Cancelletion.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -630,16 +667,6 @@ public sealed record CancelletionOrderDetails
             Message: $"Order with id:{orderId} is successfully cancelled",
             CurrentStatus: OrderStatus.Cancelled.ToString(),
             true);
-    }
-
-    internal static CancelletionOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new CancelletionOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for cancelletion",
-            CurrentStatus: currentStatus.ToString(),
-            false);
     }
 }
 ```
@@ -683,7 +710,7 @@ IUnitOfWork unitOfWork) : ICommandHandler<CancelOrderCommand, CancelletionOrderD
         if (result.IsFailure && order.Status is OrderStatus.Cancelled)
             return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetAlreadyCancelledDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<CancelletionOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<CancelletionOrderDetails>.Success(CancelletionOrderDetails.GetCancelledSuccessfullyDetails(orderIdGuid));
@@ -807,7 +834,6 @@ public sealed record ExpirationOrderDetails
 {
     public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
     public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Expiretion.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -846,16 +872,6 @@ public sealed record ExpirationOrderDetails
             Message: $"Order with id:{orderId} is successfully expired",
             CurrentStatus: OrderStatus.Expired.ToString(),
             true);
-    }
-
-    internal static ExpirationOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new ExpirationOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for expiration",
-            CurrentStatus: currentStatus.ToString(),
-            false);
     }
 }
 ```
@@ -897,10 +913,10 @@ IUnitOfWork unitOfWork) : ICommandHandler<ExpireOrderCommand, ExpirationOrderDet
         if (order is null) return Result<ExpirationOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
 
         var result = order.Expire();
-        if (result.IsFailure && order.Status is OrderStatus.Expired) 
+        if (result.IsFailure && order.Status is OrderStatus.Expired)
             return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetAlreadyExpiredDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<ExpirationOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<ExpirationOrderDetails>.Success(ExpirationOrderDetails.GetExpiredSuccessfullyDetails(orderIdGuid));
@@ -959,7 +975,7 @@ public sealed class PayOrderCommandHandler(
         if (result.IsFailure && order.Status is OrderStatus.Paid)
             return Result<PayOrderDetails>.Success(PayOrderDetails.GetAlreadyPaidDetails(orderIdGuid));
         else if (result.IsFailure)
-            return Result<PayOrderDetails>.Success(PayOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
+            return Result<PayOrderDetails>.Failure(result.Error);
 
         await unitOfWork.SaveChangesAsync(ct);
         return Result<PayOrderDetails>.Success(PayOrderDetails.GetPaidSuccessfullyDetails(orderIdGuid));
@@ -979,7 +995,6 @@ public sealed record PayOrderDetails
 {
     public const string AlreadyPaidDetailsCode = "Order.Payment.AlreadyPaid";
     public const string PaidSuccessfullyCode = "Order.Payment.PaidSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Payment.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -1019,16 +1034,6 @@ public sealed record PayOrderDetails
             CurrentStatus: OrderStatus.Cancelled.ToString(),
             true);
     }
-
-    internal static PayOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new PayOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for payment",
-            CurrentStatus: currentStatus.ToString(),
-            false);
-    }
 }
 ```
 
@@ -1036,7 +1041,55 @@ public sealed record PayOrderDetails
 
 ##### Refund
 
-```cs title="CancelletionOrderDetails.cs"
+```cs title="RefundOrderCommand.cs"
+using LegacyLego.Application.Abstractions.Messaging.Command;
+
+namespace LegacyLego.Application.Orders.Commands.Refund;
+
+public sealed record RefundOrderCommand(Guid OrderId) : ICommand<RefundOrderDetails>;
+```
+
+---
+
+```cs title="RefundOrderCommandHandler.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Orders.Commands.Refund;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Commands.Cancel;
+
+public sealed class RefundOrderCommandHandler(
+IOrderRepository orderRepository,
+IUnitOfWork unitOfWork) : ICommandHandler<RefundOrderCommand, RefundOrderDetails>
+{
+    public async Task<Result<RefundOrderDetails>> HandleAsync(RefundOrderCommand command, CancellationToken ct)
+    {
+        var orderIdGuid = command.OrderId;
+        var orderId = OrderId.From(orderIdGuid);
+
+        var order = await orderRepository.GetByIdAsync(orderId, ct);
+        if (order is null) return Result<RefundOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        var result = order.Refund();
+        if (result.IsFailure && order.Status is OrderStatus.Refunded)
+            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetAlreadyRefundedDetails(orderIdGuid));
+        else if (result.IsFailure)
+            return Result<RefundOrderDetails>.Failure(result.Error);
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetRefundedSuccessfullyDetails(orderIdGuid));
+    }
+}
+```
+
+---
+
+```cs title="RefundOrderDetails.cs"
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Refund;
@@ -1045,7 +1098,6 @@ public sealed record RefundOrderDetails
 {
     public const string AlreadyRefundedDetailsCode = "Order.Refund.AlreadyRefunded";
     public const string RefundedSuccessfullyCode = "Order.Refund.RefundedSuccessfully";
-    public const string WrongStatusTransitionCode = "Order.Refund.WrongStatusTransition";
 
     public readonly string Code;
     public readonly Guid OrderId;
@@ -1084,64 +1136,6 @@ public sealed record RefundOrderDetails
             Message: $"Order with id:{orderId} is successfully refunded",
             CurrentStatus: OrderStatus.Cancelled.ToString(),
             true);
-    }
-
-    internal static RefundOrderDetails GetWrongStatusTransitionDetails(Guid orderId, OrderStatus currentStatus)
-    {
-        return new RefundOrderDetails(
-            Code: WrongStatusTransitionCode,
-            OrderId: orderId,
-            Message: $"Order with id:{orderId} Has a status:{currentStatus.ToString()} of not suitable for refund",
-            CurrentStatus: currentStatus.ToString(),
-            false);
-    }
-}
-```
-
----
-
-```cs title="CancelOrderCommand.cs"
-using LegacyLego.Application.Abstractions.Messaging.Command;
-
-namespace LegacyLego.Application.Orders.Commands.Refund;
-
-public sealed record RefundOrderCommand(Guid OrderId) : ICommand<RefundOrderDetails>;
-```
-
----
-
-```cs title="CancelOrderCommandHandler.cs"
-using LegacyLego.Application.Abstractions.Data;
-using LegacyLego.Application.Abstractions.Messaging.Command;
-using LegacyLego.Application.Orders.Commands.Refund;
-using LegacyLego.Domain.Abstractions;
-using LegacyLego.Domain.Enums;
-using LegacyLego.Domain.Errors;
-using LegacyLego.Domain.Shared;
-using LegacyLego.Domain.ValueObjects;
-
-namespace LegacyLego.Application.Orders.Commands.Cancel;
-
-public sealed class RefundOrderCommandHandler(
-IOrderRepository orderRepository,
-IUnitOfWork unitOfWork) : ICommandHandler<RefundOrderCommand, RefundOrderDetails>
-{
-    public async Task<Result<RefundOrderDetails>> HandleAsync(RefundOrderCommand command, CancellationToken ct)
-    {
-        var orderIdGuid = command.OrderId;
-        var orderId = OrderId.From(orderIdGuid);
-
-        var order = await orderRepository.GetByIdAsync(orderId, ct);
-        if (order is null) return Result<RefundOrderDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
-
-        var result = order.Refund();
-        if (result.IsFailure && order.Status is OrderStatus.Refunded)
-            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetAlreadyRefundedDetails(orderIdGuid));
-        else if (result.IsFailure)
-            return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetWrongStatusTransitionDetails(orderIdGuid, order.Status));
-
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result<RefundOrderDetails>.Success(RefundOrderDetails.GetRefundedSuccessfullyDetails(orderIdGuid));
     }
 }
 ```
@@ -1277,7 +1271,6 @@ public sealed record GetActiveOrdersQuery(Guid UserId) : IQuery<IReadOnlyList<Or
 ```cs title="GetActiveOrdersQueryHandler.cs"
 using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Orders.Common;
-using LegacyLego.Application.Orders.Queries.Common;
 using LegacyLego.Domain.Abstractions;
 using LegacyLego.Domain.Shared;
 
@@ -1785,7 +1778,7 @@ public sealed class ProcessPaymentWebhookCommandHandler(
         var amountCheck = ValidateAmount(webhook.Currency, webhook.Amount, order);
         if (amountCheck.IsFailure)
         {
-            var refundRequestResult = payment.MarkAsRefundRequested();
+            var refundRequestResult = payment.MarkAsRefundRequested(webhook.TransactionId);
             if (refundRequestResult.IsFailure) return Result<ProcessPaymentDetails>.Failure(refundRequestResult.Error);
 
             return Result<ProcessPaymentDetails>.Failure(amountCheck.Error);
@@ -1879,6 +1872,7 @@ public sealed class StartOrderPaymentCommandHandler(
     IOrderRepository orderRepository,
     IPaymentRepository paymentRepository,
     IPaymentProvider paymentProvider,
+    TimeProvider timeProvider,
     IUnitOfWork unitOfWork) : ICommandHandler<StartOrderPaymentCommand, StartOrderPaymentDetails>
 {
     private enum ConstraintCheckTimeline : byte
@@ -1910,11 +1904,14 @@ public sealed class StartOrderPaymentCommandHandler(
                 order,
                 paymentProvider,
                 unitOfWork,
+                timeProvider,
                 ConstraintCheckTimeline.BeforeConstraintCheck,
                 ct);
         }
 
-        var paymentResult = OrderPayment.Create(orderId);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var paymentResult = OrderPayment.Create(orderId, now);
+
         if(paymentResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(paymentResult.Error);
 
@@ -1938,6 +1935,7 @@ public sealed class StartOrderPaymentCommandHandler(
                 order,
                 paymentProvider,
                 unitOfWork,
+                timeProvider,
                 ConstraintCheckTimeline.AfterConstraintCheck,
                 ct);
         }
@@ -1960,7 +1958,7 @@ public sealed class StartOrderPaymentCommandHandler(
         if (extrernalSessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
 
-        payment.AttachSession(extrernalSessionResult.Value);
+        payment.AttachSession(extrernalSessionResult.Value, timeProvider.GetUtcNow().UtcDateTime);
 
         await unitOfWork.SaveChangesAsync(ct);
 
@@ -1973,12 +1971,13 @@ public sealed class StartOrderPaymentCommandHandler(
         Order order,
         IPaymentProvider paymentProvider,
         IUnitOfWork unitOfWork,
+        TimeProvider timeProvider,
         ConstraintCheckTimeline timeline,
         CancellationToken ct = default)
     {
         PaymentSession session;
 
-        if (payment.HasSession && !payment.ExternalSession!.IsExpired(DateTime.UtcNow))
+        if (payment.HasSession && !payment.ExternalSession!.IsExpired(timeProvider.GetUtcNow().UtcDateTime))
         {
             session = new PaymentSession(
                 payment.Id.Value,
@@ -2019,7 +2018,7 @@ public sealed class StartOrderPaymentCommandHandler(
             return Result<StartOrderPaymentDetails>.Failure(extrernalSessionResult.Error);
 
 
-        payment.AttachSession(extrernalSessionResult.Value);
+        payment.AttachSession(extrernalSessionResult.Value, timeProvider.GetUtcNow().UtcDateTime);
 
         await unitOfWork.SaveChangesAsync(ct);
 
@@ -2188,17 +2187,13 @@ public static class PaymentIntegrationEventMapper
 ---
 
 ```cs title="PaymentSession.cs"
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace LegacyLego.Application.Payments.Common;
 
 public sealed record PaymentSession(
     Guid PaymentId,
     string ExternalSessionId,
     string CheckoutUrl,
-    DateTime? ExpiresAtUtc = null);
+    DateTime ExpiresAtUtc);
 ```
 
 ---
@@ -2245,10 +2240,12 @@ namespace LegacyLego.Application.Payments.Services;
 public sealed class PaymentLookup
 {
     private readonly IPaymentRepository _paymentRepository;
+    private readonly TimeProvider _timeProvider;
 
-    public PaymentLookup(IPaymentRepository paymentRepository)
+    public PaymentLookup(IPaymentRepository paymentRepository, TimeProvider timeProvider)
     {
         _paymentRepository = paymentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<OrderPayment> GetOrCreateAsync(
@@ -2268,7 +2265,8 @@ public sealed class PaymentLookup
         if (payment is not null)
             return payment;
 
-        var createResult = OrderPayment.Create(orderId);
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        var createResult = OrderPayment.Create(orderId, now);
 
         if (createResult.IsFailure)
             throw new InvalidOperationException(
@@ -2549,6 +2547,7 @@ public class Order : AggregateRoot<OrderId>
 using LegacyLego.Domain.DomainEvents;
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Exceptions;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
 
@@ -2581,9 +2580,15 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         CreatedAtUtc = createdAtUtc;
     }
 
-    public static Result<OrderPayment> Create(OrderId orderId)
+    public static Result<OrderPayment> Create(OrderId orderId, DateTime createdAt)
     {
-        var createdAt = DateTime.UtcNow;
+        ArgumentNullException.ThrowIfNull(orderId, nameof(orderId));
+        if (createdAt == default) throw new ArgumentException("Date must be provided.", nameof(createdAt));
+
+        if (createdAt.Kind is not DateTimeKind.Utc)
+            return Result<OrderPayment>.Failure(
+                OrderPaymentErrors.GetCreationTimeWasNotUtcError(createdAt.Kind));
+
         var status = PaymentStatus.Pending;
         var id = OrderPaymentId.New();
 
@@ -2594,9 +2599,28 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         return Result<OrderPayment>.Success(payment);
     }
 
-    public Result AttachSession(ExternalSession externalSession)
+    public Result AttachSession(ExternalSession newSession, DateTime nowUtc)
     {
-        ExternalSession = externalSession;
+        ArgumentNullException.ThrowIfNull(newSession, nameof(newSession));
+
+        if (nowUtc.Kind is not DateTimeKind.Utc)
+            return Result.Failure(
+                OrderPaymentErrors.GetNowTimeWasNotUtcForAttachSessionError(nowUtc.Kind));
+
+        if (HasSession && !ExternalSession!.IsExpired(nowUtc))
+            return Result.Failure(
+                OrderPaymentErrors.GetEnsuredSessionIsNotExpiredTransitionFailureError(
+                    ExternalSession.ExternalId,
+                    newSession.ExternalId,
+                    Id));
+
+        if (Status is not PaymentStatus.Pending)
+            return Result.Failure(
+                OrderPaymentErrors.GetWrongStatusForExternalSessionTransitionError(Id,
+                    Status,
+                    newSession.ExternalId));
+
+        ExternalSession = newSession;
 
         return Result.Success();
     }
@@ -2604,9 +2628,6 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
     public Result MarkAsSucceeded(string transactionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
-
-        if (Status == PaymentStatus.Succeeded && TransactionId == transactionId)
-            return Result.Success();
 
         if (TransactionId != null && TransactionId != transactionId)
             return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
@@ -2640,14 +2661,20 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         return Result.Success();
     }
 
-    public Result MarkAsRefundRequested()
+    public Result MarkAsRefundRequested(string transactionId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+
+        if (TransactionId != null && TransactionId != transactionId)
+            return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
+
         var paymentAction = PaymentAction.RefundRequest;
         var nextStatus = PaymentStatus.RefundRequested;
 
-        if (Status is not PaymentStatus.Succeeded)
+        if (Status is not PaymentStatus.Pending && Status is not PaymentStatus.Succeeded)
             return Result.Failure(OrderPaymentErrors.GetStatusTransitionFailureError(paymentAction, Status, nextStatus));
 
+        TransactionId ??= transactionId;
         Status = nextStatus;
 
         base.Raise(new OrderPaymentRefundRequested(Id, TransactionId!));
@@ -2658,9 +2685,6 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
     public Result MarkAsRefunded(string transactionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
-
-        if (Status == PaymentStatus.Refunded && TransactionId == transactionId)
-            return Result.Success();
 
         if (TransactionId != null && TransactionId != transactionId)
             return Result.Failure(OrderPaymentErrors.GetWrongTransactionIdExchangeError(TransactionId, transactionId));
@@ -2935,6 +2959,26 @@ public static class CurrencyErrors
 
 ---
 
+```cs title="ExternalSessionErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class ExternalSessionErrors
+{
+    public const string ExpirationTimeWasNotUtcCode= "ExternalSession.ExpirationTimeWasNotUtc";
+
+    public static Error GetExpirationTimeWasNotUtceError(DateTimeKind timeKind)
+    {
+        return new(
+            Code: ExpirationTimeWasNotUtcCode,
+            Message: $"Тип передаваемого времени должен быть представлен Utc, но был {timeKind}");
+    }
+}
+```
+
+---
+
 ```cs title="OrderErrors.cs"
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Shared;
@@ -3045,6 +3089,7 @@ public static class OrderItemErrors
 ```cs title="OrderPaymentErrors.cs"
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
 
 namespace LegacyLego.Domain.Errors;
 
@@ -3052,6 +3097,11 @@ public static class OrderPaymentErrors
 {
     public const string StatusTransitionFailureCode = "OrderPayment.StatusTransitionFailure";
     public const string WrongTransactionIdExchangeCode = "OrderPayment.WrongTransactionIdExchange";
+    public const string CreationTimeWasNotUtcCode = "OrderPayment.CreationTimeWasNotUtc";
+
+    public const string NowTimeWasNotUtcForAttachSessionCode = "OrderPayment.NowTimeWasNotUtcForAttachSession";
+    public const string WrongStatusForExternalSessionTransitionCode = "OrderPayment.WrongStatusForExternalSessionTransition";
+    public const string EnsuredSessionIsNotExpiredTransitionFailureCode = "OrderPayment.EnsuredSessionIsNotExpiredTransitionFailure";
 
     public static Error GetStatusTransitionFailureError(
         PaymentAction action,
@@ -3068,6 +3118,43 @@ public static class OrderPaymentErrors
         return new(
             Code: WrongTransactionIdExchangeCode,
             Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId} в MarkAsSucceeded операции");
+    }
+
+
+    public static Error GetCreationTimeWasNotUtcError(DateTimeKind timeKind)
+    {
+        return new(
+            Code: CreationTimeWasNotUtcCode,
+            Message: $"Тип передаваемого времени создания OrderPayment должен быть представлен Utc, но был {timeKind}");
+    }
+
+    public static Error GetNowTimeWasNotUtcForAttachSessionError(DateTimeKind timeKind)
+    {
+        return new(
+            Code: NowTimeWasNotUtcForAttachSessionCode,
+            Message: $"Тип передаваемого времени в AttachSession должен быть представлен Utc, но был {timeKind}");
+    }
+
+    public static Error GetWrongStatusForExternalSessionTransitionError(
+        OrderPaymentId paymentId,
+        PaymentStatus status,
+        string newSession)
+    {
+        return new(
+            Code: WrongStatusForExternalSessionTransitionCode,
+            Message: $"Для оплаты {paymentId.Value} невозможно установить сессию {newSession}," +
+            $" так какдля статуса {status} не подразумевается возможности установки сессии");
+    }
+
+    public static Error GetEnsuredSessionIsNotExpiredTransitionFailureError(
+        string oldSessionId,
+        string newSessionId,
+        OrderPaymentId paymentId)
+    {
+        return new(
+            Code: EnsuredSessionIsNotExpiredTransitionFailureCode,
+            Message: $"Не получилось установить внешнюю сессию: {newSessionId} для оплаты {paymentId.Value}" +
+            $", так как для  данной оплаты уже установлена сессия: {oldSessionId}, которая ещё не просрочена");
     }
 
 }
@@ -3113,6 +3200,26 @@ public static class CurrencyExceptionalErrors
         return new(
             Code: InvalidScaleValue,
             Message: $"Scale валюты не должен опускаться ниже нуля, значение: {actualScale} нарушает целостность системы");
+    }
+}
+```
+
+---
+
+```cs title="ExternalSessionExceptionalErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class ExternalSessionExceptionalErrors
+{
+    public const string IsExpiredCompressionParameterIsNotUtcCode = "ExternalSession.IsExpiredCompressionParameterIsNotUtcCode ";
+
+    public static ExceptionalError GetIsExpiredCompressionParameterIsNotUtcError(DateTimeKind timeKind)
+    {
+        return new(
+            Code: IsExpiredCompressionParameterIsNotUtcCode,
+            Message: $"Тип передаваемого времени передаваемого параметра в метод IsExpired должен быть представлен Utc, но был {timeKind}");
     }
 }
 ```
@@ -3692,8 +3799,8 @@ public class Currency : ValueObject
 
 ```cs title="ExternalSession.cs"
 using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Exceptions;
 using LegacyLego.Domain.Shared;
-using static System.Net.WebRequestMethods;
 
 namespace LegacyLego.Domain.ValueObjects;
 
@@ -3701,35 +3808,42 @@ public sealed class ExternalSession : ValueObject
 {
     public string ExternalId { get; }
     public string CheckoutUrl { get; }
-    public DateTime? ExpiresAtUtc { get; }
+    public DateTime ExpiresAtUtc { get; }
 
-    private ExternalSession(string externalId, string checkoutUrl, DateTime? expiresAtUtc)
+    private ExternalSession(string externalId, string checkoutUrl, DateTime expiresAtUtc)
     {
         ExternalId = externalId;
         CheckoutUrl = checkoutUrl;
         ExpiresAtUtc = expiresAtUtc;
     }
 
-    public static Result<ExternalSession> Create(string externalId, string checkoutUrl, DateTime? expiresAtUtc)
+    public static Result<ExternalSession> Create(string externalId, string checkoutUrl, DateTime expiresAtUtc)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(externalId, nameof(externalId));
         ArgumentException.ThrowIfNullOrWhiteSpace(checkoutUrl, nameof(checkoutUrl));
+
+        if (expiresAtUtc.Kind is not DateTimeKind.Utc)
+            return Result<ExternalSession>.Failure(
+                ExternalSessionErrors.GetExpirationTimeWasNotUtceError(expiresAtUtc.Kind));
 
         return Result<ExternalSession>.Success(new ExternalSession(externalId, checkoutUrl, expiresAtUtc));
     }
 
     public bool IsExpired(DateTime nowUtc)
     {
-        if (ExpiresAtUtc is null) return false;
+        if (nowUtc.Kind is not DateTimeKind.Utc)
+        {
+            throw new InvariantViolationException(ExternalSessionExceptionalErrors.GetIsExpiredCompressionParameterIsNotUtcError(nowUtc.Kind));
+        }
 
-        return ExpiresAtUtc.Value <= nowUtc;
+        return ExpiresAtUtc <= nowUtc;
     }
 
     public override IEnumerable<object> GetAtomicValues()
     {
         yield return ExternalId;
         yield return CheckoutUrl;
-        if (ExpiresAtUtc.HasValue) yield return ExpiresAtUtc.Value;
+        yield return ExpiresAtUtc;
     }
 }
 ```
@@ -4038,6 +4152,7 @@ public class Price : ValueObject
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.5.0" />
     <PackageReference Include="TUnit" Version="1.22.3" />
   </ItemGroup>
 
@@ -4051,10 +4166,6 @@ public class Price : ValueObject
 ---
 
 ```cs title="GlobalUsings.cs"
-global using TUnit.Core;
-global using TUnit.Assertions;
-global using TUnit.Assertions.Extensions;
-
 global using LegacyLego.Domain.Aggregates;
 global using LegacyLego.Domain.DomainEvents;
 global using LegacyLego.Domain.Enums;
@@ -4066,6 +4177,7 @@ global using LegacyLego.Domain.ValueObjects;
 global using LegacyLego.Domain.Tests.Common.Builders;
 
 global using static LegacyLego.Domain.Tests.Common.Factories.OrderDataFactory;
+global using static LegacyLego.Domain.Tests.Common.Factories.OrderPaymentDataFactory;
 ```
 
 ---
@@ -4166,6 +4278,20 @@ internal static class OrderDataFactory
             OrderItem.Create("Item1", 1, Guid.NewGuid(), Price.Create(100m, Currency.Usd).Value).Value
         };
         return Order.Create(address, Guid.NewGuid(), items).Value;
+    }
+}
+```
+
+---
+
+```cs title="OrderPaymentDataFactory.cs"
+namespace LegacyLego.Domain.Tests.Common.Factories;
+
+internal static class OrderPaymentDataFactory
+{
+    public static OrderPayment CreateDefaultOrderPayment()
+    {
+        return OrderPayment.Create(OrderId.New(), DateTime.UtcNow).Value;
     }
 }
 ```
@@ -4345,6 +4471,397 @@ public class CurrencyFromCodeTests
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(result.Value.Symbol).IsEqualTo(symbol);
         await Assert.That(result.Value.Scale).IsEqualTo(scale);
+    }
+}
+```
+
+---
+
+### ExternalSessionTests
+
+#### Create
+
+```cs title="ExternalSessionCreateTests.cs"
+namespace LegacyLego.Domain.Tests.ExternalSessionTests;
+
+public class ExternalSessionCreateTests
+{
+    [Test]
+    public async Task Create_WithValidValues_ShouldPreserve()
+    {
+        var id = "id";
+        var url = "url";
+        var time = DateTime.UtcNow.AddMinutes(60);
+
+        var r = ExternalSession.Create(id, url, time);
+
+        await Assert.That(r.IsSuccess).IsTrue();
+        await Assert.That(r.Value)
+            .Member(x => x.ExternalId, m => m.IsEqualTo(id))
+            .And.Member(x => x.CheckoutUrl, m => m.IsEqualTo(url))
+            .And.Member(x => x.ExpiresAtUtc, m => m.IsEqualTo(time));
+    }
+
+    [Test]
+    public async Task Create_WithNullId_ShouldThrowArgumentNullException()
+    {
+        var action = () => ExternalSession.Create(null!, "url", DateTime.UtcNow);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Create_WithNullUrl_ShouldThrowArgumentNullException()
+    {
+        var action = () => ExternalSession.Create("id", null!, DateTime.UtcNow);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Create_WithWhiteId_ShouldThrowArgumentException()
+    {
+        var action = () => ExternalSession.Create("", "url", DateTime.UtcNow);
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task Create_WithWhiteUrl_ShouldThrowArgumentException()
+    {
+        var action = () => ExternalSession.Create("id", "", DateTime.UtcNow);
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task Create_WithAlreadyExpiredTime_ShouldReturnSuccess()
+    {
+        var id = "id";
+        var url = "url";
+        var time = DateTime.UtcNow.AddMinutes(-10);
+
+        var r = ExternalSession.Create(id, url, time);
+        await Assert.That(r.IsSuccess).IsTrue();
+    }
+
+    [Test]
+    public async Task Create_WithNotUtcExpireTime_ShouldReturnFailureWithExpirationTimeWasNotUtceError()
+    {
+        var id = "id";
+        var url = "url";
+        var timeNotUtc = new DateTime(2026, 5, 7, 10, 0, 0, DateTimeKind.Local); ;
+
+        var r = ExternalSession.Create(id, url, timeNotUtc);
+
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(ExternalSessionErrors.ExpirationTimeWasNotUtcCode);
+    }
+
+    [Test]
+    public async Task Create_WithSameParameters_ShouldReturnEqualButDifferentInstances()
+    {
+        var time = DateTime.UtcNow;
+
+        var session1 = ExternalSession.Create("id", "url", time).Value;
+        var session2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(session1).IsEqualTo(session2);
+        await Assert.That(ReferenceEquals(session1, session2)).IsFalse();
+    }
+
+    [Test]
+    public async Task Create_EqualObjects_ShouldHaveSameHashCode()
+    {
+        var time = DateTime.UtcNow;
+
+        var session1 = ExternalSession.Create("id", "url", time).Value;
+        var session2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(session1.GetHashCode()).IsEqualTo(session2.GetHashCode());
+    }
+}
+```
+
+---
+
+#### Equality
+
+```cs title="ExternalSessionEqualityTests.cs"
+namespace LegacyLego.Domain.Tests.ExternalSessionTests;
+
+public record ExternalSessionWrongEqualityTestCase(ExternalSession Session1, ExternalSession Session2);
+
+public static class SessionTestData
+{
+    public static IEnumerable<TestDataRow<ExternalSessionWrongEqualityTestCase>> GetWrongComparisonCases()
+    {
+        var time = DateTime.UtcNow;
+
+        yield return new(
+            new ExternalSessionWrongEqualityTestCase(
+                ExternalSession.Create("id1", "url", time).Value,
+                ExternalSession.Create("id2", "url", time).Value
+                ),
+            DisplayName: "Sessions with different Id"
+        );
+
+        yield return new(
+            new ExternalSessionWrongEqualityTestCase(
+                ExternalSession.Create("id", "url1", time).Value,
+                ExternalSession.Create("id", "url2", time).Value
+                ),
+            DisplayName: "Sessions with different Url"
+        );
+
+        yield return new(
+            new ExternalSessionWrongEqualityTestCase(
+                ExternalSession.Create("id", "url", DateTime.UtcNow.AddMinutes(10)).Value,
+                ExternalSession.Create("id", "url", DateTime.UtcNow.AddMinutes(20)).Value
+                ),
+            DisplayName: "Sessions with different ExpiresAtUtc"
+        );
+    }
+}
+
+public class ExternalSessionEqualityTests
+{
+    [Test]
+    public async Task Equals_WithSameValues_ShouldBeTrue()
+    {
+        var time = DateTime.UtcNow;
+
+        var s1 = ExternalSession.Create("id","url", time).Value;
+        var s2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(s1).IsEqualTo(s2);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(SessionTestData), nameof(SessionTestData.GetWrongComparisonCases))]
+    public async Task Equals_WithDifferentValues_ShouldBeFalse(ExternalSessionWrongEqualityTestCase testCase)
+    {
+        await Assert.That(testCase.Session1).IsNotEqualTo(testCase.Session2);
+    }
+
+    [Test]
+    public async Task EqualsOperator_WitSameValues_ShouldBeTrue()
+    {
+        var time = DateTime.UtcNow;
+
+        var s1 = ExternalSession.Create("id", "url", time).Value;
+        var s2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(s1 == s2).IsTrue();
+    }
+
+    [Test]
+    public async Task EqualsOperator_WithDifferentValues_ShouldBeFalse()
+    {
+        var time1 = DateTime.UtcNow.AddMinutes(10);
+        var time2 = DateTime.UtcNow.AddMinutes(20);
+
+        var s1 = ExternalSession.Create("id1", "url1", time1).Value;
+        var s2 = ExternalSession.Create("id2", "url2", time2).Value;
+
+        await Assert.That(s1 == s2).IsFalse();
+    }
+
+    [Test]
+    public async Task NotEqualsOperator_WitSameValues_ShouldBeFalse()
+    {
+        var time = DateTime.UtcNow;
+
+        var s1 = ExternalSession.Create("id", "url", time).Value;
+        var s2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(s1 != s2).IsFalse();
+    }
+
+    [Test]
+    public async Task NotEqualsOperator_WithDifferentValues_ShouldBeTrue()
+    {
+        var time1 = DateTime.UtcNow.AddMinutes(10);
+        var time2 = DateTime.UtcNow.AddMinutes(20);
+
+        var s1 = ExternalSession.Create("id1", "url1", time1).Value;
+        var s2 = ExternalSession.Create("id2", "url2", time2).Value;
+
+        await Assert.That(s1 != s2).IsTrue();
+    }
+
+    [Test]
+    public async Task GetHashCode_ForEqualObjects_ShouldBeSame()
+    {
+        var time = DateTime.UtcNow;
+
+        var s1 = ExternalSession.Create("id", "url", time).Value;
+        var s2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(s1.GetHashCode()).IsEqualTo(s2.GetHashCode());
+    }
+
+    [Test]
+    public async Task GetHashCode_ForDifferentObjects_ShouldBeDifferent()
+    {
+        var time1 = DateTime.UtcNow.AddMinutes(10);
+        var time2 = DateTime.UtcNow.AddMinutes(20);
+
+        var s1 = ExternalSession.Create("id1", "url1", time1).Value;
+        var s2 = ExternalSession.Create("id2", "url2", time2).Value;
+
+        await Assert.That(s1.GetHashCode()).IsNotEqualTo(s2.GetHashCode());
+    }
+
+    [Test]
+    public async Task Create_WithSameParameters_ShouldReturnDifferentInstances()
+    {
+        var time = DateTime.UtcNow;
+
+        var s1 = ExternalSession.Create("id", "url", time).Value;
+        var s2 = ExternalSession.Create("id", "url", time).Value;
+
+        await Assert.That(ReferenceEquals(s1, s2)).IsFalse();
+    }
+
+    [Test]
+    public async Task Equals_WithNull_ShouldBeFalse()
+    {
+        var s = ExternalSession.Create("id", "url", DateTime.UtcNow).Value;
+
+        await Assert.That(s.Equals(null)).IsFalse();
+    }
+
+    [Test]
+    public async Task EqualsOperator_WithNull_ShouldBeFalse()
+    {
+        var s = ExternalSession.Create("id", "url", DateTime.UtcNow).Value;
+
+        await Assert.That(s == null).IsFalse();
+    }
+
+    [Test]
+    public async Task NotEqualsOperator_WithNull_ShouldBeTrue()
+    {
+        var s = ExternalSession.Create("id", "url", DateTime.UtcNow).Value;
+
+        await Assert.That(s != null).IsTrue();
+    }
+
+    [Test]
+    public async Task Equals_WithDifferentType_ShouldBeFalse()
+    {
+        var s = ExternalSession.Create("id", "url", DateTime.UtcNow).Value;
+
+        await Assert.That(s.Equals("not a session")).IsFalse();
+    }
+}
+```
+
+---
+
+#### IsExpired
+
+```cs title="ExternalSessionCreateTests.cs"
+namespace LegacyLego.Domain.Tests.ExternalSessionTests;
+
+public class ExternalSessionIsExpiredTests
+{
+    [Test]
+    public async Task IsExpired_WithLowerUtc_ShouldReturnFalse()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var time = expiresAt.AddMinutes(-30);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+        
+        await Assert.That(session.IsExpired(time)).IsFalse();
+    }
+
+    [Test]
+    public async Task IsExpired_WithMinimalLowerUtc_ShouldReturnFalse()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var time = expiresAt.AddMicroseconds(-1);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        await Assert.That(session.IsExpired(time)).IsFalse();
+    }
+
+    [Test]
+    public async Task IsExpired_WithSameValues_ShouldReturnTrue()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        await Assert.That(session.IsExpired(expiresAt)).IsTrue();
+    }
+
+    [Test]
+    public async Task IsExpired_WithBiggerUtc_ShouldReturnTrue()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var time = expiresAt.AddMinutes(30);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        await Assert.That(session.IsExpired(time)).IsTrue();
+    }
+
+    [Test]
+    public async Task IsExpired_WithMinimalBiggerUtc_ShouldReturnTrue()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var time = expiresAt.AddMicroseconds(1);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        await Assert.That(session.IsExpired(time)).IsTrue();
+    }
+
+    [Test]
+    public async Task IsExpired_WithLocalDateTimeKind_ShouldThrowInvariantViolationExceptionWithIsExpiredCompresionParameterIsNotUtcCode()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var local = DateTime.Now; 
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        var action = () => session.IsExpired(local);
+
+        var exception = await Assert.That(action).ThrowsExactly<InvariantViolationException>();
+        await Assert.That(exception!.Error.Code).EqualTo(ExternalSessionExceptionalErrors.IsExpiredCompressionParameterIsNotUtcCode);
+    }
+
+    [Test]
+    public async Task IsExpired_WithUnspecifiedDateTimeKind_ShouldThrowInvariantViolationExceptionWithIsExpiredCompressionParameterIsNotUtcCode()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var unspecified = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        var action = () => session.IsExpired(unspecified);
+
+        var exception = await Assert.That(action).ThrowsExactly<InvariantViolationException>();
+        await Assert.That(exception!.Error.Code).EqualTo(ExternalSessionExceptionalErrors.IsExpiredCompressionParameterIsNotUtcCode);
+    }
+
+    [Test]
+    public async Task IsExpired_ExpiresAtUtcShouldStayImmutable()
+    {
+        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var time = expiresAt.AddMinutes(30);
+
+        var session = ExternalSession.Create("id", "url", expiresAt).Value;
+
+        await Assert.That(session.ExpiresAtUtc).IsEquivalentTo(expiresAt);
+
+        session.IsExpired(time); 
+
+        await Assert.That(session.ExpiresAtUtc).IsEquivalentTo(expiresAt);
     }
 }
 ```
@@ -4806,6 +5323,952 @@ public class OrderItemGetTotalPriceTests
         var total = item.GetTotalPrice();
 
         await Assert.That(total).IsEqualTo(p);
+    }
+}
+```
+
+---
+
+### OrderPaymentTests
+
+#### AttachSession
+
+```cs title="OrderPaymentAttachSessionTests.cs"
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentAttachSessionTests
+{
+    [Test]
+    public async Task Attach_WhenStatusIsPending_ShouldReturnSuccess()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+        var attach = payment.AttachSession(session, now);
+
+        await Assert.That(attach.IsSuccess).IsTrue();
+        await Assert.That(payment.HasSession).IsTrue();
+    }
+
+    [Test]
+    public async Task Attach_WhenStatusIsSucceeded_ShouldReturnFailureWithWrongStatusForExternalSessionTransitionCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var success = payment.MarkAsSucceeded("transactionId");
+        var attach = payment.AttachSession(session, now);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.WrongStatusForExternalSessionTransitionCode);
+        await Assert.That(payment.HasSession).IsFalse();
+    }
+
+    [Test]
+    public async Task Attach_WhenStatusIsFailed_ShouldReturnFailureWithWrongStatusForExternalSessionTransitionCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var failure = payment.MarkAsFailed();
+        var attach = payment.AttachSession(session, now);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.WrongStatusForExternalSessionTransitionCode);
+        await Assert.That(payment.HasSession).IsFalse();
+    }
+
+    [Test]
+    public async Task Attach_WhenStatusIsRefundRequested_ShouldReturnFailureWithWrongStatusForExternalSessionTransitionCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        var attach = payment.AttachSession(session, now);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.WrongStatusForExternalSessionTransitionCode);
+        await Assert.That(payment.HasSession).IsFalse();
+    }
+
+    [Test]
+    public async Task Attach_WhenStatusIsRefunded_ShouldReturnFailureWithWrongStatusForExternalSessionTransitionCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var refund = payment.MarkAsRefunded("transactionId");
+        var attach = payment.AttachSession(session, now);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.WrongStatusForExternalSessionTransitionCode);
+        await Assert.That(payment.HasSession).IsFalse();
+    }
+
+    #region Guard Clauses
+
+    [Test]
+    public async Task Attach_WithNullNewSession_ShouldThrowArgumentNullException()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+
+        var action = () => { payment.AttachSession(null!, now); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Attach_WithLocalNowTime_ShouldResultFailureWithNowTimeWasNotUtcForAttachSessionCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now).Value;
+
+        var attach = payment.AttachSession(session, DateTime.Now);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.NowTimeWasNotUtcForAttachSessionCode);
+    }
+
+    [Test]
+    public async Task Attach_WithUnspecifiedNowTime_ShouldResultFailureWithNowTimeWasNotUtcForAttachSessionCode()
+    {
+        var now = DateTime.UtcNow;
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var attach = payment.AttachSession(session, nowUnspecified);
+
+        await Assert.That(attach.IsFailure).IsTrue();
+        await Assert.That(attach.Error.Code).IsEqualTo(OrderPaymentErrors.NowTimeWasNotUtcForAttachSessionCode);
+    }
+
+    #endregion
+
+    [Test]
+    public async Task Attach_WhenSessionStillActive_ShouldReturnFailureWithEnsuredSessionIsNotExpiredTransitionFailureCode()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(60)).Value;
+
+        var firstAttach = payment.AttachSession(session, now);
+        var secondAttach = payment.AttachSession(session, now);
+
+        await Assert.That(secondAttach.IsFailure).IsTrue();
+        await Assert.That(secondAttach.Error.Code).IsEqualTo(OrderPaymentErrors.EnsuredSessionIsNotExpiredTransitionFailureCode);
+    }
+
+    [Test]
+    public async Task Attach_WhenSessionExpired_ShouldSucceed()
+    {
+        var now = DateTime.UtcNow;
+        var payment = OrderPayment.Create(OrderId.New(), now).Value;
+        var session = ExternalSession.Create("id", "url", now.AddMinutes(10)).Value;
+
+        var firstAttach = payment.AttachSession(session, now.AddHours(24));
+        var secondAttach = payment.AttachSession(session, now.AddHours(24));
+
+        await Assert.That(secondAttach.IsSuccess).IsTrue();
+    }
+}
+```
+
+---
+
+#### Create
+
+```cs title="OrderPaymentCreateTests.cs"
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentCreateTests
+{
+    [Test]
+    public async Task Create_WithValidValues_ShouldResultSuccess()
+    {
+        var id = OrderId.New();
+        var now = DateTime.UtcNow;
+
+        var r = OrderPayment.Create(id, now); 
+
+        await Assert.That(r.IsSuccess).IsTrue();
+    }
+
+    [Test]
+    public async Task Create_WithValidValues_ShouldBeSameValues()
+    {
+        var id = OrderId.New();
+        var now = DateTime.UtcNow;
+
+        var r = OrderPayment.Create(id, now);
+
+        await Assert.That(r.Value)
+            .Member(v => v.OrderId, m => m.IsEqualTo(id))
+            .And.Member(v => v.CreatedAtUtc, m => m.IsEqualTo(now))
+            .And.Member(v => v.Id, m => m.IsNotNull());
+    }
+
+    [Test]
+    public async Task Create_WithValidValues_ShouldReturnOrderPaymentInPendingStatus()
+    {
+        var id = OrderId.New();
+        var now = DateTime.UtcNow;
+
+        var r = OrderPayment.Create(id, now);
+
+        await Assert.That(r.Value.Status).IsEqualTo(PaymentStatus.Pending);
+    }
+
+    [Test]
+    public async Task Create_WithValidValues_ShouldRaiseOrderPaymentCreatedDomainEvent()
+    {
+        var id = OrderId.New();
+        var now = DateTime.UtcNow;
+
+        var r = OrderPayment.Create(id, now);
+
+        await Assert.That(r.Value.Status).IsEqualTo(PaymentStatus.Pending);
+
+        await Assert.That(r.IsSuccess).IsTrue();
+        await Assert.That(r.Value.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentCreated));
+    }
+
+    #region Guard Clauses
+
+    [Test]
+    public async Task Create_WithAddressNull_ShouldThrowArgumentNullException()
+    {
+        var action = () => { var r = OrderPayment.Create(null!, DateTime.UtcNow); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Create_WithDefaultDateTime_ShouldThrowArgumentException()
+    {
+        var action = () => { var r = OrderPayment.Create(OrderId.New(), default); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task Create_WithLocalCreatedAtTime_ShouldResultFailureWithCreationTimeWasNotUtcCode()
+    {
+        var id = OrderId.New();
+        var nowlocal = DateTime.Now;
+
+        var r = OrderPayment.Create(id, nowlocal);
+
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderPaymentErrors.CreationTimeWasNotUtcCode);
+    }
+
+    [Test]
+    public async Task Create_WithUnspecifiedCreatedAtTime_ShouldResultFailureWithCreationTimeWasNotUtcCode()
+    {
+        var id = OrderId.New();
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+
+        var r = OrderPayment.Create(id, nowUnspecified);
+
+        await Assert.That(r.IsFailure).IsTrue();
+        await Assert.That(r.Error.Code).IsEqualTo(OrderPaymentErrors.CreationTimeWasNotUtcCode);
+    }
+
+    #endregion
+}
+```
+
+---
+
+#### StateTransitions
+
+##### MarkAsFailed
+
+```cs title="OrderPaymentMarkAsFailedTests.cs"
+using LegacyLego.Domain.Tests.Common.Factories;
+
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentMarkAsFailedTests
+{
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    {
+        var statusBefore = payment.Status;
+
+        var failure = payment.MarkAsFailed();
+        var statusAfter = payment.Status;
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+        await Assert.That(statusBefore).IsEqualTo(PaymentStatus.Pending);
+        await Assert.That(statusAfter).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_ShouldRaiseOrderPaymentFailedDomainEvent(OrderPayment payment)
+    {
+        var failure = payment.MarkAsFailed();
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentFailed));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_WithFailedStatus_ShouldResultFailure(OrderPayment payment)
+    {
+        var firstFailure = payment.MarkAsFailed();
+        payment.ClearDomainEvents();
+        var secondFailure = payment.MarkAsFailed();
+
+        await Assert.That(firstFailure.IsSuccess).IsTrue();
+        await Assert.That(secondFailure.IsFailure).IsTrue();
+        await Assert.That(secondFailure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_WithSuccessedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        var failure = payment.MarkAsFailed();
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(failure.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
+        await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_WithRefundRequestedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        var failure = payment.MarkAsFailed();
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(failure.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
+        await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_WithRefundedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        var failure = payment.MarkAsFailed();
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(failure.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
+        await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_ValuesAreSameAfterFailure(OrderPayment payment)
+    {
+        var id = payment.Id;
+        var orderID = payment.OrderId;
+        var createdAtUtc = payment.CreatedAtUtc;
+
+        var failure = payment.MarkAsFailed();
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+
+        await Assert.That(payment)
+            .Member(o => o.Id, m => m.IsEqualTo(id))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsFailed_ExternalSessionIsSameAfterFailure(OrderPayment payment)
+    {
+        var session = ExternalSession.Create("id","url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        payment.AttachSession(session, DateTime.UtcNow);
+
+        var success = payment.MarkAsFailed();
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(payment.HasSession).IsTrue();
+        await Assert.That(payment.ExternalSession).IsEqualTo(session);
+    }
+}
+```
+
+---
+
+##### MarkAsRefunded
+
+```cs title="OrderPaymentMarkAsRefundedTests.cs"
+using LegacyLego.Domain.Tests.Common.Factories;
+
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentMarkAsRefundedTests
+{
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    {
+        var statusBefore = payment.Status;
+
+        var refund = payment.MarkAsRefunded("transactionId");
+        var statusAfter = payment.Status;
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(statusBefore).IsEqualTo(PaymentStatus.Pending);
+        await Assert.That(statusAfter).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_ShouldRaiseOrderPaymentRefundedDomainEvent(OrderPayment payment)
+    {
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_AfterSucceededWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+        payment.ClearDomainEvents();
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_AfterSucceededWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+        payment.ClearDomainEvents();
+        var refund = payment.MarkAsRefunded("different");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(refund.IsFailure).IsTrue();
+        await Assert.That(refund.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_WithTransactionIdNull_ShouldThrowArgumentNullException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsRefunded(null!); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_WithTransactionIdEmpty_ShouldThrowArgumentException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsRefunded(String.Empty); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_WithTransactionIdWhiteSpace_ShouldThrowArgumentException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsRefunded(" "); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_WhenStatusIsFailure_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var failure = payment.MarkAsFailed();
+
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+        await Assert.That(refund.IsFailure).IsTrue(); 
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_AfterRefundRequestedWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        payment.ClearDomainEvents();
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_AfterRefundRequestedWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        payment.ClearDomainEvents();
+        var refund = payment.MarkAsRefunded("different");
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(refund.IsFailure).IsTrue();
+        await Assert.That(refund.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_WhenStatusIsRefunded_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var firstRefund = payment.MarkAsRefunded("transactionId");
+        payment.ClearDomainEvents();
+        var secondRefund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(firstRefund.IsSuccess).IsTrue();
+        await Assert.That(secondRefund.IsFailure).IsTrue();
+        await Assert.That(secondRefund.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_ValuesAreSameAfterRefund(OrderPayment payment)
+    {
+        var id = payment.Id;
+        var orderID = payment.OrderId;
+        var createdAtUtc = payment.CreatedAtUtc;
+
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+
+        await Assert.That(payment)
+            .Member(o => o.Id, m => m.IsEqualTo(id))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_TransactionIdIsSameAfterRefund(OrderPayment payment)
+    {
+        var transactionId = "transactionId";
+
+        var refund = payment.MarkAsRefunded(transactionId);
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+
+        await Assert.That(payment.TransactionId).IsEqualTo(transactionId);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefunded_ExternalSessionIsSameAfterRefund(OrderPayment payment)
+    {
+        var session = ExternalSession.Create("id", "url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        payment.AttachSession(session, DateTime.UtcNow);
+
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(payment.HasSession).IsTrue();
+        await Assert.That(payment.ExternalSession).IsEqualTo(session);
+    }
+}
+```
+
+---
+
+##### MarkAsRefundRequested
+
+```cs title="OrderPaymentMarkAsRefundRequestedTests.cs"
+using LegacyLego.Domain.Tests.Common.Factories;
+
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentMarkAsRefundRequestedTests
+{
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    {
+        var statusBefore = payment.Status;
+
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        var statusAfter = payment.Status;
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(statusBefore).IsEqualTo(PaymentStatus.Pending);
+        await Assert.That(statusAfter).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_ShouldRaiseOrderPaymentRefundRequestedDomainEvent(OrderPayment payment)
+    {
+        var success = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_AfterSucceededWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+        payment.ClearDomainEvents();
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_AfterSucceededWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+        payment.ClearDomainEvents();
+        var refundRequest = payment.MarkAsRefundRequested("different");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(refundRequest.IsFailure).IsTrue();
+        await Assert.That(refundRequest.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_WithTransactionIdNull_ShouldThrowArgumentNullException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsRefundRequested(null!); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_WithTransactionIdEmpty_ShouldThrowArgumentException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsRefundRequested(String.Empty); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_WhenStatusIsFailure_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var failure = payment.MarkAsFailed();
+
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+        await Assert.That(refundRequest.IsFailure).IsTrue(); 
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_WhenStatusIsRefundRequested_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var firstRefundRequest = payment.MarkAsRefundRequested("transactionId");
+        payment.ClearDomainEvents();
+        var secondRefundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(firstRefundRequest.IsSuccess).IsTrue();
+        await Assert.That(secondRefundRequest.IsFailure).IsTrue();
+        await Assert.That(secondRefundRequest.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_WhenStatusIsRefunded_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var refund = payment.MarkAsRefunded("transactionId");
+        payment.ClearDomainEvents();
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(refundRequest.IsFailure).IsTrue();
+        await Assert.That(refundRequest.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefundRequested));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_ValuesAreSameAfterRefundRequest(OrderPayment payment)
+    {
+        var id = payment.Id;
+        var orderID = payment.OrderId;
+        var createdAtUtc = payment.CreatedAtUtc;
+
+        var success = payment.MarkAsRefundRequested("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+
+        await Assert.That(payment)
+            .Member(o => o.Id, m => m.IsEqualTo(id))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_TransactionIdIsSameAfterRefundRequest(OrderPayment payment)
+    {
+        var transactionId = "transactionId";
+
+        var success = payment.MarkAsRefundRequested(transactionId);
+
+        await Assert.That(success.IsSuccess).IsTrue();
+
+        await Assert.That(payment.TransactionId).IsEqualTo(transactionId);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsRefundRequested_ExternalSessionIsSameAfterRefundRequest(OrderPayment payment)
+    {
+        var transactionId = "transactionId";
+        var session = ExternalSession.Create("id","url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        payment.AttachSession(session, DateTime.UtcNow);
+
+        var success = payment.MarkAsRefundRequested(transactionId);
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(payment.HasSession).IsTrue();
+        await Assert.That(payment.ExternalSession).IsEqualTo(session);
+    }
+}
+```
+
+---
+
+##### MarkAsSucceeded
+
+```cs title="OrderPaymentMarkAsSucceededTests.cs"
+using LegacyLego.Domain.Tests.Common.Factories;
+
+namespace LegacyLego.Domain.Tests.OrderPaymentTests;
+
+public class OrderPaymentMarkAsSucceededTests
+{
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    {
+        var statusBefore = payment.Status;
+
+        var success = payment.MarkAsSucceeded("transactionId");
+        var statusAfter = payment.Status;
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(statusBefore).IsEqualTo(PaymentStatus.Pending);
+        await Assert.That(statusAfter).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_ShouldRaiseOrderPaymentSucceededDomainEvent(OrderPayment payment)
+    {
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentSucceeded));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_SucceededAfterSucceededWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
+    {
+        var firstSuccess = payment.MarkAsSucceeded("transactionId");
+        payment.ClearDomainEvents();
+        var secondSuccess = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(firstSuccess.IsSuccess).IsTrue();
+        await Assert.That(secondSuccess.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentSucceeded));
+        await Assert.That(secondSuccess.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_SucceededAfterSucceededWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
+    {
+        var firstSuccess = payment.MarkAsSucceeded("transactionId1");
+        payment.ClearDomainEvents();
+        var secondSuccess = payment.MarkAsSucceeded("transactionId2");
+
+        await Assert.That(firstSuccess.IsSuccess).IsTrue();
+        await Assert.That(secondSuccess.IsFailure).IsTrue();
+        await Assert.That(secondSuccess.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentSucceeded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_WithTransactionIdNull_ShouldThrowArgumentNullException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsSucceeded(null!); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_WithTransactionIdEmpty_ShouldThrowArgumentException(OrderPayment payment)
+    {
+        var action = () => { payment.MarkAsSucceeded(String.Empty); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_WhenStatusIsFailure_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var failure = payment.MarkAsFailed();
+
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(failure.IsSuccess).IsTrue();
+        await Assert.That(success.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).Count().IsEqualTo(2)
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentCreated))
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentFailed))
+            .And.DoesNotContain(e => e.GetType() == typeof(OrderPaymentSucceeded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_WhenStatusIsRefundRequested_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(success.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).Count().IsEqualTo(2)
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentCreated))
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentRefundRequested))
+            .And.DoesNotContain(e => e.GetType() == typeof(OrderPaymentSucceeded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_WhenStatusIsRefuned_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    {
+        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        var refund = payment.MarkAsRefunded("transactionId");
+
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(refundRequest.IsSuccess).IsTrue();
+        await Assert.That(success.IsFailure).IsTrue();
+        await Assert.That(payment.DomainEvents).Count().IsEqualTo(3)
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentCreated))
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentRefundRequested))
+            .And.Contains(e => e.GetType() == typeof(OrderPaymentRefunded))
+            .And.DoesNotContain(e => e.GetType() == typeof(OrderPaymentSucceeded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_ValuesAreSameAfterSuccess(OrderPayment payment)
+    {
+        var id = payment.Id;
+        var orderID = payment.OrderId;
+        var createdAtUtc = payment.CreatedAtUtc;
+
+        var success = payment.MarkAsSucceeded("transactionId");
+
+        await Assert.That(success.IsSuccess).IsTrue();
+
+        await Assert.That(payment)
+            .Member(o => o.Id, m => m.IsEqualTo(id))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_TransactionIdIsSameAfterSuccess(OrderPayment payment)
+    {
+        var transactionId = "transactionId";
+
+        var success = payment.MarkAsSucceeded(transactionId);
+
+        await Assert.That(success.IsSuccess).IsTrue();
+
+        await Assert.That(payment.TransactionId).IsEqualTo(transactionId);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
+    public async Task MarkAsSucceeded_ExternalSessionIsSameAfterSuccess(OrderPayment payment)
+    {
+        var transactionId = "transactionId";
+        var session = ExternalSession.Create("id","url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        payment.AttachSession(session, DateTime.UtcNow);
+
+        var success = payment.MarkAsSucceeded(transactionId);
+
+        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(payment.HasSession).IsTrue();
+        await Assert.That(payment.ExternalSession).IsEqualTo(session);
     }
 }
 ```
@@ -6187,6 +7650,22 @@ public class PricePlusTests
         await Assert.That(r1).IsEqualTo(p1);
     }
 }
+```
+
+---
+
+## LegacyLego.Infrastructure
+
+```xml title="LegacyLego.Infrastructure.csproj"
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
 ```
 
 ---

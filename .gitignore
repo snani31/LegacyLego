@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Docker secrets
 .env
+
+# Temporary backup Drawio files
+*.bkp
