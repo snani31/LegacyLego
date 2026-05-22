@@ -122,7 +122,7 @@ public sealed class StartOrderPaymentCommandHandler(
     {
         PaymentSession session;
 
-        if (payment.HasSession && !payment.ExternalSession!.IsExpired(DateTime.UtcNow))
+        if (payment.HasSession && !payment.ExternalSession!.IsExpired(timeProvider.GetUtcNow().UtcDateTime))
         {
             session = new PaymentSession(
                 payment.Id.Value,
