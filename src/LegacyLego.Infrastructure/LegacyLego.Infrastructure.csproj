@@ -20,4 +20,8 @@
 		<ProjectReference Include="..\LegacyLego.Domain\LegacyLego.Domain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Migrations\" />
+	</ItemGroup>
+
 </Project>

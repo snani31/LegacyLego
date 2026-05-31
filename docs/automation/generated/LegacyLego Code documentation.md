@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.7.0
+Актуальная версия проекта: 1.7.2
 
 ## Проекты
 
@@ -65,8 +65,6 @@
 │           ├── OrderClassDiagram.drawio
 │           ├── SolutionStructureTreeDiagram.drawio
 │           └── StoreOrderingSystemDiagram.drawio
-├── LegacyLego.Infrastructure
-│   └── LegacyLego.Infrastructure.csproj
 ├── src
 │   ├── LegacyLego.Application
 │   │   ├── Abstractions
@@ -169,66 +167,85 @@
 │   │   │   └── Services
 │   │   │       └── PaymentLookup.cs
 │   │   └── LegacyLego.Application.csproj
-│   └── LegacyLego.Domain
-│       ├── Abstractions
-│       │   ├── IOrderRepository.cs
-│       │   └── IPaymentRepository.cs
-│       ├── Aggregates
-│       │   ├── Order.cs
-│       │   └── OrderPayment.cs
-│       ├── DomainEvents
-│       │   ├── OrderCanceled.cs
-│       │   ├── OrderCreated.cs
-│       │   ├── OrderExpired.cs
-│       │   ├── OrderPaid.cs
-│       │   ├── OrderPaymentCreated.cs
-│       │   ├── OrderPaymentFailed.cs
-│       │   ├── OrderPaymentRefunded.cs
-│       │   ├── OrderPaymentRefundedWithoutSuccess.cs
-│       │   ├── OrderPaymentRefundRequested.cs
-│       │   ├── OrderPaymentSucceeded.cs
-│       │   └── OrderRefunded.cs
-│       ├── Enums
-│       │   ├── OrderAction.cs
-│       │   ├── OrderStatus.cs
-│       │   ├── PaymentAction.cs
-│       │   └── PaymentStatus.cs
-│       ├── Errors
-│       │   ├── CurrencyErrors.cs
-│       │   ├── ExternalSessionErrors.cs
-│       │   ├── OrderErrors.cs
-│       │   ├── OrderItemErrors.cs
-│       │   ├── OrderPaymentErrors.cs
-│       │   └── PriceErrors.cs
-│       ├── ExceptionalErrors
-│       │   ├── CurrencyExceptionalErrors.cs
-│       │   ├── ExternalSessionExceptionalErrors.cs
-│       │   ├── OrderExceptionalErrors.cs
-│       │   ├── PriceExceptionalErrors.cs
-│       │   └── ResultExceptionalErrors.cs
-│       ├── Exceptions
-│       │   ├── InvalidDomainStateException.cs
-│       │   └── InvariantViolationException.cs
-│       ├── Shared
-│       │   ├── AggregateRoot.cs
-│       │   ├── DomainException.cs
-│       │   ├── Entity.cs
-│       │   ├── Error.cs
-│       │   ├── ExceptionalError.cs
-│       │   ├── IDomainEvent.cs
-│       │   ├── Result.cs
-│       │   ├── ResultT.cs
-│       │   ├── Specification.cs
-│       │   └── ValueObject.cs
-│       ├── ValueObjects
-│       │   ├── Currency.cs
-│       │   ├── ExternalSession.cs
-│       │   ├── OrderAddress.cs
-│       │   ├── OrderId.cs
-│       │   ├── OrderItem.cs
-│       │   ├── OrderPaymentId.cs
-│       │   └── Price.cs
-│       └── LegacyLego.Domain.csproj
+│   ├── LegacyLego.Domain
+│   │   ├── Abstractions
+│   │   │   ├── IOrderRepository.cs
+│   │   │   └── IPaymentRepository.cs
+│   │   ├── Aggregates
+│   │   │   ├── Order.cs
+│   │   │   └── OrderPayment.cs
+│   │   ├── DomainEvents
+│   │   │   ├── OrderCanceled.cs
+│   │   │   ├── OrderCreated.cs
+│   │   │   ├── OrderExpired.cs
+│   │   │   ├── OrderPaid.cs
+│   │   │   ├── OrderPaymentCreated.cs
+│   │   │   ├── OrderPaymentFailed.cs
+│   │   │   ├── OrderPaymentRefunded.cs
+│   │   │   ├── OrderPaymentRefundedWithoutSuccess.cs
+│   │   │   ├── OrderPaymentRefundRequested.cs
+│   │   │   ├── OrderPaymentSucceeded.cs
+│   │   │   └── OrderRefunded.cs
+│   │   ├── Enums
+│   │   │   ├── OrderAction.cs
+│   │   │   ├── OrderStatus.cs
+│   │   │   ├── PaymentAction.cs
+│   │   │   └── PaymentStatus.cs
+│   │   ├── Errors
+│   │   │   ├── CurrencyErrors.cs
+│   │   │   ├── ExternalSessionErrors.cs
+│   │   │   ├── OrderErrors.cs
+│   │   │   ├── OrderItemErrors.cs
+│   │   │   ├── OrderPaymentErrors.cs
+│   │   │   └── PriceErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   ├── CurrencyExceptionalErrors.cs
+│   │   │   ├── ExternalSessionExceptionalErrors.cs
+│   │   │   ├── OrderExceptionalErrors.cs
+│   │   │   ├── PriceExceptionalErrors.cs
+│   │   │   └── ResultExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InvalidDomainStateException.cs
+│   │   │   └── InvariantViolationException.cs
+│   │   ├── Shared
+│   │   │   ├── AggregateRoot.cs
+│   │   │   ├── DomainException.cs
+│   │   │   ├── Entity.cs
+│   │   │   ├── Error.cs
+│   │   │   ├── ExceptionalError.cs
+│   │   │   ├── IDomainEvent.cs
+│   │   │   ├── Result.cs
+│   │   │   ├── ResultT.cs
+│   │   │   ├── Specification.cs
+│   │   │   └── ValueObject.cs
+│   │   ├── ValueObjects
+│   │   │   ├── Currency.cs
+│   │   │   ├── ExternalSession.cs
+│   │   │   ├── OrderAddress.cs
+│   │   │   ├── OrderId.cs
+│   │   │   ├── OrderItem.cs
+│   │   │   ├── OrderPaymentId.cs
+│   │   │   └── Price.cs
+│   │   └── LegacyLego.Domain.csproj
+│   └── LegacyLego.Infrastructure
+│       ├── Common
+│       │   └── SpecificationEvaluator.cs
+│       ├── Configuration
+│       │   ├── Common
+│       │   │   ├── EntityTypeBuilderExtensions.cs
+│       │   │   ├── PostgresTypes.cs
+│       │   │   └── PropertyBuilderExtensions.cs
+│       │   ├── ExternalSessionConfiguration.cs
+│       │   ├── OrderConfiguration.cs
+│       │   ├── OrderItemConfiguration.cs
+│       │   └── OrderPaymentConfiguration.cs
+│       ├── Context
+│       │   └── OrderContext.cs
+│       ├── Migrations
+│       ├── Repositories
+│       │   ├── OrderRepository.cs
+│       │   └── PaymentRepository.cs
+│       └── LegacyLego.Infrastructure.csproj
 ├── tests
 │   └── LegacyLego.Domain.Tests
 │       ├── Common
@@ -1201,7 +1218,7 @@ public static class OrderProjections
             order.Id.Value,
             order.Status,
             order.Items.Sum(x => x.UnitPrice.Sum),
-            order.Items.FirstOrDefault()!.UnitPrice.Currency.Code,
+            order.Currency.Code,
             order.CreationDateUtc,
             order.Items.Count
         );
@@ -1221,9 +1238,9 @@ public static class OrderProjections
                     item.Title,
                     item.Quantity,
                     item.UnitPrice.Sum,
-                    item.UnitPrice.Sum * item.Quantity)).ToList(),
+                    item.UnitPrice.Sum * item.Quantity)),
                 order.TotalPrice.Sum,
-                order.Items.First().UnitPrice.Currency.Code
+                order.Currency.Code
             );
 }
 ```
@@ -1282,7 +1299,7 @@ public class GetActiveOrdersQueryHandler(IOrderRepository repository) : IQueryHa
     {
         var specification = new ActiveOrderSpecification(query.UserId);
 
-        var result = await repository.GetOrders(specification, ct);
+        var result = await repository.GetOrdersAsync(specification, ct);
 
         return Result<IReadOnlyList<OrderSummaryDto>>.Success(result);
     }
@@ -1340,7 +1357,7 @@ public class GetOrderDetailsQueryHandler(IOrderRepository repository) : IQueryHa
     public async Task<Result<OrderDetailsDto>> HandleAsync(GetOrderDetailsQuery query, CancellationToken ct)
     {
         var specification = new OrderDetailsSpecification(query.UserId, query.OrderId);
-        var order = await repository.GetOrder(specification, ct);
+        var order = await repository.GetOrderAsync(specification, ct);
 
         if (order is null)
             return Result<OrderDetailsDto>.Failure(OrderErrors.GetNotFoundByOrderIdError(OrderId.From(query.OrderId)));
@@ -1362,7 +1379,7 @@ public sealed record OrderDetailsDto(
     OrderStatus Status,
     DateTime CreatedAt,
     AddressDetailsDto DeliveryAddress,
-    IReadOnlyList<OrderItemDetailsDto> Items,
+    IEnumerable<OrderItemDetailsDto> Items,
     decimal TotalAmount,
     string Currency
 );
@@ -1412,10 +1429,10 @@ public class GetOrdersHistoryQueryHandler(IOrderRepository repository) : IQueryH
     public async Task<Result<OrdersHistoryResponse>> HandleAsync(GetOrdersHistoryQuery query, CancellationToken ct)
     {
         var specification = new OrderHistorySpecification(query.UserId,query.Filter);
-        var orders = await repository.GetOrders(specification, ct);
+        var orders = await repository.GetOrdersAsync(specification, ct);
 
         specification.DropPagination();
-        var count = await repository.GetOrdersCount(specification, ct);
+        var count = await repository.GetOrdersCountAsync(specification, ct);
 
         var result = new OrdersHistoryResponse(orders,count);
 
@@ -1892,7 +1909,7 @@ public sealed class StartOrderPaymentCommandHandler(
         if (order.Status != OrderStatus.PendingPayment)
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetOrderIsNotInPendingPaymentError(command.OrderId, order.Status));
 
-        if (await paymentRepository.ExistsSucceeded(orderId))
+        if (await paymentRepository.ExistsSucceededAsync(orderId, ct))
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetForOrderIsAlreadyExistsSuccessedPaymentError(command.OrderId));
 
         var existingBeforeCheckUniqConstraint = await paymentRepository.GetPendingByOrderIdAsync(orderId, ct);
@@ -2312,13 +2329,11 @@ public interface IOrderRepository
 {
     public Task<Order?> GetByIdAsync(OrderId id, CancellationToken cancellationToken = default);
 
-    public Task<IReadOnlyList<Order>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyList<TResult>> GetOrdersAsync<TResult>(Specification<Order,OrderId, TResult> specification, CancellationToken cancellationToken = default);
 
-    public Task<IReadOnlyList<TResult>> GetOrders<TResult>(Specification<Order,OrderId, TResult> specification, CancellationToken cancellationToken = default);
+    public Task<TResult?> GetOrderAsync<TResult>(Specification<Order, OrderId, TResult> specification, CancellationToken cancellationToken = default);
 
-    public Task<TResult?> GetOrder<TResult>(Specification<Order, OrderId, TResult> specification, CancellationToken cancellationToken = default);
-
-    public Task<int> GetOrdersCount(Specification<Order, OrderId> specification, CancellationToken cancellationToken = default);
+    public Task<int> GetOrdersCountAsync(Specification<Order, OrderId> specification, CancellationToken cancellationToken = default);
 
     public void Add(Order order);
 }
@@ -2340,9 +2355,7 @@ public interface IPaymentRepository
 
     public Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
-    public Task<bool> ExistsSucceeded(OrderId orderId);
-
-    public Task<OrderPayment?> GetByIdAsync(OrderPaymentId orderId, CancellationToken cancellationToken = default);
+    public Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
     public void Add(OrderPayment payment);
 }
@@ -2367,6 +2380,8 @@ public class Order : AggregateRoot<OrderId>
 {
     public Guid ClientId { get; }
 
+    public Currency Currency { get; }
+
     private Price? _frozenTotalPrice;
 
     public Price TotalPrice
@@ -2388,7 +2403,6 @@ public class Order : AggregateRoot<OrderId>
 
     public OrderStatus Status { get; private set; }
 
-
     private readonly List<OrderItem> _items;
 
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
@@ -2397,9 +2411,22 @@ public class Order : AggregateRoot<OrderId>
 
     public DateTime CreationDateUtc { get; }
 
+    private decimal? FrozenTotalSum => _frozenTotalPrice?.Sum;
+    /// <summary>
+    /// Приватный конструктор, используемый фабричным методом для создания нового
+    /// валидного с точки зрения бизнеса заказа 
+    /// </summary>
+    /// <param name="id"> идентификатор заказа</param>
+    /// <param name="clientId">идентификатор клиента, создавшего заказ</param>
+    /// <param name="currency">валюты заказа</param>
+    /// <param name="status">статус заказа</param>
+    /// <param name="items">список позиций заказа</param>
+    /// <param name="address">адрес доставки заказа</param>
+    /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
         Guid clientId,
+        Currency currency,
         OrderStatus status,
         List<OrderItem> items,
         OrderAddress address,
@@ -2408,11 +2435,59 @@ public class Order : AggregateRoot<OrderId>
     {
         ClientId = clientId;
         Status = status;
-        _items = new List<OrderItem>(items);
+        _items = items;
         Address = address;
         CreationDateUtc = creationDateUtc;
+        Currency = currency;
+    }
+    /// <summary>
+    /// Приватный конструктор, используемый для материализации объекта Order
+    /// EF ORM системой в соответствии с конфигурациями (Не используется бизнесом!)
+    /// </summary>
+    /// <param name="id"> идентификатор заказа</param>
+    /// <param name="clientId">идентификатор клиента, создавшего заказ</param>
+    /// <param name="currency">валюты заказа</param>
+    /// <param name="status">статус заказа</param>
+    /// <param name="frozenTotalSum">decimal занчение общей стоимсоти заказа</param>
+    /// <param name="address">адрес доставки заказа</param>
+    /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
+    private Order(
+        OrderId id,
+        Guid clientId,
+        OrderStatus status,
+        OrderAddress address,
+        Currency currency,
+        decimal? frozenTotalSum,
+        DateTime creationDateUtc)
+        : base(id)
+    {
+        ClientId = clientId;
+        Status = status;
+        _items = new List<OrderItem>();
+        Address = address;
+        Currency = currency;
+        CreationDateUtc = creationDateUtc;
+
+        _frozenTotalPrice = frozenTotalSum.HasValue
+            ? Price.Create(frozenTotalSum.Value, currency).Value
+            : null;
     }
 
+
+    /// <summary>
+    /// Фабричный метод для создания нового заказа в системе.
+    /// Инкапсулирует первичные бизнес-правила создания заказа.
+    /// </summary>
+    /// <param name="clientId">Идентификатор клиента, совершающего заказ.</param>
+    /// <param name="address">Валидный адрес доставки (Value Object).</param>
+    /// <returns>
+    /// Экземпляр <see cref="Result{Order}"/>, содержащий объект заказа при успехе,
+    /// либо ошибку доменной логики Result.Failure (например, если нарушены базовые контракты).
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Выбрасывается, если параметр 
+    /// <paramref name="address"/> или парметр <paramref name="items"/> равен null.</exception>
+    /// <exception cref="ArgumentException">Выбрасывается, если параметр коллекции 
+    /// <paramref name="items"/> содержит в коллекции хоть 1 тгдд элемент.</exception>
     public static Result<Order> Create(
         OrderAddress address,
         Guid clientId,
@@ -2447,17 +2522,17 @@ public class Order : AggregateRoot<OrderId>
         var orderId = OrderId.New();
 
         var order = new Order(
-            orderId,
-            clientId,
-            OrderStatus.PendingPayment,
-            items,
-            address,
-            createdAt);
+            id: orderId,
+            clientId: clientId,
+            currency: firstCurrency,
+            status: OrderStatus.PendingPayment,
+            items: items,
+            address: address,
+            creationDateUtc: createdAt);
 
         order.Raise(new OrderCreated(orderId, clientId, createdAt));
 
         return Result<Order>.Success(order);
-
     }
 
     public Result Pay()
@@ -7665,7 +7740,686 @@ public class PricePlusTests
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LegacyLego.Application\LegacyLego.Application.csproj" />
+		<ProjectReference Include="..\LegacyLego.Domain\LegacyLego.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Migrations\" />
+	</ItemGroup>
+
 </Project>
+```
+
+---
+
+### Common
+
+```cs title="SpecificationEvaluator.cs"
+using LegacyLego.Domain.Shared;
+using Microsoft.EntityFrameworkCore;
+
+namespace LegacyLego.Infrastructure.Common;
+
+internal static class SpecificationEvaluator
+{
+    internal static IQueryable<TResult> GetQuery<TEntity, TId, TResult>(
+        IQueryable<TEntity> inputQueryable,
+        Specification<TEntity, TId, TResult> specification)
+        where TEntity : Entity<TId>
+        where TId : ValueObject
+    {
+        var queryable = ApplyBaseSpecifications(inputQueryable, specification);
+
+        return queryable.Select(specification.Selector);
+    }
+
+    internal static IQueryable<TEntity> GetQuery<TEntity, TId>(
+        IQueryable<TEntity> inputQueryable,
+        Specification<TEntity, TId> specification)
+        where TEntity : Entity<TId>
+        where TId : ValueObject
+    {
+        var queryable = ApplyBaseSpecifications(inputQueryable, specification);
+
+        foreach (var exp in specification.IncludeExpressions)
+            queryable = queryable.Include(exp);
+
+        return queryable;
+    }
+
+    private static IQueryable<TEntity> ApplyBaseSpecifications<TEntity, TId>(
+        IQueryable<TEntity> inputQueryable,
+        Specification<TEntity, TId> specification)
+        where TEntity : Entity<TId>
+        where TId : ValueObject
+    {
+        IQueryable<TEntity> queryable = inputQueryable;
+
+        foreach (var exp in specification.FilterExpressions)
+            queryable = queryable.Where(exp);
+
+        if (specification.OrderByExpressions.Any())
+        {
+            var ordered = queryable.OrderBy(specification.OrderByExpressions[0]);
+            for (int i = 1; i < specification.OrderByExpressions.Count; i++)
+                ordered = ordered.ThenBy(specification.OrderByExpressions[i]);
+            queryable = ordered;
+        }
+
+        if (specification.OrderByDescendingExpressions.Any())
+        {
+            var ordered = queryable.OrderByDescending(specification.OrderByDescendingExpressions[0]);
+            for (int i = 1; i < specification.OrderByDescendingExpressions.Count; i++)
+                ordered = ordered.ThenByDescending(specification.OrderByDescendingExpressions[i]);
+            queryable = ordered;
+        }
+
+        if (specification.SkipNum.HasValue)
+            queryable = queryable.Skip(specification.SkipNum.Value);
+
+        if (specification.LimitNum.HasValue)
+            queryable = queryable.Take(specification.LimitNum.Value);
+
+        return queryable;
+    }
+}
+```
+
+---
+
+### Configuration
+
+```cs title="ExternalSessionConfiguration.cs"
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Configuration.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using static LegacyLego.Infrastructure.Configuration.Common.PostgresTypes;
+
+namespace LegacyLego.Infrastructure.Configuration;
+
+public class ExternalSessionConfiguration : IEntityTypeConfiguration<ExternalSession>
+{
+    #region CostraintNames
+    private const string PK_CONSTRAINT_NAME = "pk_external_session";
+    #endregion
+
+    #region ColumnNames
+    private const string TABLE_NAME = "External_session";
+    private const string ID_COLUMN_NAME = "order_payment_id";
+    private const string EXTERNAL_ID_COLUMN_NAME = "external_id";
+    private const string CHECKOUT_URL_COLUMN_NAME = "checkout_url";
+    private const string EXPIRES_AT_UTC_COLUMN_NAME = "expires_at_utc";
+    #endregion
+
+    public void Configure(EntityTypeBuilder<ExternalSession> builder)
+    {
+        builder.ToTable(TABLE_NAME);
+
+        #region order_payment_id
+        builder.Property<Guid>(ID_COLUMN_NAME)
+            .HasColumnName(ID_COLUMN_NAME)
+            .HasColumnType(Uuid)
+            .IsRequired();
+
+        builder.HasKey(ID_COLUMN_NAME)
+            .HasName(PK_CONSTRAINT_NAME); 
+        #endregion
+
+        #region external_id
+        builder.Property(x => x.ExternalId)
+            .HasColumnName(EXTERNAL_ID_COLUMN_NAME)
+            .HasPostgresVarchar(255)
+            .IsRequired(); 
+        #endregion
+
+        #region checkout_url
+        builder.Property(x => x.CheckoutUrl)
+            .HasColumnName(CHECKOUT_URL_COLUMN_NAME)
+            .HasColumnType(Text)
+            .IsRequired(); 
+        #endregion
+
+        #region expires_at_utc
+        builder.Property(x => x.ExpiresAtUtc)
+            .HasColumnName(EXPIRES_AT_UTC_COLUMN_NAME)
+            .HasColumnType(TimeStampTz)
+            .IsRequired();
+        #endregion
+    }
+}
+```
+
+---
+
+```cs title="OrderConfiguration.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Configuration.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using static LegacyLego.Infrastructure.Configuration.Common.PostgresTypes;
+
+namespace LegacyLego.Infrastructure.Configuration;
+
+public class OrderConfiguration : IEntityTypeConfiguration<Order>
+{
+    #region CostraintNames
+    private const string PK_CONSTRAINT_NAME = "pk_order";
+    private const string CHECK_ORDER_STATUS_CONSTRAINT_NAME = "check_order_status";
+    private const string CHECK_FROZEN_TOTAL_SUM_CONSTRAINT_NAME = "check_order_frozen_total_sun";
+    private const string FK_ORDER_ORDER_ITEMS_CONSTRAINT_NAME = "fk_order_order_items";
+    #endregion
+
+    #region ColumnNames
+    private const string TABLE_NAME = "Order";
+    private const string ID_COLUMN_NAME = "id";
+    private const string STATUS_COLUMN_NAME = "status";
+    private const string CREATED_AT_UTC_COLUMN_NAME = "created_at_utc";
+    private const string CLIENT_ID_COLUMN_NAME = "client_id";
+    private const string FROZEN_TOTAL_SUM_COLUMN_NAME = "frozen_total_sum";
+    private const string CURRENCY_CODE_COLUMN_NAME = "currency_code";
+
+    private const string ADDRESS_COUNTRY_COLUMT_NAME = "address_country";
+    private const string ADDRESS_CITY_COLUMT_NAME = "address_city";
+    private const string ADDRESS_STREET_COLUMT_NAME = "address_street";
+    private const string ADDRESS_POSTAL_CODE_COLUMT_NAME = "address_postal_code";
+    #endregion
+
+    public void Configure(EntityTypeBuilder<Order> builder)
+    {
+        builder.ToTable(TABLE_NAME,
+               t =>
+               {
+                   t.HasEnumCheckConstraint<OrderStatus>(CHECK_ORDER_STATUS_CONSTRAINT_NAME, STATUS_COLUMN_NAME);
+                   t.HasCheckConstraint(CHECK_FROZEN_TOTAL_SUM_CONSTRAINT_NAME, $"\"{FROZEN_TOTAL_SUM_COLUMN_NAME}\" >= 0");
+               });
+
+        #region id
+        builder.HasKey(o => o.Id).HasName(PK_CONSTRAINT_NAME);
+
+        builder.Property(o => o.Id)
+            .ValueGeneratedNever()
+            .HasColumnType(Uuid)
+            .HasConversion(id => id.Value, value => OrderId.From(value))
+            .HasColumnName(ID_COLUMN_NAME);
+        #endregion
+
+        #region status
+        builder.Property(o => o.Status)
+            .HasPostgresVarchar(50, allowStringConversion: true)
+            .HasColumnName(STATUS_COLUMN_NAME)
+            .IsRequired();
+        #endregion
+
+        #region created_at_utc
+        builder.Property(o => o.CreationDateUtc)
+            .HasColumnName(CREATED_AT_UTC_COLUMN_NAME)
+            .HasColumnType(TimeStampTz)
+            .IsRequired();
+        #endregion
+
+        #region currency_code
+        builder.Property(o => o.Currency)
+            .HasColumnName(CURRENCY_CODE_COLUMN_NAME)
+            .HasPostgresVarchar(3)
+            .HasConversion(c => c.Code, code => Currency.FromCode(code).Value)
+            .IsRequired();
+        #endregion
+
+        #region Address VO
+        builder.ComplexProperty(o => o.Address, address =>
+        {
+            address.Property(a => a.Country)
+                .HasColumnName(ADDRESS_COUNTRY_COLUMT_NAME)
+                .HasPostgresVarchar(100)
+                .IsRequired();
+
+            address.Property(a => a.City)
+                .HasColumnName(ADDRESS_CITY_COLUMT_NAME)
+                .HasPostgresVarchar(100)
+                .IsRequired();
+
+            address.Property(a => a.Street)
+                .HasColumnName(ADDRESS_STREET_COLUMT_NAME)
+                .HasPostgresVarchar(255)
+                .IsRequired();
+
+            address.Property(a => a.PostalCode)
+                .HasColumnName(ADDRESS_POSTAL_CODE_COLUMT_NAME)
+                .HasPostgresVarchar(20)
+                .IsRequired();
+        });
+        #endregion
+
+        #region Items FK
+        builder.HasMany(o => o.Items)
+            .WithOne()
+            .HasForeignKey("OrderId")
+            .HasConstraintName(FK_ORDER_ORDER_ITEMS_CONSTRAINT_NAME); 
+        #endregion
+
+        #region frozen_total_sum
+        builder.Property<decimal?>("FrozenTotalSum")
+            .HasColumnName(FROZEN_TOTAL_SUM_COLUMN_NAME)
+            .HasColumnType(Numeric(15,2))
+            .IsRequired(false);
+        #endregion
+
+        //TODO FK when Client implemented !!!
+        #region client_id 
+        builder.Property(o => o.ClientId)
+            .HasColumnName(CLIENT_ID_COLUMN_NAME)
+            .HasColumnType(Uuid)
+            .IsRequired();
+        #endregion
+    }
+}
+```
+
+---
+
+```cs title="OrderItemConfiguration.cs"
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Configuration.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using static LegacyLego.Infrastructure.Configuration.Common.PostgresTypes;
+
+namespace LegacyLego.Infrastructure.Configuration;
+
+public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
+{
+    #region CostraintNames
+    private const string PK_CONSTRAINT_NAME = "pk_order_item";
+    private const string CHECK_UNIT_PRICE_CONSTRAINT_NAME = "check_unit_price_status";
+    private const string CHECK_QUANTITY_CONSTRAINT_NAME = "check_quantity";
+    #endregion
+
+    #region ColumnNames
+    private const string TABLE_NAME = "Order_item";
+    private const string ID_COLUMN_NAME = "id";
+    private const string TITLE_COLUMN_NAME = "title";
+    private const string QUANTITY_COLUMN_NAME = "quantity";
+    private const string PRODUCT_ID_COLUMN_NAME = "product_id";
+    private const string ORDER_ID_COLUMN_NAME = "order_id";
+
+    private const string UNIT_PRICE_COLUMN_NAME = "unit_price";
+    private const string CURRENCY_CODE_COLUMN_NAME = "currency_code"; 
+    #endregion
+
+    public void Configure(EntityTypeBuilder<OrderItem> builder)
+    {
+        builder.ToTable(TABLE_NAME,
+               t =>
+               {
+                   t.HasCheckConstraint(CHECK_QUANTITY_CONSTRAINT_NAME, $"\"{QUANTITY_COLUMN_NAME}\" >= 1");
+                   t.HasCheckConstraint(CHECK_UNIT_PRICE_CONSTRAINT_NAME, $"\"{UNIT_PRICE_COLUMN_NAME}\" > 0");
+               });
+
+        #region id
+        // Shadow property
+        builder.Property<Guid>(ID_COLUMN_NAME)
+            .HasColumnName(ID_COLUMN_NAME)
+            .ValueGeneratedOnAdd();
+
+        builder.HasKey(ID_COLUMN_NAME).HasName(PK_CONSTRAINT_NAME);
+        #endregion
+
+        #region title
+        builder.Property(x => x.Title)
+            .HasColumnName(TITLE_COLUMN_NAME)
+            .HasPostgresVarchar(255)
+            .IsRequired();
+        #endregion
+
+        #region quantity
+        builder.Property(x => x.Quantity)
+            .HasColumnName(QUANTITY_COLUMN_NAME)
+            .HasColumnType(SmallInt)
+            .IsRequired();
+        #endregion
+
+        #region order_id
+        // Shadow property
+        builder.Property<Guid>("OrderId")
+            .HasColumnName(ORDER_ID_COLUMN_NAME)
+            .IsRequired();
+        #endregion
+
+        #region UnitPrice VO
+        builder.ComplexProperty(x => x.UnitPrice, price =>
+        {
+            price.Property(p => p.Sum)
+                .HasColumnName(UNIT_PRICE_COLUMN_NAME)
+                .HasColumnType(Numeric(15,2))
+                .IsRequired();
+
+            price.Property(p => p.Currency)
+                .HasColumnName(CURRENCY_CODE_COLUMN_NAME)
+                .HasPostgresVarchar(3)
+                .HasConversion(c => c.Code, code => Currency.FromCode(code).Value)
+                .IsRequired();
+        });
+        #endregion
+
+        #region product_id
+        //TODO FK when Product implemented !!!
+        builder.Property(x => x.ProductId)
+            .HasColumnName(PRODUCT_ID_COLUMN_NAME)
+            .HasColumnType(Uuid)
+            .IsRequired(); 
+        #endregion
+    }
+}
+```
+
+---
+
+```cs title="OrderPaymentConfiguration.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using LegacyLego.Infrastructure.Configuration.Common;
+using static LegacyLego.Infrastructure.Configuration.Common.PostgresTypes;
+
+namespace LegacyLego.Infrastructure.Configuration;
+
+public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
+{
+    #region CostraintNames
+    private const string CHECK_ORDER_PAYMENT_CONSTRAINT_NAME = "check_order_payment_status";
+    private const string PK_CONSTRAINT_NAME = "pk_order_payment";
+    private const string FK_ORDER_PAYMENT_ORDERS_CONSTRAINT_NAME = "fk_order_payment_orders"; 
+    #endregion
+
+    #region ColumnNames
+    private const string TABLE_NAME = "Order_payment";
+    private const string ID_COLUMN_NAME = "id";
+    private const string STATUS_COLUMN_NAME = "status";
+    private const string TRANSACTION_ID_COLUMN_NAME = "transaction_id";
+    private const string CREATED_AT_UTC_COLUMN_NAME = "created_at_utc";
+    private const string ORDER_ID_COLUMN_NAME = "order_id";
+    private const string ORDER_PAYMENT_ID_COLUMN_NAME = "order_payment_id"; 
+    #endregion
+
+    public void Configure(EntityTypeBuilder<OrderPayment> builder)
+    {
+        builder.ToTable(TABLE_NAME,
+               t => t.HasEnumCheckConstraint<PaymentStatus>(CHECK_ORDER_PAYMENT_CONSTRAINT_NAME, STATUS_COLUMN_NAME));
+
+        #region id
+        builder.HasKey(x => x.Id).HasName(PK_CONSTRAINT_NAME);
+
+        builder.Property(x => x.Id)
+            .ValueGeneratedNever()
+            .HasColumnType(Uuid)
+            .HasConversion(id => id.Value, value => OrderPaymentId.From(value))
+            .HasColumnName(ID_COLUMN_NAME);
+        #endregion
+
+        #region transaction_id
+        builder.HasIndex(x => x.TransactionId)
+            .IsUnique()
+            .HasFilter("transaction_id IS NOT NULL");
+        builder.Property(x => x.TransactionId)
+            .HasPostgresVarchar(255)
+            .IsRequired(false)
+            .HasColumnName(TRANSACTION_ID_COLUMN_NAME);
+        #endregion
+
+        #region created_at_utc
+        builder.Property(p => p.CreatedAtUtc)
+            .HasColumnType(TimeStampTz)
+            .IsRequired()
+            .HasColumnName(CREATED_AT_UTC_COLUMN_NAME);
+        #endregion
+
+        #region status
+        builder.Property(p => p.Status)
+            .HasPostgresVarchar(50, allowStringConversion:true)
+            .IsRequired()
+            .HasColumnName(STATUS_COLUMN_NAME);
+        #endregion
+
+        #region order_id
+        builder.Property(p => p.OrderId)
+            .HasConversion(id => id.Value, value => OrderId.From(value))
+            .HasColumnName(ORDER_ID_COLUMN_NAME)
+            .HasColumnType(Uuid)
+            .IsRequired();
+
+        builder.HasOne<Order>()
+            .WithMany()
+            .HasForeignKey(p => p.OrderId)
+            .HasConstraintName(FK_ORDER_PAYMENT_ORDERS_CONSTRAINT_NAME);
+        #endregion
+
+        #region ExternalSession
+        builder.HasOne(p => p.ExternalSession)
+            .WithOne()
+            .HasForeignKey<ExternalSession>(ORDER_PAYMENT_ID_COLUMN_NAME)
+            .IsRequired(false); 
+        #endregion
+    }
+}
+```
+
+---
+
+#### Common
+
+```cs title="EntityTypeBuilderExtensions.cs"
+using System.Text;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace LegacyLego.Infrastructure.Configuration.Common;
+
+public static class EntityTypeBuilderExtensions
+{
+    public static CheckConstraintBuilder HasEnumCheckConstraint<TEnum>(
+        this TableBuilder tableBuilder,
+        string constraintName,
+        string columnName) where TEnum : struct, Enum
+    {
+        var sb = new StringBuilder($"\"{columnName}\" IN (");
+
+        foreach (var status in Enum.GetValues<TEnum>())
+        {
+            sb.Append($"'{status}', ");
+        }
+
+        sb.Remove(sb.Length - 2, 2);
+        sb.Append(")");
+
+        return tableBuilder.HasCheckConstraint(constraintName, sb.ToString());
+    }
+}
+```
+
+---
+
+```cs title="PostgresTypes.cs"
+namespace LegacyLego.Infrastructure.Configuration.Common;
+
+/// <summary>
+/// Централизованное хранилище строковых литералов типов данных СУБД PostgreSQL.
+/// Используется во Fluent API конфигурациях для обеспечения строгой типизации и предотвращения опечаток.
+/// </summary>
+internal static class PostgresTypes
+{
+    internal const string TimeStampTz = "timestamptz";
+    internal const string Uuid = "uuid";
+    internal const string SmallInt = "smallint";
+    internal const string Text = "text";
+
+    /// <summary>
+    /// Генерирует строку точного численного типа данных <c>numeric(precision, scale)</c>.
+    /// </summary>
+    /// <param name="precision">Общее количество десятичных цифр в числе (как до, так и после запятой).</param>
+    /// <param name="scale">Количество цифр в дробной части (после запятой).</param>
+    /// <returns>Строковое представление numeric(x,n) типа данных для передачи в <c>HasColumnType()</c>.</returns>
+    internal static string Numeric(int precision, int scale) => $"numeric({precision},{scale})";
+}
+```
+
+---
+
+```cs title="PropertyBuilderExtensions.cs"
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace LegacyLego.Infrastructure.Configuration.Common;
+
+internal static class PropertyBuilderExtensions
+{
+    internal static PropertyBuilder<T> HasPostgresVarchar<T>(this PropertyBuilder<T> builder, int length, bool allowStringConversion = false)
+    {
+        if (allowStringConversion)
+            builder.HasConversion<string>();
+
+        return builder
+            .HasColumnType($"varchar({length})")
+            .HasMaxLength(length);
+    }
+
+    internal static ComplexTypePropertyBuilder<T> HasPostgresVarchar<T>(this ComplexTypePropertyBuilder<T> builder, int length, bool allowStringConversion = false)
+    {
+        if (allowStringConversion)
+            builder.HasConversion<string>();
+
+        return builder
+            .HasColumnType($"varchar({length})")
+            .HasMaxLength(length);
+    }
+}
+```
+
+---
+
+### Context
+
+```cs title="OrderContext.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Infrastructure.Configuration;
+using Microsoft.EntityFrameworkCore;
+
+namespace LegacyLego.Infrastructure.Context;
+
+public class OrderContext : DbContext
+{
+    public DbSet<Order> Orders { get; set; } = null!;
+
+    public DbSet<OrderPayment> OrderPayments { get; set; } = null!;
+
+    public OrderContext(DbContextOptions options) : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new OrderConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderPaymentConfiguration());
+        modelBuilder.ApplyConfiguration(new ExternalSessionConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
+}
+```
+
+---
+
+### Repositories
+
+```cs title="OrderRepository.cs"
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Common;
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+
+namespace LegacyLego.Infrastructure.Repositories;
+
+internal class OrderRepository(OrderContext context) : IOrderRepository
+{
+    public void Add(Order order) => context.Orders.Add(order);
+
+    public async Task<Order?> GetByIdAsync(OrderId id, CancellationToken cancellationToken = default)
+    {
+        return await context.Orders.Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    }
+
+    public async Task<TResult?> GetOrderAsync<TResult>(Specification<Order, OrderId, TResult> specification, CancellationToken cancellationToken = default)
+    {
+        return await SpecificationEvaluator.GetQuery(
+           context.Set<Order>()
+           , specification)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TResult>> GetOrdersAsync<TResult>(Specification<Order, OrderId, TResult> specification, CancellationToken cancellationToken = default)
+    {
+        return await SpecificationEvaluator.GetQuery(
+           context.Set<Order>()
+           ,specification)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> GetOrdersCountAsync(Specification<Order, OrderId> specification, CancellationToken cancellationToken = default)
+    {
+        return await SpecificationEvaluator.GetQuery(
+           context.Set<Order>()
+           , specification)
+            .CountAsync(cancellationToken);
+    }
+}
+```
+
+---
+
+```cs title="PaymentRepository.cs"
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+
+namespace LegacyLego.Infrastructure.Repositories;
+
+internal class PaymentRepository(OrderContext context) : IPaymentRepository
+{
+    public void Add(OrderPayment payment) => context.OrderPayments.Add(payment);
+
+    public async Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default) => 
+        await context.OrderPayments.AnyAsync(p => p.OrderId == orderId, cancellationToken);
+
+    public async Task<OrderPayment?> GetByOrderIdAsync(OrderId orderId,
+        CancellationToken cancellationToken = default) => 
+        await context.OrderPayments.FirstOrDefaultAsync(p => p.OrderId == orderId, cancellationToken);
+
+    public async Task<OrderPayment?> GetByTransactionIdAsync(string transactionId, CancellationToken cancellationToken = default) =>
+        await context.OrderPayments.FirstOrDefaultAsync(p => p.TransactionId == transactionId, cancellationToken);
+
+    public async Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
+        await context.OrderPayments.Where(p => p.OrderId == orderId && p.Status == PaymentStatus.Pending)
+            .FirstOrDefaultAsync(cancellationToken);
+}
 ```
 
 ---
