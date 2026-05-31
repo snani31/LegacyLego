@@ -12,6 +12,8 @@ public class Order : AggregateRoot<OrderId>
 {
     public Guid ClientId { get; }
 
+    public Currency Currency { get; }
+
     private Price? _frozenTotalPrice;
 
     public Price TotalPrice
@@ -33,7 +35,6 @@ public class Order : AggregateRoot<OrderId>
 
     public OrderStatus Status { get; private set; }
 
-
     private readonly List<OrderItem> _items;
 
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
@@ -42,9 +43,22 @@ public class Order : AggregateRoot<OrderId>
 
     public DateTime CreationDateUtc { get; }
 
+    private decimal? FrozenTotalSum => _frozenTotalPrice?.Sum;
+    /// <summary>
+    /// Приватный конструктор, используемый фабричным методом для создания нового
+    /// валидного с точки зрения бизнеса заказа 
+    /// </summary>
+    /// <param name="id"> идентификатор заказа</param>
+    /// <param name="clientId">идентификатор клиента, создавшего заказ</param>
+    /// <param name="currency">валюты заказа</param>
+    /// <param name="status">статус заказа</param>
+    /// <param name="items">список позиций заказа</param>
+    /// <param name="address">адрес доставки заказа</param>
+    /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
         Guid clientId,
+        Currency currency,
         OrderStatus status,
         List<OrderItem> items,
         OrderAddress address,
@@ -53,11 +67,59 @@ public class Order : AggregateRoot<OrderId>
     {
         ClientId = clientId;
         Status = status;
-        _items = new List<OrderItem>(items);
+        _items = items;
         Address = address;
         CreationDateUtc = creationDateUtc;
+        Currency = currency;
+    }
+    /// <summary>
+    /// Приватный конструктор, используемый для материализации объекта Order
+    /// EF ORM системой в соответствии с конфигурациями (Не используется бизнесом!)
+    /// </summary>
+    /// <param name="id"> идентификатор заказа</param>
+    /// <param name="clientId">идентификатор клиента, создавшего заказ</param>
+    /// <param name="currency">валюты заказа</param>
+    /// <param name="status">статус заказа</param>
+    /// <param name="frozenTotalSum">decimal занчение общей стоимсоти заказа</param>
+    /// <param name="address">адрес доставки заказа</param>
+    /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
+    private Order(
+        OrderId id,
+        Guid clientId,
+        OrderStatus status,
+        OrderAddress address,
+        Currency currency,
+        decimal? frozenTotalSum,
+        DateTime creationDateUtc)
+        : base(id)
+    {
+        ClientId = clientId;
+        Status = status;
+        _items = new List<OrderItem>();
+        Address = address;
+        Currency = currency;
+        CreationDateUtc = creationDateUtc;
+
+        _frozenTotalPrice = frozenTotalSum.HasValue
+            ? Price.Create(frozenTotalSum.Value, currency).Value
+            : null;
     }
 
+
+    /// <summary>
+    /// Фабричный метод для создания нового заказа в системе.
+    /// Инкапсулирует первичные бизнес-правила создания заказа.
+    /// </summary>
+    /// <param name="clientId">Идентификатор клиента, совершающего заказ.</param>
+    /// <param name="address">Валидный адрес доставки (Value Object).</param>
+    /// <returns>
+    /// Экземпляр <see cref="Result{Order}"/>, содержащий объект заказа при успехе,
+    /// либо ошибку доменной логики Result.Failure (например, если нарушены базовые контракты).
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Выбрасывается, если параметр 
+    /// <paramref name="address"/> или парметр <paramref name="items"/> равен null.</exception>
+    /// <exception cref="ArgumentException">Выбрасывается, если параметр коллекции 
+    /// <paramref name="items"/> содержит в коллекции хоть 1 тгдд элемент.</exception>
     public static Result<Order> Create(
         OrderAddress address,
         Guid clientId,
@@ -92,17 +154,17 @@ public class Order : AggregateRoot<OrderId>
         var orderId = OrderId.New();
 
         var order = new Order(
-            orderId,
-            clientId,
-            OrderStatus.PendingPayment,
-            items,
-            address,
-            createdAt);
+            id: orderId,
+            clientId: clientId,
+            currency: firstCurrency,
+            status: OrderStatus.PendingPayment,
+            items: items,
+            address: address,
+            creationDateUtc: createdAt);
 
         order.Raise(new OrderCreated(orderId, clientId, createdAt));
 
         return Result<Order>.Success(order);
-
     }
 
     public Result Pay()
