@@ -7,7 +7,7 @@ public sealed record OrderDetailsDto(
     OrderStatus Status,
     DateTime CreatedAt,
     AddressDetailsDto DeliveryAddress,
-    IReadOnlyList<OrderItemDetailsDto> Items,
+    IEnumerable<OrderItemDetailsDto> Items,
     decimal TotalAmount,
     string Currency
 );

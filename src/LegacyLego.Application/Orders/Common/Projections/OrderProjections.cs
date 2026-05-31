@@ -11,7 +11,7 @@ public static class OrderProjections
             order.Id.Value,
             order.Status,
             order.Items.Sum(x => x.UnitPrice.Sum),
-            order.Items.FirstOrDefault()!.UnitPrice.Currency.Code,
+            order.Currency.Code,
             order.CreationDateUtc,
             order.Items.Count
         );
@@ -31,8 +31,8 @@ public static class OrderProjections
                     item.Title,
                     item.Quantity,
                     item.UnitPrice.Sum,
-                    item.UnitPrice.Sum * item.Quantity)).ToList(),
+                    item.UnitPrice.Sum * item.Quantity)),
                 order.TotalPrice.Sum,
-                order.Items.First().UnitPrice.Currency.Code
+                order.Currency.Code
             );
 }
