@@ -37,7 +37,7 @@ public sealed class StartOrderPaymentCommandHandler(
         if (order.Status != OrderStatus.PendingPayment)
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetOrderIsNotInPendingPaymentError(command.OrderId, order.Status));
 
-        if (await paymentRepository.ExistsSucceeded(orderId))
+        if (await paymentRepository.ExistsSucceededAsync(orderId, ct))
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetForOrderIsAlreadyExistsSuccessedPaymentError(command.OrderId));
 
         var existingBeforeCheckUniqConstraint = await paymentRepository.GetPendingByOrderIdAsync(orderId, ct);

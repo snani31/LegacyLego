@@ -12,7 +12,7 @@ public class GetOrderDetailsQueryHandler(IOrderRepository repository) : IQueryHa
     public async Task<Result<OrderDetailsDto>> HandleAsync(GetOrderDetailsQuery query, CancellationToken ct)
     {
         var specification = new OrderDetailsSpecification(query.UserId, query.OrderId);
-        var order = await repository.GetOrder(specification, ct);
+        var order = await repository.GetOrderAsync(specification, ct);
 
         if (order is null)
             return Result<OrderDetailsDto>.Failure(OrderErrors.GetNotFoundByOrderIdError(OrderId.From(query.OrderId)));

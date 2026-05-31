@@ -11,7 +11,7 @@ public class GetActiveOrdersQueryHandler(IOrderRepository repository) : IQueryHa
     {
         var specification = new ActiveOrderSpecification(query.UserId);
 
-        var result = await repository.GetOrders(specification, ct);
+        var result = await repository.GetOrdersAsync(specification, ct);
 
         return Result<IReadOnlyList<OrderSummaryDto>>.Success(result);
     }
