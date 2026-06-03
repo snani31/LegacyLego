@@ -1,6 +1,6 @@
 ﻿namespace LegacyLego.Domain.Shared;
 
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     where TId : ValueObject
 {
     private readonly List<IDomainEvent> _domainEvents = new();
