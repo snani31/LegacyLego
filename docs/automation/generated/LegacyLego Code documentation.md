@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.7.2
+Актуальная версия проекта: 1.7.3
 
 ## Проекты
 
@@ -88,7 +88,9 @@
 │   │   │       │   ├── IQuery.cs
 │   │   │       │   └── IQueryHandler.cs
 │   │   │       ├── ICommandDispatcher.cs
-│   │   │       └── IEventPublisher.cs
+│   │   │       ├── IDomainEventDispatcher.cs
+│   │   │       ├── IEventPublisher.cs
+│   │   │       └── IQueryDispatcher.cs
 │   │   ├── Common
 │   │   ├── Errors
 │   │   │   └── PaymentProviderErrors.cs
@@ -214,6 +216,7 @@
 │   │   │   ├── Error.cs
 │   │   │   ├── ExceptionalError.cs
 │   │   │   ├── IDomainEvent.cs
+│   │   │   ├── IHasDomainEvents.cs
 │   │   │   ├── Result.cs
 │   │   │   ├── ResultT.cs
 │   │   │   ├── Specification.cs
@@ -238,14 +241,22 @@
 │       │   ├── ExternalSessionConfiguration.cs
 │       │   ├── OrderConfiguration.cs
 │       │   ├── OrderItemConfiguration.cs
-│       │   └── OrderPaymentConfiguration.cs
+│       │   ├── OrderPaymentConfiguration.cs
+│       │   └── OutboxMessageConfiguration.cs
 │       ├── Context
 │       │   └── OrderContext.cs
+│       ├── Messaging
+│       │   ├── CommandDispatcher.cs
+│       │   ├── DomainEventDispatcher.cs
+│       │   └── QueryDispatcher.cs
 │       ├── Migrations
+│       ├── Outbox
+│       │   └── OutboxMessage.cs
 │       ├── Repositories
 │       │   ├── OrderRepository.cs
 │       │   └── PaymentRepository.cs
-│       └── LegacyLego.Infrastructure.csproj
+│       ├── LegacyLego.Infrastructure.csproj
+│       └── UnitOfWork.cs
 ├── tests
 │   └── LegacyLego.Domain.Tests
 │       ├── Common
@@ -416,6 +427,21 @@ public interface ICommandDispatcher
 
 ---
 
+```cs title="IDomainEventDispatcher.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging;
+
+public interface IDomainEventDispatcher
+{
+    public Task DispatchAsync(
+        IEnumerable<IDomainEvent> domainEvents,
+        CancellationToken ct = default);
+}
+```
+
+---
+
 ```cs title="IEventPublisher.cs"
 using LegacyLego.Domain.Shared;
 
@@ -425,6 +451,20 @@ public interface IEventPublisher
 {
     public Task PublishAsync<TEvent>(TEvent domainEvent, CancellationToken ct = default)
         where TEvent : IDomainEvent;
+}
+```
+
+---
+
+```cs title="IQueryDispatcher.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.Messaging;
+
+public interface IQueryDispatcher
+{
+    public Task<Result<TResult>> DispatchAsync<TResult>(IQuery<TResult> query, CancellationToken ct = default);
 }
 ```
 
@@ -3476,7 +3516,7 @@ public class InvariantViolationException : DomainException
 ```cs title="AggregateRoot.cs"
 namespace LegacyLego.Domain.Shared;
 
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     where TId : ValueObject
 {
     private readonly List<IDomainEvent> _domainEvents = new();
@@ -3591,6 +3631,18 @@ namespace LegacyLego.Domain.Shared;
 public interface IDomainEvent
 {
 
+}
+```
+
+---
+
+```cs title="IHasDomainEvents.cs"
+namespace LegacyLego.Domain.Shared;
+
+public interface IHasDomainEvents
+{
+    IReadOnlyList<IDomainEvent> DomainEvents { get; }
+    void ClearDomainEvents();
 }
 ```
 
@@ -7763,6 +7815,77 @@ public class PricePlusTests
 
 ---
 
+```cs title="UnitOfWork.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Outbox;
+using System.Text.Json;
+
+namespace LegacyLego.Infrastructure;
+
+public sealed class UnitOfWork: IUnitOfWork
+{
+    private readonly OrderContext _orderContext;
+    private readonly TimeProvider _timeProvider;
+
+    public UnitOfWork(OrderContext orderContext, TimeProvider timeProvider)
+    {
+        _orderContext = orderContext;
+        _timeProvider = timeProvider;
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        OutboxingDomainEvents();
+
+        return await _orderContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private void OutboxingDomainEvents()
+    {
+        var entitiesWithEvents = GetAllWithDomainEvents();
+
+        var domainEvents = TakeDomainEvents(entitiesWithEvents);
+
+        foreach (var entity in entitiesWithEvents)
+            entity.ClearDomainEvents();
+
+        var outboxMessages = ConvertDomainEventsToOutboxMessages(domainEvents);
+
+        _orderContext.Set<OutboxMessage>().AddRange(outboxMessages);
+    }
+
+    private List<IHasDomainEvents> GetAllWithDomainEvents()
+    {
+        return _orderContext.ChangeTracker
+            .Entries<IHasDomainEvents>()
+            .Select(x => x.Entity)
+            .Where(entity => entity.DomainEvents.Any())
+            .ToList();
+    }
+
+    private List<IDomainEvent> TakeDomainEvents(List<IHasDomainEvents> hasEventsList)
+    {
+        return hasEventsList
+            .SelectMany(entity => entity.DomainEvents)
+            .ToList();
+    }
+
+    private List<OutboxMessage> ConvertDomainEventsToOutboxMessages(List<IDomainEvent> domainEvents)
+    {
+        return domainEvents.Select(domainEvent => new OutboxMessage(
+            id: Guid.NewGuid(),
+            type: domainEvent.GetType().Name,
+            content: JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
+            occurredOnUtc: _timeProvider.GetUtcNow().UtcDateTime
+        )).ToList();
+    }
+}
+```
+
+---
+
 ### Common
 
 ```cs title="SpecificationEvaluator.cs"
@@ -8221,6 +8344,86 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
 
 ---
 
+```cs title="OutboxMessageConfiguration.cs"
+using LegacyLego.Infrastructure.Configuration.Common;
+using LegacyLego.Infrastructure.Outbox;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using static LegacyLego.Infrastructure.Configuration.Common.PostgresTypes;
+
+namespace LegacyLego.Infrastructure.Configuration;
+
+public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+{
+    #region CostraintNames
+    private const string PK_CONSTRAINT_NAME = "pk_outbox_messages";
+    #endregion
+
+    #region ColumnNames
+    private const string TABLE_NAME = "Outbox_messages";
+    private const string ID_COLUMN_NAME = "id";
+    private const string TYPE_COLUMN_NAME = "type";
+    private const string CONTENT_COLUMN_NAME = "content";
+    private const string OCCURRED_ON_UTC_COLUMN_NAME = "occurred_on_utc";
+
+    private const string PROCESSED_ON_UTC_COLUMN_NAME = "processed_on_utc";
+    private const string ERROR_COLUMN_NAME = "error";
+    #endregion
+
+    public void Configure(EntityTypeBuilder<OutboxMessage> builder)
+    {
+        builder.ToTable(TABLE_NAME);
+
+        #region id
+        builder.HasKey(x => x.Id)
+            .HasName(PK_CONSTRAINT_NAME);
+
+        builder.Property(x => x.Id)
+            .HasColumnName(ID_COLUMN_NAME)
+            .HasColumnType(Uuid)
+            .IsRequired(); 
+        #endregion
+
+        #region type
+        builder.Property(x => x.Type)
+            .HasColumnName(TYPE_COLUMN_NAME)
+            .HasPostgresVarchar(255)
+            .IsRequired(); 
+        #endregion
+
+        #region content
+        builder.Property(x => x.Content)
+            .HasColumnName(CONTENT_COLUMN_NAME)
+            .HasColumnType(Text)
+            .IsRequired(); 
+        #endregion
+
+        #region occurred_on_utc
+        builder.Property(x => x.OccurredOnUtc)
+            .HasColumnName(OCCURRED_ON_UTC_COLUMN_NAME)
+            .HasColumnType(TimeStampTz)
+            .IsRequired(); 
+        #endregion
+
+        #region processed_on_utc
+        builder.Property(x => x.ProcessedOnUtc)
+            .HasColumnName(PROCESSED_ON_UTC_COLUMN_NAME)
+            .HasColumnType(TimeStampTz)
+            .IsRequired(false); 
+        #endregion
+
+        #region error
+        builder.Property(x => x.Error)
+            .HasColumnName(ERROR_COLUMN_NAME)
+            .HasColumnType(Text)
+            .IsRequired(false); 
+        #endregion
+    }
+}
+```
+
+---
+
 #### Common
 
 ```cs title="EntityTypeBuilderExtensions.cs"
@@ -8316,15 +8519,18 @@ internal static class PropertyBuilderExtensions
 ```cs title="OrderContext.cs"
 using LegacyLego.Domain.Aggregates;
 using LegacyLego.Infrastructure.Configuration;
+using LegacyLego.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace LegacyLego.Infrastructure.Context;
 
 public class OrderContext : DbContext
 {
-    public DbSet<Order> Orders { get; set; } = null!;
+    public DbSet<Order> Orders => Set<Order>();
 
-    public DbSet<OrderPayment> OrderPayments { get; set; } = null!;
+    public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     public OrderContext(DbContextOptions options) : base(options) { }
 
@@ -8334,8 +8540,235 @@ public class OrderContext : DbContext
         modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
         modelBuilder.ApplyConfiguration(new OrderPaymentConfiguration());
         modelBuilder.ApplyConfiguration(new ExternalSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
         base.OnModelCreating(modelBuilder);
     }
+}
+```
+
+---
+
+### Messaging
+
+```cs title="CommandDispatcher.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Domain.Shared;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
+
+namespace LegacyLego.Infrastructure.Messaging;
+
+public sealed class CommandDispatcher(IServiceProvider serviceProvider) : ICommandDispatcher
+{
+    private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+
+    public Task<Result<TResult>> DispatchAsync<TResult>(ICommand<TResult> command, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(command, nameof(command));
+
+        var commandType = command.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(commandType, type =>
+        {
+            var concreteWrapperType = typeof(CommandWrapperR<,>).MakeGenericType(type, typeof(TResult));
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
+
+        return ((CommandWrapperR<TResult>)wrapper).HandleAsync(command, serviceProvider, ct);
+    }
+
+    public Task<Result> DispatchAsync(ICommand command, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(command, nameof(command));
+
+        var commandType = command.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(commandType, type =>
+        {
+            var concreteWrapperType = typeof(CommandWrapper<>).MakeGenericType(type);
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
+
+        return ((CommandWrapper)wrapper).HandleAsync(command, serviceProvider, ct);
+    }
+}
+
+file abstract class CommandWrapperR<TResult>
+{
+    public abstract Task<Result<TResult>> HandleAsync(ICommand<TResult> command, IServiceProvider provider, CancellationToken ct);
+}
+
+file sealed class CommandWrapperR<TCommand, TResult> : CommandWrapperR<TResult>
+    where TCommand : ICommand<TResult>
+{
+    public override Task<Result<TResult>> HandleAsync(ICommand<TResult> command, IServiceProvider provider, CancellationToken ct)
+    {
+        var handler = provider.GetRequiredService<ICommandHandler<TCommand, TResult>>();
+        return handler.HandleAsync((TCommand)command, ct);
+    }
+}
+
+file abstract class CommandWrapper
+{
+    public abstract Task<Result> HandleAsync(ICommand command, IServiceProvider provider, CancellationToken ct);
+}
+
+file sealed class CommandWrapper<TCommand> : CommandWrapper
+    where TCommand : ICommand
+{
+    public override Task<Result> HandleAsync(ICommand command, IServiceProvider provider, CancellationToken ct)
+    {
+        var handler = provider.GetRequiredService<ICommandHandler<TCommand>>();
+        return handler.HandleAsync((TCommand)command, ct);
+    }
+}
+```
+
+---
+
+```cs title="DomainEventDispatcher.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+using LegacyLego.Domain.Shared;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
+
+namespace LegacyLego.Infrastructure.Messaging;
+
+public sealed class DomainEventDispatcher(IServiceProvider serviceProvider) : IDomainEventDispatcher
+{
+    private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+
+    public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(domainEvents, nameof(domainEvents));
+
+        foreach (var domainEvent in domainEvents)
+        {
+            if (domainEvent is null) continue;
+
+            var domainEventType = domainEvent.GetType();
+
+            var wrapper = WrapperCache.GetOrAdd(domainEventType, type =>
+            {
+                var concreteWrapperType = typeof(DomainEventWrapper<>).MakeGenericType(type);
+                return Activator.CreateInstance(concreteWrapperType)!;
+            });
+
+            await ((DomainEventWrapper)wrapper).HandleAsync(domainEvent, serviceProvider, ct);
+        }
+    }
+}
+
+file abstract class DomainEventWrapper
+{
+    public abstract Task HandleAsync(IDomainEvent domainEvent, IServiceProvider provider, CancellationToken ct);
+}
+
+file sealed class DomainEventWrapper<TDomainEvent> : DomainEventWrapper
+    where TDomainEvent : IDomainEvent
+{
+    public override async Task HandleAsync(IDomainEvent domainEvent, IServiceProvider provider, CancellationToken ct)
+    {
+        var handlers = provider.GetServices<IDomainEventHandler<TDomainEvent>>();
+
+        foreach (var handler in handlers)
+        {
+            if (handler is null) continue;
+
+            await handler.HandleAsync((TDomainEvent)domainEvent, ct);
+        }
+    }
+}
+```
+
+---
+
+```cs title="QueryDispatcher.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Domain.Shared;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
+
+namespace LegacyLego.Infrastructure.Messaging;
+
+public sealed class QueryDispatcher(IServiceProvider serviceProvider) : IQueryDispatcher
+{
+    private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+
+    public Task<Result<TResult>> DispatchAsync<TResult>(IQuery<TResult> query, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(query, nameof(query));
+
+        var queryType = query.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(queryType, type =>
+        {
+            var concreteWrapperType = typeof(QueryWrapper<,>).MakeGenericType(type, typeof(TResult));
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
+
+        return ((QueryWrapper<TResult>)wrapper).HandleAsync(query, serviceProvider, ct);
+    }
+}
+
+file abstract class QueryWrapper<TResult>
+{
+    public abstract Task<Result<TResult>> HandleAsync(IQuery<TResult> query, IServiceProvider provider, CancellationToken ct);
+}
+
+file sealed class QueryWrapper<TQuery, TResult> : QueryWrapper<TResult>
+    where TQuery : IQuery<TResult>
+{
+    public override async Task<Result<TResult>> HandleAsync(IQuery<TResult> query, IServiceProvider provider, CancellationToken ct)
+    {
+        var handler = provider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+
+        return await handler.HandleAsync((TQuery)query, ct);
+    }
+}
+```
+
+---
+
+### Outbox
+
+```cs title="OutboxMessage.cs"
+namespace LegacyLego.Infrastructure.Outbox;
+
+public sealed class OutboxMessage
+{
+    /// <summary>
+    /// Конструктор для создания нового экземпляра OutboxMessage 
+    /// в целях его дальнейшей записи в хранилище
+    /// </summary>
+    /// <param name="id"> идентификатор сообщения</param>
+    /// <param name="type">тип сообщения</param>
+    /// <param name="content">содержание сообщение json</param>
+    /// <param name="occurredOnUtc">дата и время появления сообщения в формате utc</param>
+    public OutboxMessage(Guid id, string type, string content, DateTime occurredOnUtc)
+    {
+        Id = id;
+        Type = type;
+        Content = content;
+        OccurredOnUtc = occurredOnUtc;
+    }
+
+    /// <summary>
+    /// Приватный конструктор, используемый для материализации объекта OutboxMessage
+    /// EF ORM системой в соответствии с конфигурациями
+    /// </summary>
+    private OutboxMessage() { }
+
+    public Guid Id { get; init; }
+    public string Type { get; init; } = string.Empty;
+    public string Content { get; init; } = string.Empty;
+    public DateTime OccurredOnUtc { get; init; }
+
+    public DateTime? ProcessedOnUtc { get; set; }
+    public string? Error { get; set; }
 }
 ```
 

@@ -1,14 +1,17 @@
 ﻿using LegacyLego.Domain.Aggregates;
 using LegacyLego.Infrastructure.Configuration;
+using LegacyLego.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace LegacyLego.Infrastructure.Context;
 
 public class OrderContext : DbContext
 {
-    public DbSet<Order> Orders { get; set; } = null!;
+    public DbSet<Order> Orders => Set<Order>();
 
-    public DbSet<OrderPayment> OrderPayments { get; set; } = null!;
+    public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     public OrderContext(DbContextOptions options) : base(options) { }
 
@@ -18,6 +21,7 @@ public class OrderContext : DbContext
         modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
         modelBuilder.ApplyConfiguration(new OrderPaymentConfiguration());
         modelBuilder.ApplyConfiguration(new ExternalSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }
