@@ -5,6 +5,6 @@ namespace LegacyLego.Application.Abstractions.Messaging;
 public interface IDomainEventDispatcher
 {
     public Task DispatchAsync(
-        IEnumerable<IDomainEvent> domainEvents,
+        IDomainEvent domainEvents,
         CancellationToken ct = default);
 }

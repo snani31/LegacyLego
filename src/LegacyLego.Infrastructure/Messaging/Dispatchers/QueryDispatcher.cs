@@ -4,7 +4,7 @@ using LegacyLego.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace LegacyLego.Infrastructure.Messaging;
+namespace LegacyLego.Infrastructure.Messaging.Dispatchers;
 
 public sealed class QueryDispatcher(IServiceProvider serviceProvider) : IQueryDispatcher
 {

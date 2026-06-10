@@ -4,30 +4,26 @@ using LegacyLego.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace LegacyLego.Infrastructure.Messaging;
+namespace LegacyLego.Infrastructure.Messaging.Dispatchers;
 
 public sealed class DomainEventDispatcher(IServiceProvider serviceProvider) : IDomainEventDispatcher
 {
     private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken ct = default)
+    public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(domainEvents, nameof(domainEvents));
+        ArgumentNullException.ThrowIfNull(domainEvent, nameof(domainEvent));
 
-        foreach (var domainEvent in domainEvents)
+        var domainEventType = domainEvent.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(domainEventType, type =>
         {
-            if (domainEvent is null) continue;
+            var concreteWrapperType = typeof(DomainEventWrapper<>).MakeGenericType(type);
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
 
-            var domainEventType = domainEvent.GetType();
-
-            var wrapper = WrapperCache.GetOrAdd(domainEventType, type =>
-            {
-                var concreteWrapperType = typeof(DomainEventWrapper<>).MakeGenericType(type);
-                return Activator.CreateInstance(concreteWrapperType)!;
-            });
-
-            await ((DomainEventWrapper)wrapper).HandleAsync(domainEvent, serviceProvider, ct);
-        }
+        await ((DomainEventWrapper)wrapper).HandleAsync(domainEvent, _serviceProvider, ct);
     }
 }
 
