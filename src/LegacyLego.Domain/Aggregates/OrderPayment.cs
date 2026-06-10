@@ -131,7 +131,7 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         TransactionId ??= transactionId;
         Status = nextStatus;
 
-        base.Raise(new OrderPaymentRefundRequested(Id, TransactionId!));
+        base.Raise(new OrderPaymentRefundRequested(Id, OrderId, TransactionId!));
 
         return Result.Success();
     }

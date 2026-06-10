@@ -5,4 +5,5 @@ namespace LegacyLego.Domain.DomainEvents;
 
 public sealed record OrderPaymentRefundRequested(
     OrderPaymentId Paymentid,
+    OrderId OrderId,
     string TransactionId) : IDomainEvent;
