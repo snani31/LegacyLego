@@ -58,7 +58,7 @@ public sealed class UnitOfWork: IUnitOfWork
     {
         return domainEvents.Select(domainEvent => new OutboxMessage(
             id: Guid.NewGuid(),
-            type: domainEvent.GetType().Name,
+            type: domainEvent.GetType().AssemblyQualifiedName ?? domainEvent.GetType().FullName!,
             content: JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
             occurredOnUtc: _timeProvider.GetUtcNow().UtcDateTime
         )).ToList();
