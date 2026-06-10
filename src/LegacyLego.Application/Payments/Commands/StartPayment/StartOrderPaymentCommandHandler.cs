@@ -2,6 +2,7 @@
 using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Exceptions;
+using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Abstractions;
@@ -29,10 +30,14 @@ public sealed class StartOrderPaymentCommandHandler(
     public async Task<Result<StartOrderPaymentDetails>> HandleAsync(StartOrderPaymentCommand command, CancellationToken ct)
     {
         var orderId = OrderId.From(command.OrderId);
+        var clientId = command.ClientId;
 
         var order = await orderRepository.GetByIdAsync(orderId);
         if (order is null)
             return Result<StartOrderPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        if (order.ClientId != command.ClientId)
+            return Result<StartOrderPaymentDetails>.Failure(OrderApplicationErrors.GetUnauthorizedAccessToOrderByClientIdError(orderId, clientId));
 
         if (order.Status != OrderStatus.PendingPayment)
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetOrderIsNotInPendingPaymentError(command.OrderId, order.Status));
@@ -86,10 +91,11 @@ public sealed class StartOrderPaymentCommandHandler(
         }
 
         var sessionResult = await paymentProvider.CreatePaymentSessionAsync(
-                    payment.Id.Value,
-                    order.TotalPrice.Sum,
-                    order.TotalPrice.Currency.Code,
-                    ct);
+                    paymentId: payment.Id.Value,
+                    orderId: order.Id.Value,
+                    amount: order.TotalPrice.Sum,
+                    currency: order.TotalPrice.Currency.Code,
+                    ct: ct);
 
         if (sessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(sessionResult.Error);
@@ -144,10 +150,11 @@ public sealed class StartOrderPaymentCommandHandler(
         }
 
         var newSessionResult = await paymentProvider.CreatePaymentSessionAsync(
-                payment.Id.Value,
-                order.TotalPrice.Sum,
-                order.TotalPrice.Currency.Code,
-                ct);
+                paymentId: payment.Id.Value,
+                orderId: order.Id.Value,
+                amount: order.TotalPrice.Sum,
+                currency: order.TotalPrice.Currency.Code,
+                ct: ct);
 
         if (newSessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(newSessionResult.Error);

@@ -7,11 +7,15 @@ public interface IPaymentProvider
 {
     public Task<Result<PaymentSession>> CreatePaymentSessionAsync(
         Guid paymentId,
+        Guid orderId,
         decimal amount,
         string currency,
         CancellationToken ct);
 
-    public Task<Result<PaymentSession>> GetExistingSessionAsync(
-        Guid paymentId,
+    Task<Result> RequestRefundAsync(
+        Guid orderId,
+        decimal amount,
+        string currency,
+        string transactionId,
         CancellationToken ct);
 }

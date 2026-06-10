@@ -3,4 +3,4 @@ using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
 namespace LegacyLego.Application.Payments.Commands.StartPayment;
 
-public sealed record StartOrderPaymentCommand(Guid OrderId) : ICommand<StartOrderPaymentDetails>;
+public sealed record StartOrderPaymentCommand(Guid OrderId, Guid ClientId) : ICommand<StartOrderPaymentDetails>;
