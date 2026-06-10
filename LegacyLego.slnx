@@ -3,6 +3,7 @@
     <Project Path="src/LegacyLego.Application/LegacyLego.Application.csproj" />
     <Project Path="src/LegacyLego.Domain/LegacyLego.Domain.csproj" />
     <Project Path="src/LegacyLego.Infrastructure/LegacyLego.Infrastructure.csproj" Id="aa0b78bb-e9d7-493b-9282-a99a5a59d3bc" />
+    <Project Path="src/LegacyLego.Presentation/LegacyLego.Presentation.csproj" Id="2e1154ac-fb56-4c89-9b44-1aa61bc06dd6" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LegacyLego.Domain.Tests/LegacyLego.Domain.Tests.csproj" />

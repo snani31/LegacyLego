@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.7.3
+Актуальная версия проекта: 1.8.0
 
 ## Проекты
 
@@ -18,7 +18,8 @@
 1) **LegacyLego.Domain** - Содержит доменную логику проекта, является ядром всей системы и существует, чтобы описывать бизнес-логику на уровне кода;
 2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**;
 3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры;
-4) **LegacyLego.Infrastructure** - Предназначается в первую очередь для описания персистентной модели, реализации базовых контрактов доменных и уровня приложения. Сопряжения с внешними сервисами (внешней инфраструктурой). 
+4) **LegacyLego.Infrastructure** - Предназначается в первую очередь для описания персистентной модели, реализации базовых контрактов доменных и уровня приложения. Сопряжения с внешними сервисами (внешней инфраструктурой);
+5) **LegacyLego.Presentation** - Является точкой входа (Program.cs) в API, описывает эндпоинты и регистрирует инфраструктурные сервисы через DI механизм.  
 
 ---
 
@@ -28,305 +29,109 @@
 
 ```txt title="TreeStructure"
 .
-├── docker
-│   ├── nginx
-│   │   └── nginx.conf
-│   └── docker-compose.yaml
-├── docs
-│   ├── architecture
-│   │   ├── 'Order ER-scheme.docx'
-│   │   ├── 'OrderPayment ER-scheme.docx'
-│   │   └── 'state transition matrix.docx'
-│   ├── automation
-│   │   ├── generated
-│   │   │   └── 'LegacyLego Code documentation.md'
-│   │   ├── templates
-│   │   │   └── 'LegacyLego Code documentation template.md'
-│   │   └── automation-guide.md
-│   ├── decisions
-│   │   └── 0001-automation-of-code-listings.md
-│   └── diagrams
-│       ├── out
-│       │   ├── ER
-│       │   │   ├── 'ER Diagram.jpg'
-│       │   │   ├── OrderAggregateErScheme.jpg
-│       │   │   └── OrderPaymentAggregateErScheme.jpg
-│       │   ├── ActivityDiagramOrderLifeCycle_v2.jpg
-│       │   ├── OrderClassDiagram.jpg
-│       │   ├── OrderClassDiagram_v1.jpg
-│       │   ├── SolutionStructureTreeDiagram.jpg
-│       │   └── StoreOrderingSystemDiagram_v2.jpg
-│       └── src
-│           ├── ER
-│           │   ├── 'ER Diagram.drawio'
-│           │   ├── 'Order Aggregate ER-Scheme.drawio'
-│           │   └── 'OrderPayment Aggregate ER-Scheme.drawio'
-│           ├── ActivityDiagramOrderLifeCycle.drawio
-│           ├── OrderClassDiagram.drawio
-│           ├── SolutionStructureTreeDiagram.drawio
-│           └── StoreOrderingSystemDiagram.drawio
-├── src
-│   ├── LegacyLego.Application
-│   │   ├── Abstractions
-│   │   │   ├── Data
-│   │   │   │   └── IUnitOfWork.cs
-│   │   │   ├── ExternalServices
-│   │   │   │   ├── IBackgroundJobService.cs
-│   │   │   │   └── IPaymentProvider.cs
-│   │   │   └── Messaging
-│   │   │       ├── Command
-│   │   │       │   ├── IBaseCommand.cs
-│   │   │       │   ├── ICommand.cs
-│   │   │       │   └── ICommandHandler.cs
-│   │   │       ├── Event
-│   │   │       │   ├── Domain
-│   │   │       │   │   └── IDomainEventHandler.cs
-│   │   │       │   └── Integration
-│   │   │       │       ├── IIntegrationEvent.cs
-│   │   │       │       └── IIntegrationEventPublisher.cs
-│   │   │       ├── Query
-│   │   │       │   ├── IQuery.cs
-│   │   │       │   └── IQueryHandler.cs
-│   │   │       ├── ICommandDispatcher.cs
-│   │   │       ├── IDomainEventDispatcher.cs
-│   │   │       ├── IEventPublisher.cs
-│   │   │       └── IQueryDispatcher.cs
-│   │   ├── Common
-│   │   ├── Errors
-│   │   │   └── PaymentProviderErrors.cs
-│   │   ├── ExceptionalErrors
-│   │   │   └── UnitOfWorkExceptionalErrors.cs
-│   │   ├── Exceptions
-│   │   │   ├── InfrastructureException.cs
-│   │   │   ├── PersistenceException.cs
-│   │   │   └── UniqueConstraintViolation.cs
-│   │   ├── Orders
-│   │   │   ├── Commands
-│   │   │   │   ├── Cancel
-│   │   │   │   │   ├── CancelletionOrderDetails.cs
-│   │   │   │   │   ├── CancelOrderCommand.cs
-│   │   │   │   │   └── CancelOrderCommandHandler.cs
-│   │   │   │   ├── Create
-│   │   │   │   │   ├── CreateOrderCommand.cs
-│   │   │   │   │   ├── CreateOrderCommandHandler.cs
-│   │   │   │   │   └── CreateOrderDomainEventHandler.cs
-│   │   │   │   ├── Expire
-│   │   │   │   │   ├── ExpirationOrderDetails.cs
-│   │   │   │   │   ├── ExpireOrderCommand.cs
-│   │   │   │   │   └── ExpireOrderCommandHandler.cs
-│   │   │   │   ├── Pay
-│   │   │   │   │   ├── PayOrderCommand.cs
-│   │   │   │   │   ├── PayOrderCommandHandler.cs
-│   │   │   │   │   └── PayOrderDetails.cs
-│   │   │   │   └── Refund
-│   │   │   │       ├── RefundOrderCommand.cs
-│   │   │   │       ├── RefundOrderCommandHandler.cs
-│   │   │   │       └── RefundOrderDetails.cs
-│   │   │   ├── Common
-│   │   │   │   ├── Mappers
-│   │   │   │   ├── Projections
-│   │   │   │   │   └── OrderProjections.cs
-│   │   │   │   ├── OrderAddressDto.cs
-│   │   │   │   ├── OrderItemDto.cs
-│   │   │   │   └── OrderSummaryDto.cs
-│   │   │   └── Queries
-│   │   │       ├── ActiveOrders
-│   │   │       │   ├── ActiveOrderSpecification.cs
-│   │   │       │   ├── GetActiveOrdersQuery.cs
-│   │   │       │   └── GetActiveOrdersQueryHandler.cs
-│   │   │       ├── OrderDetails
-│   │   │       │   ├── ActiveOrderSpecification.cs
-│   │   │       │   ├── GetOrderDetailsQuery.cs
-│   │   │       │   ├── GetOrderDetailsQueryHandler.cs
-│   │   │       │   └── OrderDetailsDto.cs
-│   │   │       └── OrdersHistory
-│   │   │           ├── GetOrdersHistoryQuery.cs
-│   │   │           ├── GetOrdersHistoryQueryHandler.cs
-│   │   │           ├── OrderHistoryRequest.cs
-│   │   │           ├── OrderHistorySpecification.cs
-│   │   │           └── OrdersHistoryResponse.cs
-│   │   ├── Payments
-│   │   │   ├── Commands
-│   │   │   │   ├── PocessPaymentWebhook
-│   │   │   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
-│   │   │   │   │   ├── ProcessPaymentDetails.cs
-│   │   │   │   │   ├── ProcessPaymentErrors.cs
-│   │   │   │   │   ├── ProcessPaymentWebhookCommand.cs
-│   │   │   │   │   └── ProcessPaymentWebhookCommandHandler.cs
-│   │   │   │   ├── RefundRequested
-│   │   │   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
-│   │   │   │   └── StartPayment
-│   │   │   │       ├── StartOrderPaymentCommand.cs
-│   │   │   │       ├── StartOrderPaymentCommandHandler.cs
-│   │   │   │       ├── StartOrderPaymentDetails.cs
-│   │   │   │       └── StartOrderPaymentErrors.cs
-│   │   │   ├── Common
-│   │   │   │   ├── PaymentIntegrationEventMapper.cs
-│   │   │   │   ├── PaymentSession.cs
-│   │   │   │   └── PaymentWebhook.cs
-│   │   │   ├── IntegrationEvents
-│   │   │   │   └── RefundPaymentRequestedIntegrationEvent.cs
-│   │   │   └── Services
-│   │   │       └── PaymentLookup.cs
-│   │   └── LegacyLego.Application.csproj
-│   ├── LegacyLego.Domain
-│   │   ├── Abstractions
-│   │   │   ├── IOrderRepository.cs
-│   │   │   └── IPaymentRepository.cs
-│   │   ├── Aggregates
-│   │   │   ├── Order.cs
-│   │   │   └── OrderPayment.cs
-│   │   ├── DomainEvents
-│   │   │   ├── OrderCanceled.cs
-│   │   │   ├── OrderCreated.cs
-│   │   │   ├── OrderExpired.cs
-│   │   │   ├── OrderPaid.cs
-│   │   │   ├── OrderPaymentCreated.cs
-│   │   │   ├── OrderPaymentFailed.cs
-│   │   │   ├── OrderPaymentRefunded.cs
-│   │   │   ├── OrderPaymentRefundedWithoutSuccess.cs
-│   │   │   ├── OrderPaymentRefundRequested.cs
-│   │   │   ├── OrderPaymentSucceeded.cs
-│   │   │   └── OrderRefunded.cs
-│   │   ├── Enums
-│   │   │   ├── OrderAction.cs
-│   │   │   ├── OrderStatus.cs
-│   │   │   ├── PaymentAction.cs
-│   │   │   └── PaymentStatus.cs
-│   │   ├── Errors
-│   │   │   ├── CurrencyErrors.cs
-│   │   │   ├── ExternalSessionErrors.cs
-│   │   │   ├── OrderErrors.cs
-│   │   │   ├── OrderItemErrors.cs
-│   │   │   ├── OrderPaymentErrors.cs
-│   │   │   └── PriceErrors.cs
-│   │   ├── ExceptionalErrors
-│   │   │   ├── CurrencyExceptionalErrors.cs
-│   │   │   ├── ExternalSessionExceptionalErrors.cs
-│   │   │   ├── OrderExceptionalErrors.cs
-│   │   │   ├── PriceExceptionalErrors.cs
-│   │   │   └── ResultExceptionalErrors.cs
-│   │   ├── Exceptions
-│   │   │   ├── InvalidDomainStateException.cs
-│   │   │   └── InvariantViolationException.cs
-│   │   ├── Shared
-│   │   │   ├── AggregateRoot.cs
-│   │   │   ├── DomainException.cs
-│   │   │   ├── Entity.cs
-│   │   │   ├── Error.cs
-│   │   │   ├── ExceptionalError.cs
-│   │   │   ├── IDomainEvent.cs
-│   │   │   ├── IHasDomainEvents.cs
-│   │   │   ├── Result.cs
-│   │   │   ├── ResultT.cs
-│   │   │   ├── Specification.cs
-│   │   │   └── ValueObject.cs
-│   │   ├── ValueObjects
-│   │   │   ├── Currency.cs
-│   │   │   ├── ExternalSession.cs
-│   │   │   ├── OrderAddress.cs
-│   │   │   ├── OrderId.cs
-│   │   │   ├── OrderItem.cs
-│   │   │   ├── OrderPaymentId.cs
-│   │   │   └── Price.cs
-│   │   └── LegacyLego.Domain.csproj
-│   └── LegacyLego.Infrastructure
-│       ├── Common
-│       │   └── SpecificationEvaluator.cs
-│       ├── Configuration
-│       │   ├── Common
-│       │   │   ├── EntityTypeBuilderExtensions.cs
-│       │   │   ├── PostgresTypes.cs
-│       │   │   └── PropertyBuilderExtensions.cs
-│       │   ├── ExternalSessionConfiguration.cs
-│       │   ├── OrderConfiguration.cs
-│       │   ├── OrderItemConfiguration.cs
-│       │   ├── OrderPaymentConfiguration.cs
-│       │   └── OutboxMessageConfiguration.cs
-│       ├── Context
-│       │   └── OrderContext.cs
-│       ├── Messaging
-│       │   ├── CommandDispatcher.cs
-│       │   ├── DomainEventDispatcher.cs
-│       │   └── QueryDispatcher.cs
-│       ├── Migrations
-│       ├── Outbox
-│       │   └── OutboxMessage.cs
-│       ├── Repositories
-│       │   ├── OrderRepository.cs
-│       │   └── PaymentRepository.cs
-│       ├── LegacyLego.Infrastructure.csproj
-│       └── UnitOfWork.cs
-├── tests
-│   └── LegacyLego.Domain.Tests
-│       ├── Common
-│       │   ├── Builders
-│       │   │   └── OrderBuilder.cs
-│       │   └── Factories
-│       │       ├── OrderDataFactory.cs
-│       │       └── OrderPaymentDataFactory.cs
-│       ├── CurrencyTests
-│       │   ├── Equality
-│       │   │   └── CurrencyEqualityTests.cs
-│       │   └── FromCode
-│       │       └── CurrencyFromCodeTests.cs
-│       ├── ExternalSessionTests
-│       │   ├── Create
-│       │   │   └── ExternalSessionCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── ExternalSessionEqualityTests.cs
-│       │   └── IsExpired
-│       │       └── ExternalSessionCreateTests.cs
-│       ├── OrderItemTests
-│       │   ├── Create
-│       │   │   └── OrderItemCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── OrderItemEqualityTests.cs
-│       │   └── GetTotalPriceTests
-│       │       └── OrderItemGetTotalPriceTests.cs
-│       ├── OrderPaymentTests
-│       │   ├── AttachSession
-│       │   │   └── OrderPaymentAttachSessionTests.cs
-│       │   ├── Create
-│       │   │   └── OrderPaymentCreateTests.cs
-│       │   └── StateTransitions
-│       │       ├── MarkAsFailed
-│       │       │   └── OrderPaymentMarkAsFailedTests.cs
-│       │       ├── MarkAsRefunded
-│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
-│       │       ├── MarkAsRefundRequested
-│       │       │   └── OrderPaymentMarkAsRefundRequestedTests.cs
-│       │       └── MarkAsSucceeded
-│       │           └── OrderPaymentMarkAsSucceededTests.cs
-│       ├── OrderTests
-│       │   ├── Create
-│       │   │   └── OrderCreateTests.cs
-│       │   ├── StateTransitions
-│       │   │   ├── Cancel
-│       │   │   │   └── OrderCancelTests.cs
-│       │   │   ├── Expire
-│       │   │   │   └── OrderExpireTests.cs
-│       │   │   ├── Pay
-│       │   │   │   └── OrderPayTests.cs
-│       │   │   └── Refund
-│       │   │       └── OrderRefundTests.cs
-│       │   └── TotalPrice
-│       │       └── OrderTotalPriceTests.cs
-│       ├── PriceTests
-│       │   ├── Create
-│       │   │   └── PriceCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── PriceEqualityTests.cs
-│       │   ├── MultiplyByQuantity
-│       │   │   └── PriceMultiplyByQuantityTests.cs
-│       │   └── Plus
-│       │       └── PricePlusTests.cs
-│       ├── GlobalUsings.cs
-│       └── LegacyLego.Domain.Tests.csproj
-├── tools
-│   └── update-project-listing-docs.ps1
-├── LegacyLego.slnx
-└── README.md
+├── Abstractions
+│   ├── Data
+│   │   └── IUnitOfWork.cs
+│   ├── ExternalServices
+│   │   ├── IBackgroundJobService.cs
+│   │   └── IPaymentProvider.cs
+│   └── Messaging
+│       ├── Command
+│       │   ├── IBaseCommand.cs
+│       │   ├── ICommand.cs
+│       │   └── ICommandHandler.cs
+│       ├── Event
+│       │   ├── Domain
+│       │   │   └── IDomainEventHandler.cs
+│       │   └── Integration
+│       │       ├── IIntegrationEvent.cs
+│       │       └── IIntegrationEventPublisher.cs
+│       ├── Query
+│       │   ├── IQuery.cs
+│       │   └── IQueryHandler.cs
+│       ├── ICommandDispatcher.cs
+│       ├── IDomainEventDispatcher.cs
+│       ├── IEventPublisher.cs
+│       └── IQueryDispatcher.cs
+├── Common
+├── Errors
+│   └── PaymentProviderErrors.cs
+├── ExceptionalErrors
+│   └── UnitOfWorkExceptionalErrors.cs
+├── Exceptions
+│   ├── InfrastructureException.cs
+│   ├── PersistenceException.cs
+│   └── UniqueConstraintViolation.cs
+├── Orders
+│   ├── Commands
+│   │   ├── Cancel
+│   │   │   ├── CancelletionOrderDetails.cs
+│   │   │   ├── CancelOrderCommand.cs
+│   │   │   └── CancelOrderCommandHandler.cs
+│   │   ├── Create
+│   │   │   ├── CreateOrderCommand.cs
+│   │   │   ├── CreateOrderCommandHandler.cs
+│   │   │   └── CreateOrderDomainEventHandler.cs
+│   │   ├── Expire
+│   │   │   ├── ExpirationOrderDetails.cs
+│   │   │   ├── ExpireOrderCommand.cs
+│   │   │   └── ExpireOrderCommandHandler.cs
+│   │   ├── Pay
+│   │   │   ├── PayOrderCommand.cs
+│   │   │   ├── PayOrderCommandHandler.cs
+│   │   │   └── PayOrderDetails.cs
+│   │   └── Refund
+│   │       ├── RefundOrderCommand.cs
+│   │       ├── RefundOrderCommandHandler.cs
+│   │       └── RefundOrderDetails.cs
+│   ├── Common
+│   │   ├── Mappers
+│   │   ├── Projections
+│   │   │   └── OrderProjections.cs
+│   │   ├── OrderAddressDto.cs
+│   │   ├── OrderItemDto.cs
+│   │   └── OrderSummaryDto.cs
+│   ├── Errors
+│   │   └── OrderApplicationErrors.cs
+│   └── Queries
+│       ├── ActiveOrders
+│       │   ├── ActiveOrderSpecification.cs
+│       │   ├── GetActiveOrdersQuery.cs
+│       │   └── GetActiveOrdersQueryHandler.cs
+│       ├── OrderDetails
+│       │   ├── ActiveOrderSpecification.cs
+│       │   ├── GetOrderDetailsQuery.cs
+│       │   ├── GetOrderDetailsQueryHandler.cs
+│       │   └── OrderDetailsDto.cs
+│       └── OrdersHistory
+│           ├── GetOrdersHistoryQuery.cs
+│           ├── GetOrdersHistoryQueryHandler.cs
+│           ├── OrderHistoryRequest.cs
+│           ├── OrderHistorySpecification.cs
+│           └── OrdersHistoryResponse.cs
+├── Payments
+│   ├── Commands
+│   │   ├── PocessPaymentWebhook
+│   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
+│   │   │   ├── ProcessPaymentDetails.cs
+│   │   │   ├── ProcessPaymentErrors.cs
+│   │   │   ├── ProcessPaymentWebhookCommand.cs
+│   │   │   └── ProcessPaymentWebhookCommandHandler.cs
+│   │   ├── RefundRequested
+│   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
+│   │   └── StartPayment
+│   │       ├── StartOrderPaymentCommand.cs
+│   │       ├── StartOrderPaymentCommandHandler.cs
+│   │       ├── StartOrderPaymentDetails.cs
+│   │       └── StartOrderPaymentErrors.cs
+│   ├── Common
+│   │   ├── PaymentSession.cs
+│   │   └── PaymentWebhook.cs
+│   ├── IntegrationEvents
+│   │   └── OrderPaymentRefundRequestedIntegrationEvent.cs
+│   └── Services
+│       └── PaymentLookup.cs
+└── LegacyLego.Application.csproj
 ```
 
 ---
@@ -397,12 +202,16 @@ public interface IPaymentProvider
 {
     public Task<Result<PaymentSession>> CreatePaymentSessionAsync(
         Guid paymentId,
+        Guid orderId,
         decimal amount,
         string currency,
         CancellationToken ct);
 
-    public Task<Result<PaymentSession>> GetExistingSessionAsync(
-        Guid paymentId,
+    Task<Result> RequestRefundAsync(
+        Guid orderId,
+        decimal amount,
+        string currency,
+        string transactionId,
         CancellationToken ct);
 }
 ```
@@ -435,7 +244,7 @@ namespace LegacyLego.Application.Abstractions.Messaging;
 public interface IDomainEventDispatcher
 {
     public Task DispatchAsync(
-        IEnumerable<IDomainEvent> domainEvents,
+        IDomainEvent domainEvents,
         CancellationToken ct = default);
 }
 ```
@@ -1287,6 +1096,30 @@ public static class OrderProjections
 
 ---
 
+#### Errors
+
+```cs title="OrderApplicationErrors.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Application.Orders.Errors;
+
+public static class OrderApplicationErrors
+{
+    public const string UnauthorizedAccessToOrderByClientIdCode = "Order.UnauthorizedAccessToOrderByClientId";
+
+    public static Error GetUnauthorizedAccessToOrderByClientIdError(OrderId orderId, Guid clientId)
+    {
+        return new(
+            Code: UnauthorizedAccessToOrderByClientIdCode,
+            Message: $"Запрещено обращение к заказу: {orderId.Value} по следующему идентификатору клиента: {clientId}"
+        );
+    }
+}
+```
+
+---
+
 #### Queries
 
 ##### ActiveOrders
@@ -1878,18 +1711,33 @@ public sealed class ProcessPaymentWebhookCommandHandler(
 ```cs title="RefundRequestedOrderPaymentDomainEventHandler.cs"
 using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
 using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
-using LegacyLego.Application.Payments.Common;
+using LegacyLego.Application.Payments.IntegrationEvents;
+using LegacyLego.Domain.Abstractions;
 using LegacyLego.Domain.DomainEvents;
 
 namespace LegacyLego.Application.Orders.Commands.Create;
 
-public class RefundRequestedOrderPaymentDomainEventHandler(IIntegrationEventPublisher eventPublisher)
+public class RefundRequestedOrderPaymentDomainEventHandler(
+    TimeProvider timeProvider,
+    IOrderRepository orderRepository,
+    IIntegrationEventPublisher eventPublisher)
 : IDomainEventHandler<OrderPaymentRefundRequested>
 {
     public async Task HandleAsync(OrderPaymentRefundRequested notification, CancellationToken ct)
     {
-        var ivent = PaymentIntegrationEventMapper.Map(notification);
-        await eventPublisher.PublishAsync(ivent, ct);
+        // TODO Уязвимость ! По логике ЖЦ у нас ТОЧНО есть этот order, но даже так не проверять его на null - катастрофа
+        // исправить позже Dead Letter Queue
+        var order = await orderRepository.GetByIdAsync(notification.OrderId, ct);
+
+        var @event = new OrderPaymentRefundRequestedIntegrationEvent(
+            PaymentId: notification.Paymentid,
+            OrderId: notification.OrderId.Value,
+            Amount: order!.TotalPrice.Sum,
+            Currency: order.Currency.Code,
+            TransactionId: notification.TransactionId,
+            OccurredOnUtc: timeProvider.GetUtcNow().UtcDateTime);
+
+        await eventPublisher.PublishAsync(@event, ct);
     }
 }
 ```
@@ -1904,7 +1752,7 @@ using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
 namespace LegacyLego.Application.Payments.Commands.StartPayment;
 
-public sealed record StartOrderPaymentCommand(Guid OrderId) : ICommand<StartOrderPaymentDetails>;
+public sealed record StartOrderPaymentCommand(Guid OrderId, Guid ClientId) : ICommand<StartOrderPaymentDetails>;
 ```
 
 ---
@@ -1914,6 +1762,7 @@ using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Exceptions;
+using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Abstractions;
@@ -1941,10 +1790,14 @@ public sealed class StartOrderPaymentCommandHandler(
     public async Task<Result<StartOrderPaymentDetails>> HandleAsync(StartOrderPaymentCommand command, CancellationToken ct)
     {
         var orderId = OrderId.From(command.OrderId);
+        var clientId = command.ClientId;
 
         var order = await orderRepository.GetByIdAsync(orderId);
         if (order is null)
             return Result<StartOrderPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        if (order.ClientId != command.ClientId)
+            return Result<StartOrderPaymentDetails>.Failure(OrderApplicationErrors.GetUnauthorizedAccessToOrderByClientIdError(orderId, clientId));
 
         if (order.Status != OrderStatus.PendingPayment)
             return Result<StartOrderPaymentDetails>.Failure(StartOrderPaymentErrors.GetOrderIsNotInPendingPaymentError(command.OrderId, order.Status));
@@ -1998,10 +1851,11 @@ public sealed class StartOrderPaymentCommandHandler(
         }
 
         var sessionResult = await paymentProvider.CreatePaymentSessionAsync(
-                    payment.Id.Value,
-                    order.TotalPrice.Sum,
-                    order.TotalPrice.Currency.Code,
-                    ct);
+                    paymentId: payment.Id.Value,
+                    orderId: order.Id.Value,
+                    amount: order.TotalPrice.Sum,
+                    currency: order.TotalPrice.Currency.Code,
+                    ct: ct);
 
         if (sessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(sessionResult.Error);
@@ -2056,10 +1910,11 @@ public sealed class StartOrderPaymentCommandHandler(
         }
 
         var newSessionResult = await paymentProvider.CreatePaymentSessionAsync(
-                payment.Id.Value,
-                order.TotalPrice.Sum,
-                order.TotalPrice.Currency.Code,
-                ct);
+                paymentId: payment.Id.Value,
+                orderId: order.Id.Value,
+                amount: order.TotalPrice.Sum,
+                currency: order.TotalPrice.Currency.Code,
+                ct: ct);
 
         if (newSessionResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(newSessionResult.Error);
@@ -2224,25 +2079,6 @@ public static class StartOrderPaymentErrors
 
 #### Common
 
-```cs title="PaymentIntegrationEventMapper.cs"
-using LegacyLego.Application.Payments.IntegrationEvents;
-using LegacyLego.Domain.DomainEvents;
-
-namespace LegacyLego.Application.Payments.Common;
-
-public static class PaymentIntegrationEventMapper
-{
-    public static RefundPaymentRequestedIntegrationEvent Map(OrderPaymentRefundRequested domainEvent)
-    {
-        return new RefundPaymentRequestedIntegrationEvent(
-            domainEvent.TransactionId
-        );
-    }
-}
-```
-
----
-
 ```cs title="PaymentSession.cs"
 namespace LegacyLego.Application.Payments.Common;
 
@@ -2272,15 +2108,19 @@ public record PaymentWebhook(
 
 #### IntegrationEvents
 
-```cs title="RefundPaymentRequestedIntegrationEvent.cs"
+```cs title="OrderPaymentRefundRequestedIntegrationEvent.cs"
 using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Domain.ValueObjects;
 
 namespace LegacyLego.Application.Payments.IntegrationEvents;
 
-public sealed record RefundPaymentRequestedIntegrationEvent(string TransactionId) : IIntegrationEvent
-{
-    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
-}
+public sealed record OrderPaymentRefundRequestedIntegrationEvent(
+    OrderPaymentId PaymentId,
+    Guid OrderId,
+    decimal Amount,
+    string Currency,       
+    string TransactionId,
+    DateTime OccurredOnUtc) : IIntegrationEvent;
 ```
 
 ---
@@ -2792,7 +2632,7 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
         TransactionId ??= transactionId;
         Status = nextStatus;
 
-        base.Raise(new OrderPaymentRefundRequested(Id, TransactionId!));
+        base.Raise(new OrderPaymentRefundRequested(Id, OrderId, TransactionId!));
 
         return Result.Success();
     }
@@ -2947,6 +2787,7 @@ namespace LegacyLego.Domain.DomainEvents;
 
 public sealed record OrderPaymentRefundRequested(
     OrderPaymentId Paymentid,
+    OrderId OrderId,
     string TransactionId) : IDomainEvent;
 ```
 
@@ -7793,11 +7634,13 @@ public class PricePlusTests
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.8" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
   </ItemGroup>
 
@@ -7876,10 +7719,127 @@ public sealed class UnitOfWork: IUnitOfWork
     {
         return domainEvents.Select(domainEvent => new OutboxMessage(
             id: Guid.NewGuid(),
-            type: domainEvent.GetType().Name,
+            type: domainEvent.GetType().AssemblyQualifiedName ?? domainEvent.GetType().FullName!,
             content: JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
             occurredOnUtc: _timeProvider.GetUtcNow().UtcDateTime
         )).ToList();
+    }
+}
+```
+
+---
+
+### BackgroundJobs
+
+```cs title="OutboxBackgroundWorker.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Outbox;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
+namespace LegacyLego.Infrastructure.BackgroundJobs;
+
+public sealed class OutboxBackgroundWorker : BackgroundService
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<OutboxBackgroundWorker> _logger;
+    private readonly TimeSpan _period;
+
+    private readonly int _takeRecordsNum;
+
+    public OutboxBackgroundWorker(
+        IServiceProvider serviceProvider,
+        ILogger<OutboxBackgroundWorker> logger, 
+        int secondsPeriod = 2, 
+        int takeRecordsNum = 20)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+        _takeRecordsNum = takeRecordsNum;
+
+        _period = TimeSpan.FromSeconds(secondsPeriod);
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Outbox Background Worker успешно запущен.");
+
+        using var timer = new PeriodicTimer(_period);
+
+        while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await ProcessOutboxMessagesAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Критическая ошибка при выполнении фоновой задачи Outbox.");
+            }
+        }
+    }
+
+    private async Task ProcessOutboxMessagesAsync(CancellationToken ct)
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var context = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        var domainEventDispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
+        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+
+        var messages = context.Set<OutboxMessage>()
+            .Where(m => m.ProcessedOnUtc == null)
+            .OrderBy(m => m.OccurredOnUtc)
+            .Take(_takeRecordsNum)
+            .ToList();
+
+        if (messages.Count == 0) return;
+
+        _logger.LogInformation("Найдено {Count} необработанных сообщений в Outbox.", messages.Count);
+
+        foreach (var message in messages)
+        {
+            try
+            {
+                // 1. Восстанавливаем .NET тип из строки AssemblyQualifiedName
+                Type? eventType = Type.GetType(message.Type);
+                if (eventType == null)
+                {
+                    _logger.LogError("Не удалось восстановить тип события: {Type}", message.Type);
+                    message.Error = $"Тип .NET '{message.Type}' не найден в сборках.";
+                    message.ProcessedOnUtc = timeProvider.GetUtcNow().UtcDateTime;
+                    continue;
+                }
+
+                // 2. Десериализуем JSON контент обратно в объект доменного события
+                var domainEvent = JsonSerializer.Deserialize(message.Content, eventType);
+                if (domainEvent is not IDomainEvent validEvent)
+                {
+                    _logger.LogError("Объект сообщения не реализует IDomainEvent");
+                    message.Error = "Объект десериализации не является IDomainEvent.";
+                    message.ProcessedOnUtc = timeProvider.GetUtcNow().UtcDateTime;
+                    continue;
+                }
+
+                await domainEventDispatcher.DispatchAsync(validEvent, ct);
+
+                // в случае успеха маркируем дату успешной обработки
+                message.ProcessedOnUtc = timeProvider.GetUtcNow().UtcDateTime;
+                message.Error = null; // очистить ошибки, если были ранее
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при обработке Outbox сообщения с Id: {Id}", message.Id);
+
+                message.Error = ex.ToString();
+            }
+        }
+
+        await context.SaveChangesAsync(ct);
     }
 }
 ```
@@ -8550,6 +8510,137 @@ public class OrderContext : DbContext
 
 ### Messaging
 
+#### Abstractions
+
+```cs title="IIntegrationEventBus.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+
+namespace LegacyLego.Infrastructure.Messaging.Abstractions;
+
+public interface IIntegrationEventBus
+{
+    public Task DispatchAsync(
+        IIntegrationEvent @event,
+        CancellationToken ct = default);
+}
+```
+
+---
+
+```cs title="IIntegrationEventConsumer.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+
+namespace LegacyLego.Infrastructure.Messaging.Abstractions;
+
+public interface IIntegrationEventConsumer<in TIntegrationEvent>
+    where TIntegrationEvent : IIntegrationEvent
+{
+    public Task HandleAsync(TIntegrationEvent notification, CancellationToken ct);
+}
+```
+
+---
+
+#### Bus
+
+```cs title="InMemoryIntegrationEventBus.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Infrastructure.Messaging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
+
+namespace LegacyLego.Infrastructure.Messaging.Bus;
+
+public sealed class InMemoryIntegrationEventBus : IIntegrationEventBus
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+
+    public InMemoryIntegrationEventBus(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public async Task DispatchAsync(IIntegrationEvent @event, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(@event, nameof(@event));
+
+        var eventType = @event.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(eventType, type =>
+        {
+            var concreteWrapperType = typeof(IntegrationEventWrapper<>).MakeGenericType(type);
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
+
+        await ((IntegrationEventWrapper)wrapper).HandleAsync(@event, _serviceProvider, ct);
+    }
+}
+
+file abstract class IntegrationEventWrapper
+{
+    public abstract Task HandleAsync(IIntegrationEvent @event, IServiceProvider serviceProvider, CancellationToken ct);
+}
+
+file sealed class IntegrationEventWrapper<TIntegrationEvent> : IntegrationEventWrapper
+    where TIntegrationEvent : IIntegrationEvent
+{
+    public override async Task HandleAsync(IIntegrationEvent @event, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        var consumers = serviceProvider.GetServices<IIntegrationEventConsumer<TIntegrationEvent>>();
+
+        foreach (var consumer in consumers)
+        {
+            if (consumer is null) continue;
+
+            await consumer.HandleAsync((TIntegrationEvent)@event, ct);
+        }
+    }
+}
+```
+
+---
+
+#### Consumers
+
+```cs title="OrderPaymentRefundRequestedIntegrationConsumer.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Payments.IntegrationEvents;
+using LegacyLego.Infrastructure.Messaging.Abstractions;
+
+namespace LegacyLego.Infrastructure.Messaging.Consumers;
+
+public class OrderPaymentRefundRequestedIntegrationConsumer : IIntegrationEventConsumer<OrderPaymentRefundRequestedIntegrationEvent>
+{
+    private readonly IPaymentProvider _paymentProvider;
+
+    public OrderPaymentRefundRequestedIntegrationConsumer(IPaymentProvider paymentProvider)
+    {
+        _paymentProvider = paymentProvider;
+    }
+
+    public async Task HandleAsync(OrderPaymentRefundRequestedIntegrationEvent notification, CancellationToken ct)
+    {
+        var result = await _paymentProvider.RequestRefundAsync(
+             notification.OrderId,
+             notification.Amount,
+             notification.Currency,
+             notification.TransactionId,
+             ct);
+
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException(result.Error.Message);
+        }
+    }
+}
+```
+
+---
+
+#### Dispatchers
+
 ```cs title="CommandDispatcher.cs"
 using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Application.Abstractions.Messaging.Command;
@@ -8557,7 +8648,7 @@ using LegacyLego.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace LegacyLego.Infrastructure.Messaging;
+namespace LegacyLego.Infrastructure.Messaging.Dispatchers;
 
 public sealed class CommandDispatcher(IServiceProvider serviceProvider) : ICommandDispatcher
 {
@@ -8634,30 +8725,26 @@ using LegacyLego.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace LegacyLego.Infrastructure.Messaging;
+namespace LegacyLego.Infrastructure.Messaging.Dispatchers;
 
 public sealed class DomainEventDispatcher(IServiceProvider serviceProvider) : IDomainEventDispatcher
 {
     private static readonly ConcurrentDictionary<Type, object> WrapperCache = new();
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken ct = default)
+    public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(domainEvents, nameof(domainEvents));
+        ArgumentNullException.ThrowIfNull(domainEvent, nameof(domainEvent));
 
-        foreach (var domainEvent in domainEvents)
+        var domainEventType = domainEvent.GetType();
+
+        var wrapper = WrapperCache.GetOrAdd(domainEventType, type =>
         {
-            if (domainEvent is null) continue;
+            var concreteWrapperType = typeof(DomainEventWrapper<>).MakeGenericType(type);
+            return Activator.CreateInstance(concreteWrapperType)!;
+        });
 
-            var domainEventType = domainEvent.GetType();
-
-            var wrapper = WrapperCache.GetOrAdd(domainEventType, type =>
-            {
-                var concreteWrapperType = typeof(DomainEventWrapper<>).MakeGenericType(type);
-                return Activator.CreateInstance(concreteWrapperType)!;
-            });
-
-            await ((DomainEventWrapper)wrapper).HandleAsync(domainEvent, serviceProvider, ct);
-        }
+        await ((DomainEventWrapper)wrapper).HandleAsync(domainEvent, _serviceProvider, ct);
     }
 }
 
@@ -8692,7 +8779,7 @@ using LegacyLego.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace LegacyLego.Infrastructure.Messaging;
+namespace LegacyLego.Infrastructure.Messaging.Dispatchers;
 
 public sealed class QueryDispatcher(IServiceProvider serviceProvider) : IQueryDispatcher
 {
@@ -8728,6 +8815,27 @@ file sealed class QueryWrapper<TQuery, TResult> : QueryWrapper<TResult>
 
         return await handler.HandleAsync((TQuery)query, ct);
     }
+}
+```
+
+---
+
+#### Publishers
+
+```cs title="LocalIntegrationEventPublisher.cs"
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Infrastructure.Messaging.Abstractions;
+
+namespace LegacyLego.Infrastructure.Messaging.Publishers;
+
+public sealed class LocalIntegrationEventPublisher : IIntegrationEventPublisher
+{
+    private readonly IIntegrationEventBus _bus;
+
+    public LocalIntegrationEventPublisher(IIntegrationEventBus bus) => _bus = bus;
+
+    public Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken ct)
+        => _bus.DispatchAsync(integrationEvent, ct);
 }
 ```
 
@@ -8853,6 +8961,468 @@ internal class PaymentRepository(OrderContext context) : IPaymentRepository
         await context.OrderPayments.Where(p => p.OrderId == orderId && p.Status == PaymentStatus.Pending)
             .FirstOrDefaultAsync(cancellationToken);
 }
+```
+
+---
+
+### Services
+
+```cs title="MockPaymentProvider.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Domain.Shared;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Net.Http.Json;
+
+namespace LegacyLego.Infrastructure.Services;
+
+public sealed class MockPaymentProvider : IPaymentProvider
+{
+    private const string HTTP_ROUTE = "/mock/api/webhooks/payment";
+
+    private readonly HttpClient _httpClient;
+    private readonly TimeProvider _timeProvider;
+    private readonly string _baseUrl;
+    private readonly int _expiresAtMinutes;
+
+    public MockPaymentProvider(
+        HttpClient httpClient,
+        TimeProvider timeProvider,
+        string baseUrl,
+        int expiresAtMinutes)
+    {
+        _httpClient = httpClient;
+        _timeProvider = timeProvider;
+        _baseUrl = baseUrl;
+        _expiresAtMinutes = expiresAtMinutes;
+    }
+
+    public async Task<Result<PaymentSession>> CreatePaymentSessionAsync(
+        Guid paymentId,
+        Guid orderId,
+        decimal amount,
+        string currency,
+        CancellationToken ct)
+    {
+        string externalSessionId = GenerateExternalSession();
+
+        var expiresAtUtc = _timeProvider.GetUtcNow().AddMinutes(_expiresAtMinutes).UtcDateTime;
+
+        var queryParams = new Dictionary<string, string?>
+        {
+            { "paymentId", paymentId.ToString() },
+            { "orderId", orderId.ToString() },
+            { "amount", amount.ToString("F2") },
+            { "currency", currency },
+            { "externalSessionId", externalSessionId }
+        };
+
+        string checkoutUrl = QueryHelpers.AddQueryString(_baseUrl, queryParams);
+
+        var session = new PaymentSession(
+            PaymentId: paymentId,
+            ExternalSessionId: externalSessionId,
+            CheckoutUrl: checkoutUrl,
+            ExpiresAtUtc: expiresAtUtc
+        );
+
+        return Result<PaymentSession>.Success(session);
+    }
+
+    public async Task<Result> RequestRefundAsync(
+        Guid orderId,
+        decimal amount,
+        string currency,
+        string transactionId,
+        CancellationToken ct)
+    {
+        await Task.Delay(500, ct);
+
+        var payload = new ExternalStripeWebhookSimulation(
+            OrderId: orderId,
+            Amount: amount,
+            Currency: currency,
+            TransactionId: transactionId,
+            Status: "refund");
+
+        var response = await _httpClient.PostAsJsonAsync(HTTP_ROUTE, payload, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return Result.Failure(new Error(
+                "MockPayment.RefundFailed",
+                $"Имитация вебхука возврата завершилась ошибкой: {response.StatusCode}"));
+        }
+
+        return Result.Success();
+    }
+
+    private string GenerateExternalSession() =>  $"ext_sess_{Guid.NewGuid():N}";
+
+
+}
+
+file sealed record ExternalStripeWebhookSimulation(
+        Guid OrderId,
+        decimal Amount,
+        string Currency,
+        string TransactionId,
+        string Status);
+```
+
+---
+
+## LegacyLego.Presentation
+
+```xml title="LegacyLego.Presentation.csproj"
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\Mapping\" />
+    <Folder Include="Mock\Common\Dto\Response\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LegacyLego.Application\LegacyLego.Application.csproj" />
+    <ProjectReference Include="..\LegacyLego.Domain\LegacyLego.Domain.csproj" />
+    <ProjectReference Include="..\LegacyLego.Infrastructure\LegacyLego.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
+```
+
+---
+
+```cs title="Program.cs"
+using LegacyLego.Presentation.Orders;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.UseOrdersEndpoints();
+
+app.Run();
+```
+
+---
+
+### Orders
+
+```cs title="OrderEndpoints.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Orders.Errors;
+using LegacyLego.Application.Orders.Commands.Create;
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+using LegacyLego.Application.Payments.Commands.StartPayment;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using LegacyLego.Presentation.Payments.Dto;
+using LegacyLego.Presentation.Orders.Dto;
+namespace LegacyLego.Presentation.Orders;
+
+public static class OrderEndpoints
+{
+    public static IEndpointRouteBuilder UseOrdersEndpoints(this IEndpointRouteBuilder app)
+    {
+        var ordersGroup = app.MapGroup("/orders")
+            .WithDisplayName("Orders")
+            .WithDescription("Управление заказами")
+            .WithGroupName("Orders");
+
+        ordersGroup.MapPost("", Create);
+        ordersGroup.MapPost("/{orderId:guid}/pay", StartPayment);
+
+        return app;
+    }
+
+    private static async Task<Results<Created<Guid>, BadRequest<ProblemDetails>>> Create(
+        [FromBody] CreateOrderRequest request,
+        ICommandDispatcher commandDispatcher,
+        ClaimsPrincipal user,
+        CancellationToken ct)
+    {
+        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Временно для тестов, пока не настроен JWT:
+        if (!Guid.TryParse(clientIdString, out var clientId))
+        {
+            clientId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        }
+
+        var command = new CreateOrderCommand(
+            ClientId: clientId,
+            CurrencyCode: request.CurrencyCode,
+            OrderAddress: request.OrderAddress,
+            Items: request.Items
+        );
+
+        var result = await commandDispatcher.DispatchAsync(command, ct);
+
+        if (result.IsFailure)
+        {
+            return TypedResults.BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = result.Error.Code,
+                Detail = result.Error.Message
+            });
+        }
+
+        return TypedResults.Created($"/orders/{result.Value}", result.Value);
+    }
+
+    private static async Task<Results<
+        Ok<StartPaymentResponse>,
+        ForbidHttpResult,
+        Conflict<ProblemDetails>,
+        NotFound<ProblemDetails>,
+        BadRequest<ProblemDetails>>> StartPayment(
+            [FromRoute] Guid orderId,
+            ICommandDispatcher commandDispatcher,
+            ClaimsPrincipal user,
+            CancellationToken ct)
+    {
+        // ⌚ Временно для тестов, пока не настроен JWT:
+        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(clientIdString, out var clientId))
+        {
+            clientId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        }
+
+        var command = new StartOrderPaymentCommand(OrderId: orderId, ClientId: clientId);
+
+        var result = await commandDispatcher.DispatchAsync(command, ct);
+
+        if (result.IsFailure)
+        {
+            var error = result.Error;
+
+            return error.Code switch
+            {
+                OrderApplicationErrors.UnauthorizedAccessToOrderByClientIdCode =>
+                    TypedResults.Forbid(),
+
+                StartOrderPaymentErrors.OrderIsNotInPendingPaymentCode or
+                StartOrderPaymentErrors.ForOrderIsAlreadyExistsSuccessedPaymentCode =>
+                    TypedResults.Conflict(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                StartOrderPaymentErrors.CanNotFindPendingPaymentAfterCheckConstraintCode =>
+                    TypedResults.NotFound(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status404NotFound,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                _ => TypedResults.BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = error.Code,
+                    Detail = error.Message
+                })
+            };
+        }
+
+        var details = result.Value;
+
+        var response = new StartPaymentResponse(
+            CheckoutUrl: details.Session.CheckoutUrl,
+            ExpiresAtUtc: details.Session.ExpiresAtUtc
+        );
+
+        return TypedResults.Ok(response);
+    }
+}
+```
+
+---
+
+#### Dto
+
+```cs title="CreateOrderRequest.cs"
+using LegacyLego.Application.Orders.Common;
+
+namespace LegacyLego.Presentation.Orders.Dto;
+
+public sealed record CreateOrderRequest(
+    string CurrencyCode,
+    OrderAddressDto OrderAddress,
+    List<OrderItemDto> Items);
+```
+
+---
+
+### Payments
+
+```cs title="PaymentWebhookEndpoints.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+using LegacyLego.Presentation.Payments;
+using LegacyLego.Presentation.Payments.Dto;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+
+namespace LegacyLego.Presentation.Mock.Endpoints;
+
+public static class PaymentWebhookEndpoints
+{
+    public static IEndpointRouteBuilder UseMockPaymentWebhookEndpoints(this IEndpointRouteBuilder app)
+    {
+        var mockGroup = app.MapGroup("/mock")
+            .WithDisplayName("Payment Webhooks")
+            .WithDescription("Тестировочные эндпоинты оплаты заказа")
+            .WithGroupName("Payment Webhooks");
+
+        mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
+
+        return app;
+    }
+
+    private static async Task<Results<
+        Ok<ProcessPaymentDetails>,
+        BadRequest<ProblemDetails>,
+        Conflict<ProblemDetails>>> HandleWebhook(
+            [FromBody] PaymentProviderWebhookRequest request,
+            ICommandDispatcher commandDispatcher,
+            CancellationToken ct)
+    {
+        ProcessPaymentWebhookCommand command;
+        try
+        {
+            command = PaymentWebhookMapper.MapToPaymentWebhookCommand(request);
+        }
+        catch (ArgumentException ex)
+        {
+            return TypedResults.BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Invalid Request Status",
+                Detail = ex.Message
+            });
+        }
+
+        var result = await commandDispatcher.DispatchAsync(command, ct);
+
+        // 3. Обработка Ошибок (Result.Failure)
+        if (result.IsFailure)
+        {
+            var error = result.Error;
+
+            return error.Code switch
+            {
+                ProcessPaymentErrors.InvalidAmountCode or
+                ProcessPaymentErrors.UnknownStatusCode =>
+                    TypedResults.BadRequest(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                ProcessPaymentErrors.TransactionConflictCode =>
+                    TypedResults.Conflict(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                ProcessPaymentErrors.TotalPricesMismatchCode =>
+                    TypedResults.Conflict(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                _ => TypedResults.BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = error.Code,
+                    Detail = error.Message
+                })
+            };
+        }
+
+        return TypedResults.Ok(result.Value);
+    }
+}
+```
+
+---
+
+```cs title="PaymentWebhookMapper.cs"
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+using LegacyLego.Application.Payments.Common;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Presentation.Payments.Dto;
+
+namespace LegacyLego.Presentation.Payments;
+
+public static class PaymentWebhookMapper
+{
+    private const string REFUND_STATUS = "refund";
+    private const string SUCCESS_STATUS = "success";
+    private const string FAILED_STATUS = "fail";
+
+    public static ProcessPaymentWebhookCommand MapToPaymentWebhookCommand(PaymentProviderWebhookRequest request)
+    {
+        var webhook = new PaymentWebhook(
+            TransactionId: request.TransactionId,
+            OrderId: request.OrderId,
+            Amount: request.Amount,
+            Currency: request.Currency,
+            Status: MapRequestStatusToPaymentStatus(request.Status));
+
+        return new ProcessPaymentWebhookCommand(webhook);
+    }
+
+    private static PaymentStatus MapRequestStatusToPaymentStatus(string requestStatus) => requestStatus switch
+    {
+        REFUND_STATUS => PaymentStatus.Refunded,
+        SUCCESS_STATUS => PaymentStatus.Succeeded,
+        FAILED_STATUS => PaymentStatus.Failed,
+        _ => throw new ArgumentException(
+            $"Unsupported status value: '{requestStatus}'. Allowed values: {SUCCESS_STATUS}, {FAILED_STATUS}, {REFUND_STATUS}")
+    };
+}
+```
+
+---
+
+#### Dto
+
+```cs title="PaymentProviderWebhookRequest.cs"
+namespace LegacyLego.Presentation.Mock.Common.Dto.Request;
+
+public sealed record PaymentProviderWebhookRequest(
+    string TransactionId,
+    Guid OrderId,
+    decimal Amount,
+    string Currency,
+    string Status); // "success", "failed", "refunded"
+```
+
+---
+
+```cs title="StartPaymentResponse.cs"
+namespace LegacyLego.Presentation.Payments.Dto;
+
+public sealed record StartPaymentResponse(
+    string CheckoutUrl,
+    DateTime ExpiresAtUtc);
 ```
 
 ---
