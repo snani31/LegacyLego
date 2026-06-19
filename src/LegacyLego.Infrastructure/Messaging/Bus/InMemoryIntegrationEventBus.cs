@@ -28,7 +28,8 @@ public sealed class InMemoryIntegrationEventBus : IIntegrationEventBus
             return Activator.CreateInstance(concreteWrapperType)!;
         });
 
-        await ((IntegrationEventWrapper)wrapper).HandleAsync(@event, _serviceProvider, ct);
+        using var scope = _serviceProvider.CreateScope();
+        await ((IntegrationEventWrapper)wrapper).HandleAsync(@event, scope.ServiceProvider, ct);
     }
 }
 
