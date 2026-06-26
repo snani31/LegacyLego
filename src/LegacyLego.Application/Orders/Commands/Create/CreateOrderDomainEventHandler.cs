@@ -7,7 +7,7 @@ using LegacyLego.Domain.Shared;
 
 namespace LegacyLego.Application.Orders.Commands.Create;
 
-public class CreateOrderDomainEventHandler(IBackgroundJobService jobService)
+public class CreateOrderDomainEventHandler(ICommandBackgroundJobService jobService)
 : IDomainEventHandler<OrderCreated>
 {
     public Task HandleAsync(OrderCreated notification, CancellationToken ct)
