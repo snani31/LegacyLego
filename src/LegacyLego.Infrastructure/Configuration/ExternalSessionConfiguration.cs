@@ -1,4 +1,5 @@
-﻿using LegacyLego.Domain.ValueObjects;
+﻿using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
 using LegacyLego.Infrastructure.Configuration.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -25,12 +26,13 @@ public class ExternalSessionConfiguration : IEntityTypeConfiguration<ExternalSes
         builder.ToTable(TABLE_NAME);
 
         #region order_payment_id
-        builder.Property<Guid>(ID_COLUMN_NAME)
+        builder.Property<OrderPaymentId>("OrderPaymentId")
             .HasColumnName(ID_COLUMN_NAME)
+            .HasConversion(id => id.Value, value => OrderPaymentId.From(value))
             .HasColumnType(Uuid)
             .IsRequired();
 
-        builder.HasKey(ID_COLUMN_NAME)
+        builder.HasKey("OrderPaymentId")
             .HasName(PK_CONSTRAINT_NAME); 
         #endregion
 

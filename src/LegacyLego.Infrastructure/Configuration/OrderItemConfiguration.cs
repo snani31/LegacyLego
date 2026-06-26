@@ -37,11 +37,13 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 
         #region id
         // Shadow property
-        builder.Property<Guid>(ID_COLUMN_NAME)
+        builder.Property<Guid>("Id")
             .HasColumnName(ID_COLUMN_NAME)
-            .ValueGeneratedOnAdd();
+            .HasColumnType(Uuid)
+            .ValueGeneratedOnAdd()
+            .IsRequired();
 
-        builder.HasKey(ID_COLUMN_NAME).HasName(PK_CONSTRAINT_NAME);
+        builder.HasKey("Id").HasName(PK_CONSTRAINT_NAME);
         #endregion
 
         #region title
@@ -60,9 +62,10 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 
         #region order_id
         // Shadow property
-        builder.Property<Guid>("OrderId")
-            .HasColumnName(ORDER_ID_COLUMN_NAME)
-            .IsRequired();
+        builder.Property<OrderId>("OrderId")
+             .HasColumnName(ORDER_ID_COLUMN_NAME)
+             .HasConversion(id => id.Value, value => OrderId.From(value))
+             .IsRequired();
         #endregion
 
         #region UnitPrice VO

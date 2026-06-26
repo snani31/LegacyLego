@@ -81,13 +81,11 @@ public class Order : AggregateRoot<OrderId>
     /// <param name="currency">валюты заказа</param>
     /// <param name="status">статус заказа</param>
     /// <param name="frozenTotalSum">decimal занчение общей стоимсоти заказа</param>
-    /// <param name="address">адрес доставки заказа</param>
     /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
         Guid clientId,
         OrderStatus status,
-        OrderAddress address,
         Currency currency,
         decimal? frozenTotalSum,
         DateTime creationDateUtc)
@@ -96,7 +94,6 @@ public class Order : AggregateRoot<OrderId>
         ClientId = clientId;
         Status = status;
         _items = new List<OrderItem>();
-        Address = address;
         Currency = currency;
         CreationDateUtc = creationDateUtc;
 

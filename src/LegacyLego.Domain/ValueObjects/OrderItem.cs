@@ -25,6 +25,16 @@ public class OrderItem : ValueObject
         UnitPrice = unitPrice;
     }
 
+    private OrderItem(
+        string title,
+        int quantity,
+        Guid productId)
+    {
+        Title = title;
+        Quantity = quantity;
+        ProductId = productId;
+    }
+
     public static Result<OrderItem> Create(
         string title,
         int quantity,

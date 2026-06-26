@@ -23,7 +23,6 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
     private const string TRANSACTION_ID_COLUMN_NAME = "transaction_id";
     private const string CREATED_AT_UTC_COLUMN_NAME = "created_at_utc";
     private const string ORDER_ID_COLUMN_NAME = "order_id";
-    private const string ORDER_PAYMENT_ID_COLUMN_NAME = "order_payment_id"; 
     #endregion
 
     public void Configure(EntityTypeBuilder<OrderPayment> builder)
@@ -81,7 +80,7 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
         #region ExternalSession
         builder.HasOne(p => p.ExternalSession)
             .WithOne()
-            .HasForeignKey<ExternalSession>(ORDER_PAYMENT_ID_COLUMN_NAME)
+            .HasForeignKey<ExternalSession>("OrderPaymentId")
             .IsRequired(false); 
         #endregion
     }
