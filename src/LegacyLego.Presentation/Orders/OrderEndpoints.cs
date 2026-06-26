@@ -1,23 +1,19 @@
 ﻿using LegacyLego.Application.Abstractions.Messaging;
-using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Orders.Commands.Create;
-using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
-using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Presentation.Orders.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using LegacyLego.Presentation.Payments.Dto;
-using LegacyLego.Presentation.Orders.Dto;
 namespace LegacyLego.Presentation.Orders;
 
 public static class OrderEndpoints
 {
-    public static IEndpointRouteBuilder UseOrdersEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapOrdersEndpoints(this IEndpointRouteBuilder app)
     {
         var ordersGroup = app.MapGroup("/orders")
             .WithDisplayName("Orders")
             .WithDescription("Управление заказами")
-            .WithGroupName("Orders");
+            .WithTags("Orders");
 
         ordersGroup.MapPost("", Create);
 
@@ -28,6 +24,8 @@ public static class OrderEndpoints
         [FromBody] CreateOrderRequest request,
         ICommandDispatcher commandDispatcher,
         ClaimsPrincipal user,
+        ILogger<Program> logger,
+        HttpContext httpContext,
         CancellationToken ct)
     {
         var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -49,11 +47,17 @@ public static class OrderEndpoints
 
         if (result.IsFailure)
         {
+            logger.LogWarning("Запрос отклонен. Код: {ErrorCode}. Детали: {Message}",
+                result.Error.Code, result.Error.Message);
+
             return TypedResults.BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
-                Title = result.Error.Code,
-                Detail = result.Error.Message
+                Title = "Произошла ошибка обработки запроса",
+                Detail = "Запрос не прошел валидацию. Подробности см. в параметре errorCode.",
+                Instance = httpContext.Request.Path,
+                // Передаем код ошибки для фронтенда:
+                Extensions = { ["errorCode"] = result.Error.Code }
             });
         }
 

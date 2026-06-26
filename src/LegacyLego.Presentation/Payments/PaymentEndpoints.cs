@@ -2,6 +2,7 @@
 using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Presentation.Mock.Common.Dto.Request;
 using LegacyLego.Presentation.Payments.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,12 @@ namespace LegacyLego.Presentation.Payments;
 
 public static class PaymentEndpoints
 {
-    public static IEndpointRouteBuilder UsePaymentEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapPaymentEndpoints(this IEndpointRouteBuilder app)
     {
         var mockGroup = app.MapGroup("/mock")
-            .WithDisplayName("Payment Webhooks")
+            .WithDisplayName("Payment")
             .WithDescription("Тестировочные эндпоинты оплаты заказа")
-            .WithGroupName("Payment Webhooks");
+            .WithTags("Payments");
 
         mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
         mockGroup.MapPost("/{orderId:guid}/pay", StartPayment);

@@ -1,7 +1,7 @@
 ﻿using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Enums;
-using LegacyLego.Presentation.Payments.Dto;
+using LegacyLego.Presentation.Mock.Common.Dto.Request;
 
 namespace LegacyLego.Presentation.Payments;
 
