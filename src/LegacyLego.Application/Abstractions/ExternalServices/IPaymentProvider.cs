@@ -10,6 +10,7 @@ public interface IPaymentProvider
         Guid orderId,
         decimal amount,
         string currency,
+        int scale,
         CancellationToken ct);
 
     Task<Result> RequestRefundAsync(

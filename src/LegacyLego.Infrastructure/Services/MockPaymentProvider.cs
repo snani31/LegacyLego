@@ -1,30 +1,27 @@
 ﻿using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Options;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 
 namespace LegacyLego.Infrastructure.Services;
 
 public sealed class MockPaymentProvider : IPaymentProvider
 {
-    private const string HTTP_ROUTE = "/mock/api/webhooks/payment";
-
     private readonly HttpClient _httpClient;
     private readonly TimeProvider _timeProvider;
-    private readonly string _baseUrl;
-    private readonly int _expiresAtMinutes;
+    private readonly PaymentProviderOptions _options;
 
     public MockPaymentProvider(
         HttpClient httpClient,
         TimeProvider timeProvider,
-        string baseUrl,
-        int expiresAtMinutes)
+        IOptions<PaymentProviderOptions> options)
     {
         _httpClient = httpClient;
         _timeProvider = timeProvider;
-        _baseUrl = baseUrl;
-        _expiresAtMinutes = expiresAtMinutes;
+        _options = options.Value;
     }
 
     public async Task<Result<PaymentSession>> CreatePaymentSessionAsync(
@@ -32,22 +29,24 @@ public sealed class MockPaymentProvider : IPaymentProvider
         Guid orderId,
         decimal amount,
         string currency,
+        int scale,
         CancellationToken ct)
     {
         string externalSessionId = GenerateExternalSession();
 
-        var expiresAtUtc = _timeProvider.GetUtcNow().AddMinutes(_expiresAtMinutes).UtcDateTime;
+        var expiresAtUtc = _timeProvider.GetUtcNow().AddMinutes(_options.ExpiresAtMinutes).UtcDateTime;
 
         var queryParams = new Dictionary<string, string?>
         {
             { "paymentId", paymentId.ToString() },
             { "orderId", orderId.ToString() },
-            { "amount", amount.ToString("F2") },
+            { "amount", amount.ToString($"F{scale}",System.Globalization.CultureInfo.InvariantCulture) },
             { "currency", currency },
             { "externalSessionId", externalSessionId }
         };
 
-        string checkoutUrl = QueryHelpers.AddQueryString(_baseUrl, queryParams);
+        string baseCheckoutUrl = new Uri(new Uri(_options.ApiBaseUrl), _options.CheckoutPagePath).ToString();
+        string checkoutUrl = QueryHelpers.AddQueryString(baseCheckoutUrl, queryParams);
 
         var session = new PaymentSession(
             PaymentId: paymentId,
@@ -75,7 +74,7 @@ public sealed class MockPaymentProvider : IPaymentProvider
             TransactionId: transactionId,
             Status: "refund");
 
-        var response = await _httpClient.PostAsJsonAsync(HTTP_ROUTE, payload, ct);
+        var response = await _httpClient.PostAsJsonAsync(_options.WebhookRoute, payload, ct);
 
         if (!response.IsSuccessStatusCode)
         {

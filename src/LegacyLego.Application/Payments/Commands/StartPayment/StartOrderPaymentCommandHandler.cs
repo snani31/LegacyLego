@@ -95,6 +95,7 @@ public sealed class StartOrderPaymentCommandHandler(
                     orderId: order.Id.Value,
                     amount: order.TotalPrice.Sum,
                     currency: order.TotalPrice.Currency.Code,
+                    scale: order.Currency.Scale,
                     ct: ct);
 
         if (sessionResult.IsFailure)
@@ -154,6 +155,7 @@ public sealed class StartOrderPaymentCommandHandler(
                 orderId: order.Id.Value,
                 amount: order.TotalPrice.Sum,
                 currency: order.TotalPrice.Currency.Code,
+                scale: order.Currency.Scale,
                 ct: ct);
 
         if (newSessionResult.IsFailure)
