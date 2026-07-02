@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.8.0
+Актуальная версия проекта: 1.9.0
 
 ## Проекты
 
@@ -29,109 +29,372 @@
 
 ```txt title="TreeStructure"
 .
-├── Abstractions
-│   ├── Data
-│   │   └── IUnitOfWork.cs
-│   ├── ExternalServices
-│   │   ├── IBackgroundJobService.cs
-│   │   └── IPaymentProvider.cs
-│   └── Messaging
-│       ├── Command
-│       │   ├── IBaseCommand.cs
-│       │   ├── ICommand.cs
-│       │   └── ICommandHandler.cs
-│       ├── Event
-│       │   ├── Domain
-│       │   │   └── IDomainEventHandler.cs
-│       │   └── Integration
-│       │       ├── IIntegrationEvent.cs
-│       │       └── IIntegrationEventPublisher.cs
-│       ├── Query
-│       │   ├── IQuery.cs
-│       │   └── IQueryHandler.cs
-│       ├── ICommandDispatcher.cs
-│       ├── IDomainEventDispatcher.cs
-│       ├── IEventPublisher.cs
-│       └── IQueryDispatcher.cs
-├── Common
-├── Errors
-│   └── PaymentProviderErrors.cs
-├── ExceptionalErrors
-│   └── UnitOfWorkExceptionalErrors.cs
-├── Exceptions
-│   ├── InfrastructureException.cs
-│   ├── PersistenceException.cs
-│   └── UniqueConstraintViolation.cs
-├── Orders
-│   ├── Commands
-│   │   ├── Cancel
-│   │   │   ├── CancelletionOrderDetails.cs
-│   │   │   ├── CancelOrderCommand.cs
-│   │   │   └── CancelOrderCommandHandler.cs
-│   │   ├── Create
-│   │   │   ├── CreateOrderCommand.cs
-│   │   │   ├── CreateOrderCommandHandler.cs
-│   │   │   └── CreateOrderDomainEventHandler.cs
-│   │   ├── Expire
-│   │   │   ├── ExpirationOrderDetails.cs
-│   │   │   ├── ExpireOrderCommand.cs
-│   │   │   └── ExpireOrderCommandHandler.cs
-│   │   ├── Pay
-│   │   │   ├── PayOrderCommand.cs
-│   │   │   ├── PayOrderCommandHandler.cs
-│   │   │   └── PayOrderDetails.cs
-│   │   └── Refund
-│   │       ├── RefundOrderCommand.cs
-│   │       ├── RefundOrderCommandHandler.cs
-│   │       └── RefundOrderDetails.cs
-│   ├── Common
-│   │   ├── Mappers
-│   │   ├── Projections
-│   │   │   └── OrderProjections.cs
-│   │   ├── OrderAddressDto.cs
-│   │   ├── OrderItemDto.cs
-│   │   └── OrderSummaryDto.cs
-│   ├── Errors
-│   │   └── OrderApplicationErrors.cs
-│   └── Queries
-│       ├── ActiveOrders
-│       │   ├── ActiveOrderSpecification.cs
-│       │   ├── GetActiveOrdersQuery.cs
-│       │   └── GetActiveOrdersQueryHandler.cs
-│       ├── OrderDetails
-│       │   ├── ActiveOrderSpecification.cs
-│       │   ├── GetOrderDetailsQuery.cs
-│       │   ├── GetOrderDetailsQueryHandler.cs
-│       │   └── OrderDetailsDto.cs
-│       └── OrdersHistory
-│           ├── GetOrdersHistoryQuery.cs
-│           ├── GetOrdersHistoryQueryHandler.cs
-│           ├── OrderHistoryRequest.cs
-│           ├── OrderHistorySpecification.cs
-│           └── OrdersHistoryResponse.cs
-├── Payments
-│   ├── Commands
-│   │   ├── PocessPaymentWebhook
-│   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
-│   │   │   ├── ProcessPaymentDetails.cs
-│   │   │   ├── ProcessPaymentErrors.cs
-│   │   │   ├── ProcessPaymentWebhookCommand.cs
-│   │   │   └── ProcessPaymentWebhookCommandHandler.cs
-│   │   ├── RefundRequested
-│   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
-│   │   └── StartPayment
-│   │       ├── StartOrderPaymentCommand.cs
-│   │       ├── StartOrderPaymentCommandHandler.cs
-│   │       ├── StartOrderPaymentDetails.cs
-│   │       └── StartOrderPaymentErrors.cs
-│   ├── Common
-│   │   ├── PaymentSession.cs
-│   │   └── PaymentWebhook.cs
-│   ├── IntegrationEvents
-│   │   └── OrderPaymentRefundRequestedIntegrationEvent.cs
-│   └── Services
-│       └── PaymentLookup.cs
-└── LegacyLego.Application.csproj
+├── docker
+│   ├── nginx
+│   │   └── nginx.conf
+│   └── docker-compose.yaml
+├── docs
+│   ├── architecture
+│   │   ├── 'Order ER-scheme.docx'
+│   │   ├── 'OrderPayment ER-scheme.docx'
+│   │   └── 'state transition matrix.docx'
+│   ├── automation
+│   │   ├── generated
+│   │   │   └── 'LegacyLego Code documentation.md'
+│   │   ├── templates
+│   │   │   └── 'LegacyLego Code documentation template.md'
+│   │   └── automation-guide.md
+│   ├── decisions
+│   │   └── 0001-automation-of-code-listings.md
+│   └── diagrams
+│       ├── out
+│       │   ├── ER
+│       │   │   ├── 'ER Diagram.jpg'
+│       │   │   ├── OrderAggregateErScheme.jpg
+│       │   │   └── OrderPaymentAggregateErScheme.jpg
+│       │   ├── ActivityDiagramOrderLifeCycle_v2.jpg
+│       │   ├── OrderClassDiagram.jpg
+│       │   ├── OrderClassDiagram_v1.jpg
+│       │   ├── SolutionStructureTreeDiagram.jpg
+│       │   └── StoreOrderingSystemDiagram_v2.jpg
+│       └── src
+│           ├── ER
+│           │   ├── 'ER Diagram.drawio'
+│           │   ├── 'Order Aggregate ER-Scheme.drawio'
+│           │   └── 'OrderPayment Aggregate ER-Scheme.drawio'
+│           ├── ActivityDiagramOrderLifeCycle.drawio
+│           ├── OrderClassDiagram.drawio
+│           ├── SolutionStructureTreeDiagram.drawio
+│           └── StoreOrderingSystemDiagram.drawio
+├── src
+│   ├── LegacyLego.Application
+│   │   ├── Abstractions
+│   │   │   ├── Data
+│   │   │   │   └── IUnitOfWork.cs
+│   │   │   ├── ExceptionHandling
+│   │   │   │   ├── AppFailureDescription.cs
+│   │   │   │   ├── ExceptionFailureKind.cs
+│   │   │   │   └── IExceptionMapper.cs
+│   │   │   ├── ExternalServices
+│   │   │   │   ├── ICommandBackgroundJobService.cs
+│   │   │   │   └── IPaymentProvider.cs
+│   │   │   └── Messaging
+│   │   │       ├── Command
+│   │   │       │   ├── IBaseCommand.cs
+│   │   │       │   ├── ICommand.cs
+│   │   │       │   └── ICommandHandler.cs
+│   │   │       ├── Event
+│   │   │       │   ├── Domain
+│   │   │       │   │   └── IDomainEventHandler.cs
+│   │   │       │   └── Integration
+│   │   │       │       ├── IIntegrationEvent.cs
+│   │   │       │       └── IIntegrationEventPublisher.cs
+│   │   │       ├── Query
+│   │   │       │   ├── IQuery.cs
+│   │   │       │   └── IQueryHandler.cs
+│   │   │       ├── ICommandDispatcher.cs
+│   │   │       ├── IDomainEventDispatcher.cs
+│   │   │       ├── IEventPublisher.cs
+│   │   │       └── IQueryDispatcher.cs
+│   │   ├── Common
+│   │   ├── Diagnostics
+│   │   │   └── DomainExceptionMapper.cs
+│   │   ├── Errors
+│   │   │   └── PaymentProviderErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   └── UnitOfWorkExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InfrastructureException.cs
+│   │   │   ├── PersistenceException.cs
+│   │   │   └── UniqueConstraintViolation.cs
+│   │   ├── Orders
+│   │   │   ├── Commands
+│   │   │   │   ├── Cancel
+│   │   │   │   │   ├── CancelletionOrderDetails.cs
+│   │   │   │   │   ├── CancelOrderCommand.cs
+│   │   │   │   │   └── CancelOrderCommandHandler.cs
+│   │   │   │   ├── Create
+│   │   │   │   │   ├── CreateOrderCommand.cs
+│   │   │   │   │   ├── CreateOrderCommandHandler.cs
+│   │   │   │   │   └── CreateOrderDomainEventHandler.cs
+│   │   │   │   ├── Expire
+│   │   │   │   │   ├── ExpirationOrderDetails.cs
+│   │   │   │   │   ├── ExpireOrderCommand.cs
+│   │   │   │   │   └── ExpireOrderCommandHandler.cs
+│   │   │   │   ├── Pay
+│   │   │   │   │   ├── PayOrderCommand.cs
+│   │   │   │   │   ├── PayOrderCommandHandler.cs
+│   │   │   │   │   └── PayOrderDetails.cs
+│   │   │   │   └── Refund
+│   │   │   │       ├── RefundOrderCommand.cs
+│   │   │   │       ├── RefundOrderCommandHandler.cs
+│   │   │   │       └── RefundOrderDetails.cs
+│   │   │   ├── Common
+│   │   │   │   ├── Mappers
+│   │   │   │   ├── Projections
+│   │   │   │   │   └── OrderProjections.cs
+│   │   │   │   ├── OrderAddressDto.cs
+│   │   │   │   ├── OrderItemDto.cs
+│   │   │   │   └── OrderSummaryDto.cs
+│   │   │   ├── Errors
+│   │   │   │   └── OrderApplicationErrors.cs
+│   │   │   └── Queries
+│   │   │       ├── ActiveOrders
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetActiveOrdersQuery.cs
+│   │   │       │   └── GetActiveOrdersQueryHandler.cs
+│   │   │       ├── OrderDetails
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetOrderDetailsQuery.cs
+│   │   │       │   ├── GetOrderDetailsQueryHandler.cs
+│   │   │       │   └── OrderDetailsDto.cs
+│   │   │       └── OrdersHistory
+│   │   │           ├── GetOrdersHistoryQuery.cs
+│   │   │           ├── GetOrdersHistoryQueryHandler.cs
+│   │   │           ├── OrderHistoryRequest.cs
+│   │   │           ├── OrderHistorySpecification.cs
+│   │   │           └── OrdersHistoryResponse.cs
+│   │   ├── Payments
+│   │   │   ├── Commands
+│   │   │   │   ├── PocessPaymentWebhook
+│   │   │   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
+│   │   │   │   │   ├── ProcessPaymentDetails.cs
+│   │   │   │   │   ├── ProcessPaymentErrors.cs
+│   │   │   │   │   ├── ProcessPaymentWebhookCommand.cs
+│   │   │   │   │   └── ProcessPaymentWebhookCommandHandler.cs
+│   │   │   │   ├── RefundRequested
+│   │   │   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
+│   │   │   │   └── StartPayment
+│   │   │   │       ├── StartOrderPaymentCommand.cs
+│   │   │   │       ├── StartOrderPaymentCommandHandler.cs
+│   │   │   │       ├── StartOrderPaymentDetails.cs
+│   │   │   │       └── StartOrderPaymentErrors.cs
+│   │   │   ├── Common
+│   │   │   │   ├── PaymentSession.cs
+│   │   │   │   └── PaymentWebhook.cs
+│   │   │   ├── IntegrationEvents
+│   │   │   │   └── OrderPaymentRefundRequestedIntegrationEvent.cs
+│   │   │   └── Services
+│   │   │       └── PaymentLookup.cs
+│   │   ├── DependencyInjection.cs
+│   │   └── LegacyLego.Application.csproj
+│   ├── LegacyLego.Domain
+│   │   ├── Abstractions
+│   │   │   ├── IOrderRepository.cs
+│   │   │   └── IPaymentRepository.cs
+│   │   ├── Aggregates
+│   │   │   ├── Order.cs
+│   │   │   └── OrderPayment.cs
+│   │   ├── DomainEvents
+│   │   │   ├── OrderCanceled.cs
+│   │   │   ├── OrderCreated.cs
+│   │   │   ├── OrderExpired.cs
+│   │   │   ├── OrderPaid.cs
+│   │   │   ├── OrderPaymentCreated.cs
+│   │   │   ├── OrderPaymentFailed.cs
+│   │   │   ├── OrderPaymentRefunded.cs
+│   │   │   ├── OrderPaymentRefundedWithoutSuccess.cs
+│   │   │   ├── OrderPaymentRefundRequested.cs
+│   │   │   ├── OrderPaymentSucceeded.cs
+│   │   │   └── OrderRefunded.cs
+│   │   ├── Enums
+│   │   │   ├── OrderAction.cs
+│   │   │   ├── OrderStatus.cs
+│   │   │   ├── PaymentAction.cs
+│   │   │   └── PaymentStatus.cs
+│   │   ├── Errors
+│   │   │   ├── CurrencyErrors.cs
+│   │   │   ├── ExternalSessionErrors.cs
+│   │   │   ├── OrderErrors.cs
+│   │   │   ├── OrderItemErrors.cs
+│   │   │   ├── OrderPaymentErrors.cs
+│   │   │   └── PriceErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   ├── CurrencyExceptionalErrors.cs
+│   │   │   ├── ExternalSessionExceptionalErrors.cs
+│   │   │   ├── OrderExceptionalErrors.cs
+│   │   │   ├── PriceExceptionalErrors.cs
+│   │   │   └── ResultExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InvalidDomainStateException.cs
+│   │   │   └── InvariantViolationException.cs
+│   │   ├── Shared
+│   │   │   ├── AggregateRoot.cs
+│   │   │   ├── DomainException.cs
+│   │   │   ├── Entity.cs
+│   │   │   ├── Error.cs
+│   │   │   ├── ExceptionalError.cs
+│   │   │   ├── IDomainEvent.cs
+│   │   │   ├── IHasDomainEvents.cs
+│   │   │   ├── Result.cs
+│   │   │   ├── ResultT.cs
+│   │   │   ├── Specification.cs
+│   │   │   └── ValueObject.cs
+│   │   ├── ValueObjects
+│   │   │   ├── Currency.cs
+│   │   │   ├── ExternalSession.cs
+│   │   │   ├── OrderAddress.cs
+│   │   │   ├── OrderId.cs
+│   │   │   ├── OrderItem.cs
+│   │   │   ├── OrderPaymentId.cs
+│   │   │   └── Price.cs
+│   │   └── LegacyLego.Domain.csproj
+│   ├── LegacyLego.Infrastructure
+│   │   ├── BackgroundJobs
+│   │   │   ├── HangfireCommandBackgroundJobService.cs
+│   │   │   └── OutboxBackgroundWorker.cs
+│   │   ├── Common
+│   │   │   └── SpecificationEvaluator.cs
+│   │   ├── Configuration
+│   │   │   ├── Common
+│   │   │   │   ├── EntityTypeBuilderExtensions.cs
+│   │   │   │   ├── PostgresTypes.cs
+│   │   │   │   └── PropertyBuilderExtensions.cs
+│   │   │   ├── ExternalSessionConfiguration.cs
+│   │   │   ├── OrderConfiguration.cs
+│   │   │   ├── OrderItemConfiguration.cs
+│   │   │   ├── OrderPaymentConfiguration.cs
+│   │   │   └── OutboxMessageConfiguration.cs
+│   │   ├── Context
+│   │   │   └── OrderContext.cs
+│   │   ├── Diagnostics
+│   │   │   └── InfrastructureExceptionMapper.cs
+│   │   ├── Messaging
+│   │   │   ├── Abstractions
+│   │   │   │   ├── IIntegrationEventBus.cs
+│   │   │   │   └── IIntegrationEventConsumer.cs
+│   │   │   ├── Bus
+│   │   │   │   └── InMemoryIntegrationEventBus.cs
+│   │   │   ├── Consumers
+│   │   │   │   └── OrderPaymentRefundRequestedIntegrationConsumer.cs
+│   │   │   ├── Dispatchers
+│   │   │   │   ├── CommandDispatcher.cs
+│   │   │   │   ├── DomainEventDispatcher.cs
+│   │   │   │   └── QueryDispatcher.cs
+│   │   │   └── Publishers
+│   │   │       └── LocalIntegrationEventPublisher.cs
+│   │   ├── Migrations
+│   │   │   ├── 20260622101458__Init.cs
+│   │   │   ├── 20260622101458__Init.Designer.cs
+│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.cs
+│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.Designer.cs
+│   │   │   └── OrderContextModelSnapshot.cs
+│   │   ├── Options
+│   │   │   ├── DatabaseOptions.cs
+│   │   │   ├── HangfireOptions.cs
+│   │   │   ├── OutboxBackgroundWorkerOptions.cs
+│   │   │   └── PaymentProviderOptions.cs
+│   │   ├── Outbox
+│   │   │   └── OutboxMessage.cs
+│   │   ├── Repositories
+│   │   │   ├── OrderRepository.cs
+│   │   │   └── PaymentRepository.cs
+│   │   ├── Services
+│   │   │   └── MockPaymentProvider.cs
+│   │   ├── DependencyInjection.cs
+│   │   ├── LegacyLego.Infrastructure.csproj
+│   │   ├── LegacyLego.Infrastructure.csproj.user
+│   │   └── UnitOfWork.cs
+│   └── LegacyLego.Presentation
+│       ├── Middleware
+│       │   └── DynamicGlobalExceptionHandler.cs
+│       ├── OpenApi
+│       │   ├── ApiMetadataTransformer.cs
+│       │   └── OpenApiExtensions.cs
+│       ├── Orders
+│       │   ├── Dto
+│       │   │   └── CreateOrderRequest.cs
+│       │   └── OrderEndpoints.cs
+│       ├── Payments
+│       │   ├── Dto
+│       │   │   ├── PaymentProviderWebhookRequest.cs
+│       │   │   └── StartPaymentResponse.cs
+│       │   ├── PaymentEndpoints.cs
+│       │   └── PaymentWebhookMapper.cs
+│       ├── Properties
+│       │   └── launchSettings.json
+│       ├── Shared
+│       ├── wwwroot
+│       │   └── mock-checkout.html
+│       ├── appsettings.Development.json
+│       ├── appsettings.json
+│       ├── LegacyLego.Presentation.csproj
+│       ├── LegacyLego.Presentation.csproj.user
+│       ├── LegacyLego.Presentation.json
+│       └── Program.cs
+├── tests
+│   └── LegacyLego.Domain.Tests
+│       ├── Common
+│       │   ├── Builders
+│       │   │   └── OrderBuilder.cs
+│       │   └── Factories
+│       │       ├── OrderDataFactory.cs
+│       │       └── OrderPaymentDataFactory.cs
+│       ├── CurrencyTests
+│       │   ├── Equality
+│       │   │   └── CurrencyEqualityTests.cs
+│       │   └── FromCode
+│       │       └── CurrencyFromCodeTests.cs
+│       ├── ExternalSessionTests
+│       │   ├── Create
+│       │   │   └── ExternalSessionCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── ExternalSessionEqualityTests.cs
+│       │   └── IsExpired
+│       │       └── ExternalSessionCreateTests.cs
+│       ├── OrderItemTests
+│       │   ├── Create
+│       │   │   └── OrderItemCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── OrderItemEqualityTests.cs
+│       │   └── GetTotalPriceTests
+│       │       └── OrderItemGetTotalPriceTests.cs
+│       ├── OrderPaymentTests
+│       │   ├── AttachSession
+│       │   │   └── OrderPaymentAttachSessionTests.cs
+│       │   ├── Create
+│       │   │   └── OrderPaymentCreateTests.cs
+│       │   └── StateTransitions
+│       │       ├── MarkAsFailed
+│       │       │   └── OrderPaymentMarkAsFailedTests.cs
+│       │       ├── MarkAsRefunded
+│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
+│       │       ├── MarkAsRefundRequested
+│       │       │   └── OrderPaymentMarkAsRefundRequestedTests.cs
+│       │       └── MarkAsSucceeded
+│       │           └── OrderPaymentMarkAsSucceededTests.cs
+│       ├── OrderTests
+│       │   ├── Create
+│       │   │   └── OrderCreateTests.cs
+│       │   ├── StateTransitions
+│       │   │   ├── Cancel
+│       │   │   │   └── OrderCancelTests.cs
+│       │   │   ├── Expire
+│       │   │   │   └── OrderExpireTests.cs
+│       │   │   ├── Pay
+│       │   │   │   └── OrderPayTests.cs
+│       │   │   └── Refund
+│       │   │       └── OrderRefundTests.cs
+│       │   └── TotalPrice
+│       │       └── OrderTotalPriceTests.cs
+│       ├── PriceTests
+│       │   ├── Create
+│       │   │   └── PriceCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── PriceEqualityTests.cs
+│       │   ├── MultiplyByQuantity
+│       │   │   └── PriceMultiplyByQuantityTests.cs
+│       │   └── Plus
+│       │       └── PricePlusTests.cs
+│       ├── GlobalUsings.cs
+│       └── LegacyLego.Domain.Tests.csproj
+├── tools
+│   └── update-project-listing-docs.ps1
+├── docker-compose.prod.yml
+├── docker-compose.yml
+├── LegacyLego.slnx
+├── Presentation.Dockerfile
+└── README.md
 ```
 
 ---
@@ -157,7 +420,58 @@
     <Folder Include="Orders\Commands\Cancel\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+    <PackageReference Include="Scrutor" Version="7.0.0" />
+  </ItemGroup>
+
 </Project>
+```
+
+---
+
+```cs title="DependencyInjection.cs"
+using LegacyLego.Application.Abstractions.ExceptionHandling;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Diagnostics;
+using LegacyLego.Application.Payments.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace LegacyLego.Application;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        services.Scan(scan => scan
+            .FromAssemblies(typeof(DependencyInjection).Assembly)
+
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+
+            .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+
+            .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+        )
+            
+            .AddScoped<PaymentLookup>()
+            
+            .AddSingleton<IExceptionMapper, DomainExceptionMapper>();
+
+        return services;
+    }
+}
 ```
 
 ---
@@ -177,16 +491,75 @@ public interface IUnitOfWork
 
 ---
 
+#### ExceptionHandling
+
+```cs title="AppFailureDescription.cs"
+namespace LegacyLego.Application.Abstractions.ExceptionHandling;
+
+public record AppFailureDescription(
+    ExceptionFailureKind Kind,
+    string Title,
+    string Detail,
+    string? ErrorCode = null);
+```
+
+---
+
+```cs title="ExceptionFailureKind.cs"
+namespace LegacyLego.Application.Abstractions.ExceptionHandling;
+
+/// <summary>
+/// Описывает конкретный тип ошибки-исключения
+/// </summary>
+/// <remarks>
+/// Используется в случае с возникновением исключения
+/// </remarks>
+public enum ExceptionFailureKind : byte
+{
+    /// <summary>
+    /// Ошибка на уровне бизнес-логики
+    /// </summary>
+    DomainLevelException = 0, 
+    /// <summary>
+    /// Ошибка на уровне интеграции с инфраструктурой
+    /// </summary>
+    InfrastructureLevelException,   
+    /// <summary>
+    /// ошибка интеграции с внешним api
+    /// </summary>
+    UnhandledNetworkLevelException,
+    /// <summary>
+    /// ошибка неизвестного типа
+    /// </summary>
+    Unknown
+}
+```
+
+---
+
+```cs title="IExceptionMapper.cs"
+namespace LegacyLego.Application.Abstractions.ExceptionHandling;
+
+public interface IExceptionMapper
+{
+    public bool TryMap(Exception exception, out AppFailureDescription? description);
+}
+```
+
+---
+
 #### ExternalServices
 
-```cs title="IBackgroundJobService.cs"
+```cs title="ICommandBackgroundJobService.cs"
 using LegacyLego.Application.Abstractions.Messaging.Command;
 
 namespace LegacyLego.Application.Abstractions.ExternalServices;
 
-public interface IBackgroundJobService
+public interface ICommandBackgroundJobService
 {
-    public void Schedule(IBaseCommand command, TimeSpan delay);
+    public void Schedule<TResult>(ICommand<TResult> command, TimeSpan delay);
+
+    public void Schedule(ICommand command, TimeSpan delay);
 }
 ```
 
@@ -205,6 +578,7 @@ public interface IPaymentProvider
         Guid orderId,
         decimal amount,
         string currency,
+        int scale,
         CancellationToken ct);
 
     Task<Result> RequestRefundAsync(
@@ -381,6 +755,37 @@ public interface IQueryHandler<in TQuery, TResponse>
     where TQuery : IQuery<TResponse>
 {
     public Task<Result<TResponse>> HandleAsync(TQuery query,CancellationToken cancellationToken);
+}
+```
+
+---
+
+### Diagnostics
+
+```cs title="DomainExceptionMapper.cs"
+using LegacyLego.Application.Abstractions.ExceptionHandling;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Diagnostics;
+
+public sealed class DomainExceptionMapper : IExceptionMapper
+{
+    public bool TryMap(Exception exception, out AppFailureDescription? description)
+    {
+        if (exception is DomainException domainException)
+        {
+            description = new AppFailureDescription(
+                Kind: ExceptionFailureKind.DomainLevelException,
+                Title: "Критическое нарушение бизнес-состояния системы",
+                Detail: domainException.Error.Message,
+                ErrorCode: domainException.Error.Code
+            );
+            return true;
+        }
+
+        description = null;
+        return false;
+    }
 }
 ```
 
@@ -676,7 +1081,7 @@ using LegacyLego.Domain.Shared;
 
 namespace LegacyLego.Application.Orders.Commands.Create;
 
-public class CreateOrderDomainEventHandler(IBackgroundJobService jobService)
+public class CreateOrderDomainEventHandler(ICommandBackgroundJobService jobService)
 : IDomainEventHandler<OrderCreated>
 {
     public Task HandleAsync(OrderCreated notification, CancellationToken ct)
@@ -1855,6 +2260,7 @@ public sealed class StartOrderPaymentCommandHandler(
                     orderId: order.Id.Value,
                     amount: order.TotalPrice.Sum,
                     currency: order.TotalPrice.Currency.Code,
+                    scale: order.Currency.Scale,
                     ct: ct);
 
         if (sessionResult.IsFailure)
@@ -1914,6 +2320,7 @@ public sealed class StartOrderPaymentCommandHandler(
                 orderId: order.Id.Value,
                 amount: order.TotalPrice.Sum,
                 currency: order.TotalPrice.Currency.Code,
+                scale: order.Currency.Scale,
                 ct: ct);
 
         if (newSessionResult.IsFailure)
@@ -2329,13 +2736,11 @@ public class Order : AggregateRoot<OrderId>
     /// <param name="currency">валюты заказа</param>
     /// <param name="status">статус заказа</param>
     /// <param name="frozenTotalSum">decimal занчение общей стоимсоти заказа</param>
-    /// <param name="address">адрес доставки заказа</param>
     /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
         Guid clientId,
         OrderStatus status,
-        OrderAddress address,
         Currency currency,
         decimal? frozenTotalSum,
         DateTime creationDateUtc)
@@ -2344,7 +2749,6 @@ public class Order : AggregateRoot<OrderId>
         ClientId = clientId;
         Status = status;
         _items = new List<OrderItem>();
-        Address = address;
         Currency = currency;
         CreationDateUtc = creationDateUtc;
 
@@ -3924,6 +4328,16 @@ public class OrderItem : ValueObject
         Quantity = quantity;
         ProductId = productId;
         UnitPrice = unitPrice;
+    }
+
+    private OrderItem(
+        string title,
+        int quantity,
+        Guid productId)
+    {
+        Title = title;
+        Quantity = quantity;
+        ProductId = productId;
     }
 
     public static Result<OrderItem> Create(
@@ -7634,14 +8048,19 @@ public class PricePlusTests
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.8" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -7654,6 +8073,148 @@ public class PricePlusTests
 	</ItemGroup>
 
 </Project>
+```
+
+---
+
+```cs title="DependencyInjection.cs"
+using Hangfire;
+using Hangfire.PostgreSql;
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.ExceptionHandling;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Domain.Abstractions;
+using LegacyLego.Infrastructure.BackgroundJobs;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Diagnostics;
+using LegacyLego.Infrastructure.Messaging.Abstractions;
+using LegacyLego.Infrastructure.Messaging.Bus;
+using LegacyLego.Infrastructure.Messaging.Dispatchers;
+using LegacyLego.Infrastructure.Messaging.Publishers;
+using LegacyLego.Infrastructure.Options;
+using LegacyLego.Infrastructure.Repositories;
+using LegacyLego.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+namespace LegacyLego.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        var options = services.AddOptions<DatabaseOptions>()
+            .BindConfiguration(DatabaseOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<OutboxBackgroundWorkerOptions>()
+            .BindConfiguration(OutboxBackgroundWorkerOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<PaymentProviderOptions>()
+            .BindConfiguration(PaymentProviderOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<HangfireOptions>()
+            .BindConfiguration(HangfireOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
+                              ?? new DatabaseOptions();
+
+        var hangfireOptions = configuration.GetSection(HangfireOptions.SectionName).Get<HangfireOptions>()
+                              ?? new HangfireOptions();
+
+        var hangfirePostgreSqlStorageOptions = new PostgreSqlStorageOptions();
+        hangfirePostgreSqlStorageOptions.QueuePollInterval = TimeSpan.FromSeconds(hangfireOptions.QueuePollInterval);
+        hangfirePostgreSqlStorageOptions.SchemaName = "internal_jobs";
+
+        services.Scan(scan => scan
+            .FromAssemblies(typeof(DependencyInjection).Assembly)
+
+            .AddClasses(classes => classes.AssignableTo(typeof(IIntegrationEventConsumer<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime())
+            
+            .AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(options => 
+            {
+                options.UseNpgsqlConnection(databaseOptions.ConnectionString);
+            }, hangfirePostgreSqlStorageOptions))
+            .AddHangfireServer(options =>
+            {
+                options.WorkerCount = hangfireOptions.WorkerCount;
+                options.Queues = new[] { HangfireOptions.CommandHangfireQueueName, "default" };
+            })
+
+            .AddDbContext<OrderContext>((serviceProvider, options) =>
+            {
+                var dbOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+                options.UseNpgsql(dbOptions.ConnectionString, npgsqlOptions =>
+                {
+                    npgsqlOptions.CommandTimeout(dbOptions.CommandTimeoutSeconds);
+
+                    npgsqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: dbOptions.MaxRetryCount,
+                        maxRetryDelay: TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds),
+                        errorCodesToAdd: null);
+                });
+
+                if (dbOptions.EnableSensitiveDataLogging)
+                {
+                    options.EnableSensitiveDataLogging();
+                }
+
+                if (dbOptions.EnableDetailedErrors)
+                {
+                    options.EnableDetailedErrors();
+                }
+            })
+
+            .AddScoped<IUnitOfWork, UnitOfWork>()
+
+            .AddScoped<IOrderRepository, OrderRepository>()
+            .AddScoped<IPaymentRepository, PaymentRepository>()
+
+            .AddSingleton<IIntegrationEventBus, InMemoryIntegrationEventBus>()
+            .AddScoped<IIntegrationEventPublisher, LocalIntegrationEventPublisher>()
+
+            .AddScoped<ICommandDispatcher, CommandDispatcher>()
+            .AddScoped<IDomainEventDispatcher, DomainEventDispatcher>()
+            .AddScoped<IQueryDispatcher, QueryDispatcher>()
+
+            .AddSingleton<IExceptionMapper, InfrastructureExceptionMapper>()
+
+            .AddSingleton(TimeProvider.System)
+
+            .AddScoped<ICommandBackgroundJobService, HangfireCommandBackgroundJobService>()
+
+            .AddHostedService<OutboxBackgroundWorker>();
+
+        services.AddHttpClient<IPaymentProvider, MockPaymentProvider>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<PaymentProviderOptions>>().Value;
+
+            //базовый адрес для ВСЕХ запросов этого клиента
+            client.BaseAddress = new Uri(options.ApiBaseUrl);
+        });
+
+
+        return services;
+    }
+}
 ```
 
 ---
@@ -7731,14 +8292,59 @@ public sealed class UnitOfWork: IUnitOfWork
 
 ### BackgroundJobs
 
+```cs title="HangfireCommandBackgroundJobService.cs"
+using Hangfire;
+using Hangfire.States;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Infrastructure.Options;
+
+namespace LegacyLego.Infrastructure.BackgroundJobs;
+
+public sealed class HangfireCommandBackgroundJobService : ICommandBackgroundJobService
+{
+    private readonly IBackgroundJobClient _jobClient;
+
+    public HangfireCommandBackgroundJobService(IBackgroundJobClient jobClient)
+    {
+        _jobClient = jobClient;
+    }
+
+    public void Schedule<TResult>(ICommand<TResult> command, TimeSpan delay)
+    {
+        var methodCall = Hangfire.Common.Job.FromExpression<ICommandDispatcher>(
+            dispatcher => dispatcher.DispatchAsync(command, CancellationToken.None), HangfireOptions.CommandHangfireQueueName);
+
+        var state = new ScheduledState(delay);
+
+        _jobClient.Create(methodCall, state);
+    }
+
+    public void Schedule(ICommand command, TimeSpan delay)
+    {
+        var methodCall = Hangfire.Common.Job.FromExpression<ICommandDispatcher>(
+            dispatcher => dispatcher.DispatchAsync(command, CancellationToken.None), HangfireOptions.CommandHangfireQueueName);
+
+        var state = new ScheduledState(delay);
+
+        _jobClient.Create(methodCall, state);
+    }
+}
+```
+
+---
+
 ```cs title="OutboxBackgroundWorker.cs"
 using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Outbox;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace LegacyLego.Infrastructure.BackgroundJobs;
@@ -7747,28 +8353,34 @@ public sealed class OutboxBackgroundWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OutboxBackgroundWorker> _logger;
-    private readonly TimeSpan _period;
 
-    private readonly int _takeRecordsNum;
+    private readonly IOptionsMonitor<OutboxBackgroundWorkerOptions> _optionsMonitor;
+
+    private TimeSpan Period
+    {
+        get => TimeSpan.FromSeconds(_optionsMonitor.CurrentValue.SecondsPeriod);
+    }
+
+    private int TakeRecordsNum
+    {
+        get => _optionsMonitor.CurrentValue.TakeRecordsNum;
+    }
 
     public OutboxBackgroundWorker(
         IServiceProvider serviceProvider,
-        ILogger<OutboxBackgroundWorker> logger, 
-        int secondsPeriod = 2, 
-        int takeRecordsNum = 20)
+        ILogger<OutboxBackgroundWorker> logger,
+        IOptionsMonitor<OutboxBackgroundWorkerOptions> optionsMonitor)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _takeRecordsNum = takeRecordsNum;
-
-        _period = TimeSpan.FromSeconds(secondsPeriod);
+        _optionsMonitor = optionsMonitor;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Outbox Background Worker успешно запущен.");
 
-        using var timer = new PeriodicTimer(_period);
+        using var timer = new PeriodicTimer(Period);
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -7785,17 +8397,16 @@ public sealed class OutboxBackgroundWorker : BackgroundService
 
     private async Task ProcessOutboxMessagesAsync(CancellationToken ct)
     {
-        using var scope = _serviceProvider.CreateScope();
-
-        var context = scope.ServiceProvider.GetRequiredService<OrderContext>();
-        var domainEventDispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
-        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-
-        var messages = context.Set<OutboxMessage>()
-            .Where(m => m.ProcessedOnUtc == null)
-            .OrderBy(m => m.OccurredOnUtc)
-            .Take(_takeRecordsNum)
-            .ToList();
+        List<OutboxMessage> messages;
+        using (var readScope = _serviceProvider.CreateScope())
+        {
+            var context = readScope.ServiceProvider.GetRequiredService<OrderContext>();
+            messages = context.Set<OutboxMessage>()
+                .Where(m => m.ProcessedOnUtc == null)
+                .OrderBy(m => m.OccurredOnUtc)
+                .Take(TakeRecordsNum)
+                .ToList();
+        }
 
         if (messages.Count == 0) return;
 
@@ -7803,11 +8414,18 @@ public sealed class OutboxBackgroundWorker : BackgroundService
 
         foreach (var message in messages)
         {
+            using var actionScope = _serviceProvider.CreateScope();
+            var context = actionScope.ServiceProvider.GetRequiredService<OrderContext>();
+            var domainEventDispatcher = actionScope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
+            var timeProvider = actionScope.ServiceProvider.GetRequiredService<TimeProvider>();
+
+            context.Attach(message);
+
             try
             {
                 // 1. Восстанавливаем .NET тип из строки AssemblyQualifiedName
                 Type? eventType = Type.GetType(message.Type);
-                if (eventType == null)
+                if (eventType == null) 
                 {
                     _logger.LogError("Не удалось восстановить тип события: {Type}", message.Type);
                     message.Error = $"Тип .NET '{message.Type}' не найден в сборках.";
@@ -7817,7 +8435,7 @@ public sealed class OutboxBackgroundWorker : BackgroundService
 
                 // 2. Десериализуем JSON контент обратно в объект доменного события
                 var domainEvent = JsonSerializer.Deserialize(message.Content, eventType);
-                if (domainEvent is not IDomainEvent validEvent)
+                if (domainEvent is not IDomainEvent validEvent) 
                 {
                     _logger.LogError("Объект сообщения не реализует IDomainEvent");
                     message.Error = "Объект десериализации не является IDomainEvent.";
@@ -7826,7 +8444,6 @@ public sealed class OutboxBackgroundWorker : BackgroundService
                 }
 
                 await domainEventDispatcher.DispatchAsync(validEvent, ct);
-
                 // в случае успеха маркируем дату успешной обработки
                 message.ProcessedOnUtc = timeProvider.GetUtcNow().UtcDateTime;
                 message.Error = null; // очистить ошибки, если были ранее
@@ -7834,12 +8451,11 @@ public sealed class OutboxBackgroundWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при обработке Outbox сообщения с Id: {Id}", message.Id);
-
                 message.Error = ex.ToString();
             }
-        }
 
-        await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
+        }
     }
 }
 ```
@@ -7924,6 +8540,7 @@ internal static class SpecificationEvaluator
 ### Configuration
 
 ```cs title="ExternalSessionConfiguration.cs"
+using LegacyLego.Domain.Aggregates;
 using LegacyLego.Domain.ValueObjects;
 using LegacyLego.Infrastructure.Configuration.Common;
 using Microsoft.EntityFrameworkCore;
@@ -7951,12 +8568,13 @@ public class ExternalSessionConfiguration : IEntityTypeConfiguration<ExternalSes
         builder.ToTable(TABLE_NAME);
 
         #region order_payment_id
-        builder.Property<Guid>(ID_COLUMN_NAME)
+        builder.Property<OrderPaymentId>("OrderPaymentId")
             .HasColumnName(ID_COLUMN_NAME)
+            .HasConversion(id => id.Value, value => OrderPaymentId.From(value))
             .HasColumnType(Uuid)
             .IsRequired();
 
-        builder.HasKey(ID_COLUMN_NAME)
+        builder.HasKey("OrderPaymentId")
             .HasName(PK_CONSTRAINT_NAME); 
         #endregion
 
@@ -8154,11 +8772,13 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 
         #region id
         // Shadow property
-        builder.Property<Guid>(ID_COLUMN_NAME)
+        builder.Property<Guid>("Id")
             .HasColumnName(ID_COLUMN_NAME)
-            .ValueGeneratedOnAdd();
+            .HasColumnType(Uuid)
+            .ValueGeneratedOnAdd()
+            .IsRequired();
 
-        builder.HasKey(ID_COLUMN_NAME).HasName(PK_CONSTRAINT_NAME);
+        builder.HasKey("Id").HasName(PK_CONSTRAINT_NAME);
         #endregion
 
         #region title
@@ -8177,9 +8797,10 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 
         #region order_id
         // Shadow property
-        builder.Property<Guid>("OrderId")
-            .HasColumnName(ORDER_ID_COLUMN_NAME)
-            .IsRequired();
+        builder.Property<OrderId>("OrderId")
+             .HasColumnName(ORDER_ID_COLUMN_NAME)
+             .HasConversion(id => id.Value, value => OrderId.From(value))
+             .IsRequired();
         #endregion
 
         #region UnitPrice VO
@@ -8237,7 +8858,6 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
     private const string TRANSACTION_ID_COLUMN_NAME = "transaction_id";
     private const string CREATED_AT_UTC_COLUMN_NAME = "created_at_utc";
     private const string ORDER_ID_COLUMN_NAME = "order_id";
-    private const string ORDER_PAYMENT_ID_COLUMN_NAME = "order_payment_id"; 
     #endregion
 
     public void Configure(EntityTypeBuilder<OrderPayment> builder)
@@ -8295,7 +8915,7 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
         #region ExternalSession
         builder.HasOne(p => p.ExternalSession)
             .WithOne()
-            .HasForeignKey<ExternalSession>(ORDER_PAYMENT_ID_COLUMN_NAME)
+            .HasForeignKey<ExternalSession>("OrderPaymentId")
             .IsRequired(false); 
         #endregion
     }
@@ -8508,6 +9128,36 @@ public class OrderContext : DbContext
 
 ---
 
+### Diagnostics
+
+```cs title="InfrastructureExceptionMapper.cs"
+using LegacyLego.Application.Abstractions.ExceptionHandling;
+using Microsoft.EntityFrameworkCore;
+
+namespace LegacyLego.Infrastructure.Diagnostics;
+
+public sealed class InfrastructureExceptionMapper : IExceptionMapper
+{
+    public bool TryMap(Exception exception, out AppFailureDescription? description)
+    {
+        if (exception is DbUpdateException)
+        {
+            description = new AppFailureDescription(
+                Kind: ExceptionFailureKind.InfrastructureLevelException,
+                Title: "Хранилище данных временно недоступно",
+                Detail: "Ошибка при выполнении операции с базой данных PostgreSQL."
+            );
+            return true;
+        }
+
+        description = null;
+        return false;
+    }
+}
+```
+
+---
+
 ### Messaging
 
 #### Abstractions
@@ -8574,7 +9224,8 @@ public sealed class InMemoryIntegrationEventBus : IIntegrationEventBus
             return Activator.CreateInstance(concreteWrapperType)!;
         });
 
-        await ((IntegrationEventWrapper)wrapper).HandleAsync(@event, _serviceProvider, ct);
+        using var scope = _serviceProvider.CreateScope();
+        await ((IntegrationEventWrapper)wrapper).HandleAsync(@event, scope.ServiceProvider, ct);
     }
 }
 
@@ -8841,6 +9492,1205 @@ public sealed class LocalIntegrationEventPublisher : IIntegrationEventPublisher
 
 ---
 
+### Migrations
+
+```cs title="20260622101458__Init.cs"
+using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace LegacyLego.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class _Init : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Order",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    client_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    currency_code = table.Column<string>(type: "varchar(3)", maxLength: 3, nullable: false),
+                    status = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    created_at_utc = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    frozen_total_sum = table.Column<decimal>(type: "numeric(15,2)", nullable: true),
+                    address_city = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    address_country = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    address_postal_code = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    address_street = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_order", x => x.id);
+                    table.CheckConstraint("check_order_frozen_total_sun", "\"frozen_total_sum\" >= 0");
+                    table.CheckConstraint("check_order_status", "\"status\" IN ('PendingPayment', 'Paid', 'Cancelled', 'Expired', 'Refunded')");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Outbox_messages",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    type = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    content = table.Column<string>(type: "text", nullable: false),
+                    occurred_on_utc = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    processed_on_utc = table.Column<DateTime>(type: "timestamptz", nullable: true),
+                    error = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_outbox_messages", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Order_item",
+                columns: table => new
+                {
+                    order_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    quantity = table.Column<short>(type: "smallint", nullable: false),
+                    product_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    currency_code = table.Column<string>(type: "varchar(3)", maxLength: 3, nullable: false),
+                    unit_price = table.Column<decimal>(type: "numeric(15,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_order_item", x => x.order_id);
+                    table.CheckConstraint("check_quantity", "\"quantity\" >= 1");
+                    table.CheckConstraint("check_unit_price_status", "\"unit_price\" > 0");
+                    table.ForeignKey(
+                        name: "fk_order_order_items",
+                        column: x => x.order_id,
+                        principalTable: "Order",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Order_payment",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    transaction_id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
+                    order_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    created_at_utc = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_order_payment", x => x.id);
+                    table.CheckConstraint("check_order_payment_status", "\"status\" IN ('Pending', 'Succeeded', 'Failed', 'Refunded', 'RefundRequested')");
+                    table.ForeignKey(
+                        name: "fk_order_payment_orders",
+                        column: x => x.order_id,
+                        principalTable: "Order",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "External_session",
+                columns: table => new
+                {
+                    order_payment_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    external_id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    checkout_url = table.Column<string>(type: "text", nullable: false),
+                    expires_at_utc = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_external_session", x => x.order_payment_id);
+                    table.ForeignKey(
+                        name: "FK_External_session_Order_payment_order_payment_id",
+                        column: x => x.order_payment_id,
+                        principalTable: "Order_payment",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Order_payment_order_id",
+                table: "Order_payment",
+                column: "order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Order_payment_transaction_id",
+                table: "Order_payment",
+                column: "transaction_id",
+                unique: true,
+                filter: "transaction_id IS NOT NULL");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "External_session");
+
+            migrationBuilder.DropTable(
+                name: "Order_item");
+
+            migrationBuilder.DropTable(
+                name: "Outbox_messages");
+
+            migrationBuilder.DropTable(
+                name: "Order_payment");
+
+            migrationBuilder.DropTable(
+                name: "Order");
+        }
+    }
+}
+```
+
+---
+
+```cs title="20260622101458__Init.Designer.cs"
+// <auto-generated />
+using System;
+using System.Collections.Generic;
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace LegacyLego.Infrastructure.Migrations
+{
+    [DbContext(typeof(OrderContext))]
+    [Migration("20260622101458__Init")]
+    partial class _Init
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTime>("CreationDateUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<decimal?>("FrozenTotalSum")
+                        .HasColumnType("numeric(15,2)")
+                        .HasColumnName("frozen_total_sum");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "LegacyLego.Domain.Aggregates.Order.Address#OrderAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_city");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_country");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("varchar(20)")
+                                .HasColumnName("address_postal_code");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("varchar(255)")
+                                .HasColumnName("address_street");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_order");
+
+                    b.ToTable("Order", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_frozen_total_sun", "\"frozen_total_sum\" >= 0");
+
+                            t.HasCheckConstraint("check_order_status", "\"status\" IN ('PendingPayment', 'Paid', 'Cancelled', 'Expired', 'Refunded')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("transaction_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_order_payment");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("transaction_id IS NOT NULL");
+
+                    b.ToTable("Order_payment", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_payment_status", "\"status\" IN ('Pending', 'Succeeded', 'Failed', 'Refunded', 'RefundRequested')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.Property<Guid>("OrderPaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_payment_id");
+
+                    b.Property<string>("CheckoutUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("external_id");
+
+                    b.HasKey("OrderPaymentId")
+                        .HasName("pk_external_session");
+
+                    b.ToTable("External_session", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<short>("Quantity")
+                        .HasColumnType("smallint")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "UnitPrice", "LegacyLego.Domain.ValueObjects.OrderItem.UnitPrice#Price", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("varchar(3)")
+                                .HasColumnName("currency_code");
+
+                            b1.Property<decimal>("Sum")
+                                .HasColumnType("numeric(15,2)")
+                                .HasColumnName("unit_price");
+                        });
+
+                    b.HasKey("OrderId")
+                        .HasName("pk_order_item");
+
+                    b.ToTable("Order_item", null, t =>
+                        {
+                            t.HasCheckConstraint("check_quantity", "\"quantity\" >= 1");
+
+                            t.HasCheckConstraint("check_unit_price_status", "\"unit_price\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Infrastructure.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_on_utc");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("processed_on_utc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_outbox_messages");
+
+                    b.ToTable("Outbox_messages", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_payment_orders");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.OrderPayment", null)
+                        .WithOne("ExternalSession")
+                        .HasForeignKey("LegacyLego.Domain.ValueObjects.ExternalSession", "OrderPaymentId");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_order_items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Navigation("ExternalSession");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+```
+
+---
+
+```cs title="20260622144846_FixExternalSessionPkShadowPropertyMapping.cs"
+using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace LegacyLego.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class FixExternalSessionPkShadowPropertyMapping : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropPrimaryKey(
+                name: "pk_order_item",
+                table: "Order_item");
+
+            migrationBuilder.AddColumn<Guid>(
+                name: "id",
+                table: "Order_item",
+                type: "uuid",
+                nullable: false,
+                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+
+            migrationBuilder.AddPrimaryKey(
+                name: "pk_order_item",
+                table: "Order_item",
+                column: "id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Order_item_order_id",
+                table: "Order_item",
+                column: "order_id");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropPrimaryKey(
+                name: "pk_order_item",
+                table: "Order_item");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Order_item_order_id",
+                table: "Order_item");
+
+            migrationBuilder.DropColumn(
+                name: "id",
+                table: "Order_item");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "pk_order_item",
+                table: "Order_item",
+                column: "order_id");
+        }
+    }
+}
+```
+
+---
+
+```cs title="20260622144846_FixExternalSessionPkShadowPropertyMapping.Designer.cs"
+// <auto-generated />
+using System;
+using System.Collections.Generic;
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace LegacyLego.Infrastructure.Migrations
+{
+    [DbContext(typeof(OrderContext))]
+    [Migration("20260622144846_FixExternalSessionPkShadowPropertyMapping")]
+    partial class FixExternalSessionPkShadowPropertyMapping
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTime>("CreationDateUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<decimal?>("FrozenTotalSum")
+                        .HasColumnType("numeric(15,2)")
+                        .HasColumnName("frozen_total_sum");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "LegacyLego.Domain.Aggregates.Order.Address#OrderAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_city");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_country");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("varchar(20)")
+                                .HasColumnName("address_postal_code");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("varchar(255)")
+                                .HasColumnName("address_street");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_order");
+
+                    b.ToTable("Order", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_frozen_total_sun", "\"frozen_total_sum\" >= 0");
+
+                            t.HasCheckConstraint("check_order_status", "\"status\" IN ('PendingPayment', 'Paid', 'Cancelled', 'Expired', 'Refunded')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("transaction_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_order_payment");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("transaction_id IS NOT NULL");
+
+                    b.ToTable("Order_payment", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_payment_status", "\"status\" IN ('Pending', 'Succeeded', 'Failed', 'Refunded', 'RefundRequested')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.Property<Guid>("OrderPaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_payment_id");
+
+                    b.Property<string>("CheckoutUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("external_id");
+
+                    b.HasKey("OrderPaymentId")
+                        .HasName("pk_external_session");
+
+                    b.ToTable("External_session", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<short>("Quantity")
+                        .HasColumnType("smallint")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "UnitPrice", "LegacyLego.Domain.ValueObjects.OrderItem.UnitPrice#Price", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("varchar(3)")
+                                .HasColumnName("currency_code");
+
+                            b1.Property<decimal>("Sum")
+                                .HasColumnType("numeric(15,2)")
+                                .HasColumnName("unit_price");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_order_item");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Order_item", null, t =>
+                        {
+                            t.HasCheckConstraint("check_quantity", "\"quantity\" >= 1");
+
+                            t.HasCheckConstraint("check_unit_price_status", "\"unit_price\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Infrastructure.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_on_utc");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("processed_on_utc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_outbox_messages");
+
+                    b.ToTable("Outbox_messages", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_payment_orders");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.OrderPayment", null)
+                        .WithOne("ExternalSession")
+                        .HasForeignKey("LegacyLego.Domain.ValueObjects.ExternalSession", "OrderPaymentId");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_order_items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Navigation("ExternalSession");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+```
+
+---
+
+```cs title="OrderContextModelSnapshot.cs"
+// <auto-generated />
+using System;
+using System.Collections.Generic;
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace LegacyLego.Infrastructure.Migrations
+{
+    [DbContext(typeof(OrderContext))]
+    partial class OrderContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTime>("CreationDateUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<decimal?>("FrozenTotalSum")
+                        .HasColumnType("numeric(15,2)")
+                        .HasColumnName("frozen_total_sum");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "LegacyLego.Domain.Aggregates.Order.Address#OrderAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_city");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("varchar(100)")
+                                .HasColumnName("address_country");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("varchar(20)")
+                                .HasColumnName("address_postal_code");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("varchar(255)")
+                                .HasColumnName("address_street");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_order");
+
+                    b.ToTable("Order", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_frozen_total_sun", "\"frozen_total_sum\" >= 0");
+
+                            t.HasCheckConstraint("check_order_status", "\"status\" IN ('PendingPayment', 'Paid', 'Cancelled', 'Expired', 'Refunded')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("transaction_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_order_payment");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("transaction_id IS NOT NULL");
+
+                    b.ToTable("Order_payment", null, t =>
+                        {
+                            t.HasCheckConstraint("check_order_payment_status", "\"status\" IN ('Pending', 'Succeeded', 'Failed', 'Refunded', 'RefundRequested')");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.Property<Guid>("OrderPaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_payment_id");
+
+                    b.Property<string>("CheckoutUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("external_id");
+
+                    b.HasKey("OrderPaymentId")
+                        .HasName("pk_external_session");
+
+                    b.ToTable("External_session", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<short>("Quantity")
+                        .HasColumnType("smallint")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "UnitPrice", "LegacyLego.Domain.ValueObjects.OrderItem.UnitPrice#Price", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("varchar(3)")
+                                .HasColumnName("currency_code");
+
+                            b1.Property<decimal>("Sum")
+                                .HasColumnType("numeric(15,2)")
+                                .HasColumnName("unit_price");
+                        });
+
+                    b.HasKey("Id")
+                        .HasName("pk_order_item");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Order_item", null, t =>
+                        {
+                            t.HasCheckConstraint("check_quantity", "\"quantity\" >= 1");
+
+                            t.HasCheckConstraint("check_unit_price_status", "\"unit_price\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("LegacyLego.Infrastructure.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_on_utc");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("processed_on_utc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_outbox_messages");
+
+                    b.ToTable("Outbox_messages", (string)null);
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_payment_orders");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.ExternalSession", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.OrderPayment", null)
+                        .WithOne("ExternalSession")
+                        .HasForeignKey("LegacyLego.Domain.ValueObjects.ExternalSession", "OrderPaymentId");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.ValueObjects.OrderItem", b =>
+                {
+                    b.HasOne("LegacyLego.Domain.Aggregates.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_order_items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.Order", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("LegacyLego.Domain.Aggregates.OrderPayment", b =>
+                {
+                    b.Navigation("ExternalSession");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+```
+
+---
+
+### Options
+
+```cs title="DatabaseOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public class DatabaseOptions
+{
+    public const string SectionName = "Database";
+
+    [Required(ErrorMessage = "Строка подключения обязательна.")]
+    public string ConnectionString { get; set; } = string.Empty;
+
+    [Range(1, 60, ErrorMessage = "CommandTimeoutSeconds должен быть от 1 до 60 секунд.")]
+    public int CommandTimeoutSeconds { get; set; } = 30;
+
+    [Range(1, 10, ErrorMessage = "MaxRetryCount должен быть в диапазоне от 1 до 10.")]
+    public int MaxRetryCount { get; set; } = 3;
+
+    [Range(1, 30, ErrorMessage = "MaxRetryDelaySeconds должен быть в диапазоне от 1 до 30.")]
+    public int MaxRetryDelaySeconds { get; set; } = 5;
+
+    public bool EnableSensitiveDataLogging { get; set; }
+    public bool EnableDetailedErrors { get; set; }
+}
+```
+
+---
+
+```cs title="HangfireOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class HangfireOptions
+{
+    public const string SectionName = "Hangfire";
+    public const string CommandHangfireQueueName = "command";
+
+    [Range(1, 60, ErrorMessage = "QueuePollInterval должен быть от 1 до 60 секунд.")]
+    public int QueuePollInterval { get; set; } = 15;
+
+    [Range(1, 20, ErrorMessage = "WorkerCount должен быть в диапазоне от 1 до 20.")]
+    public int WorkerCount { get; set; } = 2;
+}
+```
+
+---
+
+```cs title="OutboxBackgroundWorkerOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class OutboxBackgroundWorkerOptions
+{
+    public const string SectionName = "OutboxBackgroundWorkerOptions";
+
+    [Range(1, 60, ErrorMessage = "Период воркера должен быть от 1 до 60 секунд.")]
+    public int SecondsPeriod { get; set; } = 2;
+
+    [Range(1, 100, ErrorMessage = "За раз можно взять от 1 до 100 записей.")]
+    public int TakeRecordsNum { get; set; } = 20;
+}
+```
+
+---
+
+```cs title="PaymentProviderOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class PaymentProviderOptions
+{
+    public const string SectionName = "PaymentProviderOptions";
+
+    [Required(ErrorMessage = "ApiBaseUrl is required")]
+    public string ApiBaseUrl { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "WebhookRoute is required")]
+    public string WebhookRoute { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "CheckoutPagePath is required")]
+    public string CheckoutPagePath { get; set; } = string.Empty;
+
+    [Range(1, 60, ErrorMessage = "ExpiresAtMinutes должен быть от 1 до 60 минут.")]
+    public int ExpiresAtMinutes { get; set; } = 10;
+}
+```
+
+---
+
 ### Outbox
 
 ```cs title="OutboxMessage.cs"
@@ -8971,30 +10821,27 @@ internal class PaymentRepository(OrderContext context) : IPaymentRepository
 using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Options;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 
 namespace LegacyLego.Infrastructure.Services;
 
 public sealed class MockPaymentProvider : IPaymentProvider
 {
-    private const string HTTP_ROUTE = "/mock/api/webhooks/payment";
-
     private readonly HttpClient _httpClient;
     private readonly TimeProvider _timeProvider;
-    private readonly string _baseUrl;
-    private readonly int _expiresAtMinutes;
+    private readonly PaymentProviderOptions _options;
 
     public MockPaymentProvider(
         HttpClient httpClient,
         TimeProvider timeProvider,
-        string baseUrl,
-        int expiresAtMinutes)
+        IOptions<PaymentProviderOptions> options)
     {
         _httpClient = httpClient;
         _timeProvider = timeProvider;
-        _baseUrl = baseUrl;
-        _expiresAtMinutes = expiresAtMinutes;
+        _options = options.Value;
     }
 
     public async Task<Result<PaymentSession>> CreatePaymentSessionAsync(
@@ -9002,22 +10849,24 @@ public sealed class MockPaymentProvider : IPaymentProvider
         Guid orderId,
         decimal amount,
         string currency,
+        int scale,
         CancellationToken ct)
     {
         string externalSessionId = GenerateExternalSession();
 
-        var expiresAtUtc = _timeProvider.GetUtcNow().AddMinutes(_expiresAtMinutes).UtcDateTime;
+        var expiresAtUtc = _timeProvider.GetUtcNow().AddMinutes(_options.ExpiresAtMinutes).UtcDateTime;
 
         var queryParams = new Dictionary<string, string?>
         {
             { "paymentId", paymentId.ToString() },
             { "orderId", orderId.ToString() },
-            { "amount", amount.ToString("F2") },
+            { "amount", amount.ToString($"F{scale}",System.Globalization.CultureInfo.InvariantCulture) },
             { "currency", currency },
             { "externalSessionId", externalSessionId }
         };
 
-        string checkoutUrl = QueryHelpers.AddQueryString(_baseUrl, queryParams);
+        string baseCheckoutUrl = new Uri(new Uri(_options.ApiBaseUrl), _options.CheckoutPagePath).ToString();
+        string checkoutUrl = QueryHelpers.AddQueryString(baseCheckoutUrl, queryParams);
 
         var session = new PaymentSession(
             PaymentId: paymentId,
@@ -9045,7 +10894,7 @@ public sealed class MockPaymentProvider : IPaymentProvider
             TransactionId: transactionId,
             Status: "refund");
 
-        var response = await _httpClient.PostAsJsonAsync(HTTP_ROUTE, payload, ct);
+        var response = await _httpClient.PostAsJsonAsync(_options.WebhookRoute, payload, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -9081,18 +10930,37 @@ file sealed record ExternalStripeWebhookSimulation(
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>4c1ab31b-79ef-45cf-b0db-bef1bd60998f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Mapping\" />
-    <Folder Include="Mock\Common\Dto\Response\" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.4" />
   </ItemGroup>
 
-  <ItemGroup>
+	<PropertyGroup>
+		<OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
+
+		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
+	</PropertyGroup>
+
+	<ItemGroup>
     <ProjectReference Include="..\LegacyLego.Application\LegacyLego.Application.csproj" />
     <ProjectReference Include="..\LegacyLego.Domain\LegacyLego.Domain.csproj" />
     <ProjectReference Include="..\LegacyLego.Infrastructure\LegacyLego.Infrastructure.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\" />
+	</ItemGroup>
 
 </Project>
 ```
@@ -9100,14 +10968,221 @@ file sealed record ExternalStripeWebhookSimulation(
 ---
 
 ```cs title="Program.cs"
+using LegacyLego.Application;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Infrastructure;
+using LegacyLego.Infrastructure.Services;
+using LegacyLego.Presentation.Middleware;
+using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
+using LegacyLego.Presentation.Payments;
+using Scalar.AspNetCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
+
+builder.Services.AddApplication()
+    .AddInfrastructure(configuration)
+    .AddPresentationOpenApi();
+
+builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
-app.UseOrdersEndpoints();
+app.UseExceptionHandler(); // стоит самый первый в пайплайне
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+
+    app.MapScalarApiReference("/docs/scalar", options =>
+    {
+        options.WithTitle("LegacyLego Documentation")
+            .WithTheme(ScalarTheme.DeepSpace)
+            .WithClassicLayout()
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
+}
+
+app.UseStaticFiles();
+
+app.MapOrdersEndpoints();
+app.MapPaymentEndpoints();
 
 app.Run();
+```
+
+---
+
+### Middleware
+
+```cs title="DynamicGlobalExceptionHandler.cs"
+using LegacyLego.Application.Abstractions.ExceptionHandling;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+
+namespace LegacyLego.Presentation.Middleware;
+
+public sealed class DynamicGlobalExceptionHandler : IExceptionHandler
+{
+    private readonly IEnumerable<IExceptionMapper> _mappers;
+    private readonly ILogger<DynamicGlobalExceptionHandler> _logger;
+    private readonly IWebHostEnvironment _env;
+    private readonly IProblemDetailsService _problemDetailsService;
+
+    public DynamicGlobalExceptionHandler(
+        IEnumerable<IExceptionMapper> mappers,
+        ILogger<DynamicGlobalExceptionHandler> logger,
+        IWebHostEnvironment env,
+        IProblemDetailsService problemDetailsService)
+    {
+        _mappers = mappers;
+        _logger = logger;
+        _env = env;
+        _problemDetailsService = problemDetailsService;
+    }
+
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext httpContext,
+        Exception exception,
+        CancellationToken cancellationToken)
+    {
+        AppFailureDescription? failureDescription = null;
+        foreach (var mapper in _mappers)
+        {
+            if (mapper.TryMap(exception, out failureDescription) && failureDescription is not null)
+                break;
+        }
+
+        failureDescription ??= new AppFailureDescription(
+            ExceptionFailureKind.Unknown,
+            "Внутренняя ошибка сервера",
+            "Произошла непредвиденная ошибка в работе системы.");
+
+        LogException(exception, failureDescription, httpContext);
+
+        return await WriteProblemDetailsAsync(httpContext, failureDescription, cancellationToken);
+    }
+
+    private void LogException(Exception exception, AppFailureDescription failure, HttpContext context)
+    {
+        var logLevel = failure.Kind switch
+        {
+            ExceptionFailureKind.DomainLevelException => LogLevel.Critical,
+            ExceptionFailureKind.InfrastructureLevelException => LogLevel.Error,
+            _ => LogLevel.Error
+        };
+
+        _logger.Log(
+            logLevel,
+            exception,
+            "Перехвачено исключение [{ErrorCode}]: {Title}. Маршрут: {Method} {Path}",
+            failure.ErrorCode ?? "Core.Unknown",
+            failure.Title,
+            context.Request.Method,
+            context.Request.Path);
+    }
+
+    private async ValueTask<bool> WriteProblemDetailsAsync(HttpContext context, AppFailureDescription failure, CancellationToken ct)
+    {
+        var statusCode = failure.Kind switch
+        {
+            ExceptionFailureKind.DomainLevelException => StatusCodes.Status500InternalServerError,
+            ExceptionFailureKind.InfrastructureLevelException => StatusCodes.Status503ServiceUnavailable,
+            ExceptionFailureKind.UnhandledNetworkLevelException => StatusCodes.Status502BadGateway,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        
+        string publicDetail;
+
+        if (_env.IsDevelopment())
+        {
+            publicDetail = failure.Detail;
+        }
+        else
+        {
+            publicDetail = failure.Kind switch
+            {
+                ExceptionFailureKind.InfrastructureLevelException => "Сервис временно недоступен. Пожалуйста, повторите попытку позже.",
+                _ => $"Внутренняя ошибка сервера. Пжалуйста сообщите данный код техподдержке в случае обращения за помощью: {context.TraceIdentifier}" // TraceIdentifier пользователю, чтобы тот сообщил поддержке 
+            };
+        }
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = _env.IsDevelopment() ? failure.Title : "Внутренняя ошибка сервера",
+            Detail = publicDetail,
+            Instance = context.Request.Path
+        };
+
+        if (_env.IsDevelopment() && !string.IsNullOrEmpty(failure.ErrorCode))
+        {
+            problemDetails.Extensions["errorCode"] = failure.ErrorCode;
+        }
+
+        var problemContext = new ProblemDetailsContext
+        {
+            HttpContext = context,
+            ProblemDetails = problemDetails
+        };
+
+        return await _problemDetailsService.TryWriteAsync(problemContext);
+    }
+}
+```
+
+---
+
+### OpenApi
+
+```cs title="ApiMetadataTransformer.cs"
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
+
+namespace LegacyLego.Presentation.OpenApi;
+
+internal sealed class ApiMetadataTransformer : IOpenApiDocumentTransformer
+{
+    public Task TransformAsync(
+        OpenApiDocument document,
+        OpenApiDocumentTransformerContext context,
+        CancellationToken cancellationToken)
+    {
+        document.Info.Title = "LegacyLego E-Commerce API";
+        document.Info.Description = "Внутреннее API интернет-магазина конструкторов Lego. " +
+                                     "Обеспечивает работу с заказами, корзиной и платежными шлюзами.";
+
+        // ПРАВИЛЬНЫЙ ВАРИАНТ: Берем имя документа из контекста .NET OpenAPI!
+        // Если зарегистрирован документ "v1", то версия будет "v1"
+        document.Info.Version = $"openapi.{context.DocumentName}";
+
+        return Task.CompletedTask;
+    }
+}
+```
+
+---
+
+```cs title="OpenApiExtensions.cs"
+namespace LegacyLego.Presentation.OpenApi;
+
+public static class OpenApiExtensions
+{
+    public const string ApiVersion = "v1";
+
+    public static IServiceCollection AddPresentationOpenApi(this IServiceCollection services)
+    {
+        return services.AddOpenApi(ApiVersion, options =>
+        {
+            options.AddDocumentTransformer<ApiMetadataTransformer>();
+        });
+    }
+}
 ```
 
 ---
@@ -9116,28 +11191,23 @@ app.Run();
 
 ```cs title="OrderEndpoints.cs"
 using LegacyLego.Application.Abstractions.Messaging;
-using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Orders.Commands.Create;
-using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
-using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Presentation.Orders.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using LegacyLego.Presentation.Payments.Dto;
-using LegacyLego.Presentation.Orders.Dto;
 namespace LegacyLego.Presentation.Orders;
 
 public static class OrderEndpoints
 {
-    public static IEndpointRouteBuilder UseOrdersEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapOrdersEndpoints(this IEndpointRouteBuilder app)
     {
         var ordersGroup = app.MapGroup("/orders")
             .WithDisplayName("Orders")
             .WithDescription("Управление заказами")
-            .WithGroupName("Orders");
+            .WithTags("Orders");
 
         ordersGroup.MapPost("", Create);
-        ordersGroup.MapPost("/{orderId:guid}/pay", StartPayment);
 
         return app;
     }
@@ -9146,6 +11216,8 @@ public static class OrderEndpoints
         [FromBody] CreateOrderRequest request,
         ICommandDispatcher commandDispatcher,
         ClaimsPrincipal user,
+        ILogger<Program> logger,
+        HttpContext httpContext,
         CancellationToken ct)
     {
         var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -9167,27 +11239,150 @@ public static class OrderEndpoints
 
         if (result.IsFailure)
         {
+            logger.LogWarning("Запрос отклонен. Код: {ErrorCode}. Детали: {Message}",
+                result.Error.Code, result.Error.Message);
+
             return TypedResults.BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
-                Title = result.Error.Code,
-                Detail = result.Error.Message
+                Title = "Произошла ошибка обработки запроса",
+                Detail = "Запрос не прошел валидацию. Подробности см. в параметре errorCode.",
+                Instance = httpContext.Request.Path,
+                // Передаем код ошибки для фронтенда:
+                Extensions = { ["errorCode"] = result.Error.Code }
             });
         }
 
         return TypedResults.Created($"/orders/{result.Value}", result.Value);
     }
+}
+```
+
+---
+
+#### Dto
+
+```cs title="CreateOrderRequest.cs"
+using LegacyLego.Application.Orders.Common;
+
+namespace LegacyLego.Presentation.Orders.Dto;
+
+public sealed record CreateOrderRequest(
+    string CurrencyCode,
+    OrderAddressDto OrderAddress,
+    List<OrderItemDto> Items);
+```
+
+---
+
+### Payments
+
+```cs title="PaymentEndpoints.cs"
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Orders.Errors;
+using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
+using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Presentation.Mock.Common.Dto.Request;
+using LegacyLego.Presentation.Payments.Dto;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace LegacyLego.Presentation.Payments;
+
+public static class PaymentEndpoints
+{
+    public static IEndpointRouteBuilder MapPaymentEndpoints(this IEndpointRouteBuilder app)
+    {
+        var mockGroup = app.MapGroup("/mock")
+            .WithDisplayName("Payment")
+            .WithDescription("Тестировочные эндпоинты оплаты заказа")
+            .WithTags("Payments");
+
+        mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
+        mockGroup.MapPost("/{orderId:guid}/pay", StartPayment);
+
+        return app;
+    }
 
     private static async Task<Results<
-        Ok<StartPaymentResponse>,
-        ForbidHttpResult,
-        Conflict<ProblemDetails>,
-        NotFound<ProblemDetails>,
-        BadRequest<ProblemDetails>>> StartPayment(
-            [FromRoute] Guid orderId,
+        Ok<ProcessPaymentDetails>,
+        BadRequest<ProblemDetails>,
+        Conflict<ProblemDetails>>> HandleWebhook(
+            [FromBody] PaymentProviderWebhookRequest request,
             ICommandDispatcher commandDispatcher,
-            ClaimsPrincipal user,
             CancellationToken ct)
+    {
+        ProcessPaymentWebhookCommand command;
+        try
+        {
+            command = PaymentWebhookMapper.MapToPaymentWebhookCommand(request);
+        }
+        catch (ArgumentException ex)
+        {
+            return TypedResults.BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Invalid Request Status",
+                Detail = ex.Message
+            });
+        }
+
+        var result = await commandDispatcher.DispatchAsync(command, ct);
+
+        if (result.IsFailure)
+        {
+            var error = result.Error;
+
+            return error.Code switch
+            {
+                ProcessPaymentErrors.InvalidAmountCode or
+                ProcessPaymentErrors.UnknownStatusCode =>
+                    TypedResults.BadRequest(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                ProcessPaymentErrors.TransactionConflictCode =>
+                    TypedResults.Conflict(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                ProcessPaymentErrors.TotalPricesMismatchCode =>
+                    TypedResults.Conflict(new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = error.Code,
+                        Detail = error.Message
+                    }),
+
+                _ => TypedResults.BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = error.Code,
+                    Detail = error.Message
+                })
+            };
+        }
+
+        return TypedResults.Ok(result.Value);
+    }
+
+    private static async Task<Results<
+    Ok<StartPaymentResponse>,
+    ForbidHttpResult,
+    Conflict<ProblemDetails>,
+    NotFound<ProblemDetails>,
+    BadRequest<ProblemDetails>>> StartPayment(
+        [FromRoute] Guid orderId,
+        ICommandDispatcher commandDispatcher,
+        ClaimsPrincipal user,
+        CancellationToken ct)
     {
         // ⌚ Временно для тестов, пока не настроен JWT:
         var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -9249,125 +11444,11 @@ public static class OrderEndpoints
 
 ---
 
-#### Dto
-
-```cs title="CreateOrderRequest.cs"
-using LegacyLego.Application.Orders.Common;
-
-namespace LegacyLego.Presentation.Orders.Dto;
-
-public sealed record CreateOrderRequest(
-    string CurrencyCode,
-    OrderAddressDto OrderAddress,
-    List<OrderItemDto> Items);
-```
-
----
-
-### Payments
-
-```cs title="PaymentWebhookEndpoints.cs"
-using LegacyLego.Application.Abstractions.Messaging;
-using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
-using LegacyLego.Presentation.Payments;
-using LegacyLego.Presentation.Payments.Dto;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-
-namespace LegacyLego.Presentation.Mock.Endpoints;
-
-public static class PaymentWebhookEndpoints
-{
-    public static IEndpointRouteBuilder UseMockPaymentWebhookEndpoints(this IEndpointRouteBuilder app)
-    {
-        var mockGroup = app.MapGroup("/mock")
-            .WithDisplayName("Payment Webhooks")
-            .WithDescription("Тестировочные эндпоинты оплаты заказа")
-            .WithGroupName("Payment Webhooks");
-
-        mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
-
-        return app;
-    }
-
-    private static async Task<Results<
-        Ok<ProcessPaymentDetails>,
-        BadRequest<ProblemDetails>,
-        Conflict<ProblemDetails>>> HandleWebhook(
-            [FromBody] PaymentProviderWebhookRequest request,
-            ICommandDispatcher commandDispatcher,
-            CancellationToken ct)
-    {
-        ProcessPaymentWebhookCommand command;
-        try
-        {
-            command = PaymentWebhookMapper.MapToPaymentWebhookCommand(request);
-        }
-        catch (ArgumentException ex)
-        {
-            return TypedResults.BadRequest(new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Invalid Request Status",
-                Detail = ex.Message
-            });
-        }
-
-        var result = await commandDispatcher.DispatchAsync(command, ct);
-
-        // 3. Обработка Ошибок (Result.Failure)
-        if (result.IsFailure)
-        {
-            var error = result.Error;
-
-            return error.Code switch
-            {
-                ProcessPaymentErrors.InvalidAmountCode or
-                ProcessPaymentErrors.UnknownStatusCode =>
-                    TypedResults.BadRequest(new ProblemDetails
-                    {
-                        Status = StatusCodes.Status400BadRequest,
-                        Title = error.Code,
-                        Detail = error.Message
-                    }),
-
-                ProcessPaymentErrors.TransactionConflictCode =>
-                    TypedResults.Conflict(new ProblemDetails
-                    {
-                        Status = StatusCodes.Status409Conflict,
-                        Title = error.Code,
-                        Detail = error.Message
-                    }),
-
-                ProcessPaymentErrors.TotalPricesMismatchCode =>
-                    TypedResults.Conflict(new ProblemDetails
-                    {
-                        Status = StatusCodes.Status409Conflict,
-                        Title = error.Code,
-                        Detail = error.Message
-                    }),
-
-                _ => TypedResults.BadRequest(new ProblemDetails
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Title = error.Code,
-                    Detail = error.Message
-                })
-            };
-        }
-
-        return TypedResults.Ok(result.Value);
-    }
-}
-```
-
----
-
 ```cs title="PaymentWebhookMapper.cs"
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Enums;
-using LegacyLego.Presentation.Payments.Dto;
+using LegacyLego.Presentation.Mock.Common.Dto.Request;
 
 namespace LegacyLego.Presentation.Payments;
 

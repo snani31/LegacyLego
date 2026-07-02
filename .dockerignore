@@ -1,0 +1,37 @@
+# === 1. Результаты компиляции и тестов .NET ===
+**/bin/
+**/obj/
+**/publish/
+**/TestResults/
+
+# === 2. Окружение разработчика и настройки IDE ===
+.vs/
+.vscode/
+*.user
+*.*proj.user
+*.suo
+*.sln.docstates
+
+# === 3. Инфраструктура Docker и Секреты (КРИТИЧНО!) ===
+.dockerignore
+**/*.Dockerfile
+Dockerfile*
+docker-compose*
+.env
+.env.*
+**/secrets.dev.yaml
+
+# === 4. Системный мусор, логи и контроль версий ===
+.git/
+.gitignore
+**/*.bak
+**/*.tmp
+**/node_modules/
+**/npm-debug.log
+
+# === 5. Документация и локальные утилиты решения ===
+# (Этим файлам нечего делать в рантайм-образе приложения)
+README.md
+LICENSE
+docs/
+tools/

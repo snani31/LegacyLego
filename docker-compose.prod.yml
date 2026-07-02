@@ -1,0 +1,59 @@
+volumes:
+ postgres-legacy-lego-data:
+
+networks:
+  legacy-lego-network:
+    driver: bridge
+
+services:
+ legacy-lego-migrator:
+  container_name: legacy-lego-migrator
+  build:
+   context: .
+   dockerfile: Presentation.Dockerfile
+   target: migrator
+  env_file:
+   - .env
+  networks:
+   - legacy-lego-network
+  command: ["--connection", "Host=legacy-lego-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"]
+  depends_on:
+   legacy-lego-postgres:
+    condition: service_healthy
+ legacy-lego-api:
+  container_name: legacy-lego-api
+  build:
+   context: .
+   dockerfile: Presentation.Dockerfile
+  env_file:
+   - .env
+  networks:
+   - legacy-lego-network
+  environment:
+   - ASPNETCORE_ENVIRONMENT=Development
+   - Database__ConnectionString=Host=legacy-lego-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+  ports:
+   - "8080:8080"
+  depends_on:
+   legacy-lego-migrator:
+    condition: service_completed_successfully
+  restart: unless-stopped
+ legacy-lego-postgres:
+  image: postgres:16-alpine
+  container_name: legacy-lego-postgres
+  env_file:
+   - .env
+  networks:
+   - legacy-lego-network
+  environment: 
+   POSTGRES_PASSWORD: ${DB_PASSWORD}
+   POSTGRES_USER: ${DB_USER}
+   POSTGRES_DB: ${DB_NAME}
+  healthcheck:
+   test: ["CMD-SHELL","pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+   interval: 5s
+   timeout: 5s
+   retries: 3
+  restart: unless-stopped
+  volumes:
+   - postgres-legacy-lego-data:/var/lib/postgresql/data

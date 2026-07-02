@@ -37,7 +37,7 @@ public sealed class CreateOrderCommandHandler(
         orderRepository.Add(order);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return Result<Guid>.Success(orderResult.Value.Id.Value);
+        return Result<Guid>.Success(order.Id.Value);
     }
 
     private static Result<List<OrderItem>> CreateItems(IEnumerable<OrderItemDto> requests, Currency currency)
