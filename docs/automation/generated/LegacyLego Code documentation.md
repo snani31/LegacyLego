@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.9.0
+Актуальная версия проекта: 1.9.1
 
 ## Проекты
 
@@ -77,6 +77,7 @@
 │   │   │   │   └── IExceptionMapper.cs
 │   │   │   ├── ExternalServices
 │   │   │   │   ├── ICommandBackgroundJobService.cs
+│   │   │   │   ├── ICursorSerializer.cs
 │   │   │   │   └── IPaymentProvider.cs
 │   │   │   └── Messaging
 │   │   │       ├── Command
@@ -107,6 +108,8 @@
 │   │   │   ├── InfrastructureException.cs
 │   │   │   ├── PersistenceException.cs
 │   │   │   └── UniqueConstraintViolation.cs
+│   │   ├── Options
+│   │   │   └── OrderHistoryOptions.cs
 │   │   ├── Orders
 │   │   │   ├── Commands
 │   │   │   │   ├── Cancel
@@ -290,6 +293,7 @@
 │   │   │   ├── OrderRepository.cs
 │   │   │   └── PaymentRepository.cs
 │   │   ├── Services
+│   │   │   ├── Base64JsonCursorSerializer.cs
 │   │   │   └── MockPaymentProvider.cs
 │   │   ├── DependencyInjection.cs
 │   │   ├── LegacyLego.Infrastructure.csproj
@@ -421,7 +425,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
@@ -436,6 +444,7 @@ using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
 using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Diagnostics;
+using LegacyLego.Application.Options;
 using LegacyLego.Application.Payments.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -445,6 +454,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        var options = services.AddOptions<OrderHistoryOptions>()
+            .BindConfiguration(OrderHistoryOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.Scan(scan => scan
             .FromAssemblies(typeof(DependencyInjection).Assembly)
 
@@ -560,6 +574,21 @@ public interface ICommandBackgroundJobService
     public void Schedule<TResult>(ICommand<TResult> command, TimeSpan delay);
 
     public void Schedule(ICommand command, TimeSpan delay);
+}
+```
+
+---
+
+```cs title="ICursorSerializer.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Application.Abstractions.ExternalServices;
+
+public interface ICursorSerializer
+{
+    public string Serialize<T>(T cursorData) where T : struct;
+
+    public Result<T> Deserialize<T>(string cursor) where T : struct;
 }
 ```
 
@@ -885,6 +914,25 @@ public class UniqueConstraintViolation : InfrastructureException
 
 ---
 
+### Options
+
+```cs title="OrderHistoryOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Application.Options;
+
+public class OrderHistoryOptions
+{
+    public const string SectionName = "OrderHistory";
+
+    [Range(1, 15, ErrorMessage = "Значение OrderHistory PageSize должно быть в диапазоне от 1 до 15.")]
+    public int PageSize { get; set; } = 5;
+
+}
+```
+
+---
+
 ### Orders
 
 #### Commands
@@ -1048,7 +1096,7 @@ public sealed class CreateOrderCommandHandler(
         orderRepository.Add(order);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return Result<Guid>.Success(orderResult.Value.Id.Value);
+        return Result<Guid>.Success(order.Id.Value);
     }
 
     private static Result<List<OrderItem>> CreateItems(IEnumerable<OrderItemDto> requests, Currency currency)
@@ -1467,11 +1515,11 @@ namespace LegacyLego.Application.Orders.Common.Projections;
 
 public static class OrderProjections
 {
-    public static Expression<Func<Order,OrderSummaryDto>> Summary =>
+    public static Expression<Func<Order, OrderSummaryDto>> Summary =>
         order => new OrderSummaryDto(
             order.Id.Value,
             order.Status,
-            order.Items.Sum(x => x.UnitPrice.Sum),
+            order.Items.Sum(x => x.UnitPrice.Sum * x.Quantity),
             order.Currency.Code,
             order.CreationDateUtc,
             order.Items.Count
@@ -1598,10 +1646,10 @@ namespace LegacyLego.Application.Orders.Queries.OrderDetails;
 
 public class OrderDetailsSpecification : Specification<Order, OrderId, OrderDetailsDto>
 {
-    public OrderDetailsSpecification(Guid clientId, Guid orderId) : base(OrderProjections.Details)
+    public OrderDetailsSpecification(Guid clientId, OrderId orderId) : base(OrderProjections.Details)
     {
         AddFilter(order => order.ClientId == clientId);
-        AddFilter(order => order.Id.Value == orderId);
+        AddFilter(order => order.Id == orderId);
     }
 }
 ```
@@ -1634,13 +1682,16 @@ public class GetOrderDetailsQueryHandler(IOrderRepository repository) : IQueryHa
 {
     public async Task<Result<OrderDetailsDto>> HandleAsync(GetOrderDetailsQuery query, CancellationToken ct)
     {
-        var specification = new OrderDetailsSpecification(query.UserId, query.OrderId);
-        var order = await repository.GetOrderAsync(specification, ct);
+        var orderId = OrderId.From(query.OrderId);
 
-        if (order is null)
-            return Result<OrderDetailsDto>.Failure(OrderErrors.GetNotFoundByOrderIdError(OrderId.From(query.OrderId)));
+        var specification = new OrderDetailsSpecification(query.UserId, orderId);
 
-        return Result<OrderDetailsDto>.Success(order);
+        var orderDetails = await repository.GetOrderAsync(specification, ct);
+
+        if (orderDetails is null)
+            return Result<OrderDetailsDto>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
+
+        return Result<OrderDetailsDto>.Success(orderDetails);
     }
 }
 ```
@@ -1695,24 +1746,64 @@ public sealed record GetOrdersHistoryQuery(Guid UserId, OrderHistoryRequest Filt
 ---
 
 ```cs title="GetOrdersHistoryQueryHandler.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Options;
 using LegacyLego.Application.Orders.Queries.OrdersHistory;
 using LegacyLego.Domain.Abstractions;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+using Microsoft.Extensions.Options;
 
 namespace LegacyLego.Application.Orders.Queries.ActiveOrders;
 
-public class GetOrdersHistoryQueryHandler(IOrderRepository repository) : IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>
+public class GetOrdersHistoryQueryHandler(
+    IOrderRepository repository,
+    ICursorSerializer cursorSerializer,
+    IOptions<OrderHistoryOptions> options) : IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>
 {
     public async Task<Result<OrdersHistoryResponse>> HandleAsync(GetOrdersHistoryQuery query, CancellationToken ct)
     {
-        var specification = new OrderHistorySpecification(query.UserId,query.Filter);
+        var pageSize = options.Value.PageSize;
+        var takeLimit = pageSize + 1;
+
+        DateTime? cursorDate = null;
+        Guid? cursorId = null;
+        OrderId? cursorOrderId = null;
+
+        if (!string.IsNullOrWhiteSpace(query.Filter.Cursor))
+        {
+            var parseResult = cursorSerializer.Deserialize<(DateTime Date, Guid Id)>(query.Filter.Cursor);
+
+            if (parseResult.IsFailure) 
+                return Result<OrdersHistoryResponse>.Failure(parseResult.Error);
+
+            (cursorDate, cursorId) = parseResult.Value;
+
+            cursorOrderId = OrderId.From(cursorId.Value);
+        }
+
+        var specification = new OrderHistorySpecification(
+             clientId: query.UserId,
+             cursorDate: cursorDate,
+             cursorOrderId: cursorOrderId,
+             limit: takeLimit);
+
         var orders = await repository.GetOrdersAsync(specification, ct);
 
-        specification.DropPagination();
-        var count = await repository.GetOrdersCountAsync(specification, ct);
+        string? nextCursor = null;
 
-        var result = new OrdersHistoryResponse(orders,count);
+        if (orders.Count == takeLimit)
+        {
+            var lastPagedOrder = orders[pageSize - 1];
+            nextCursor = cursorSerializer.Serialize((lastPagedOrder.CreatedAt, lastPagedOrder.OrderId));
+        }
+
+        var resultOrders = orders.Count > pageSize
+        ? orders.Take(pageSize).ToList()
+        : orders;
+
+        var result = new OrdersHistoryResponse(resultOrders, nextCursor);
 
         return Result<OrdersHistoryResponse>.Success(result);
     }
@@ -1725,11 +1816,8 @@ public class GetOrdersHistoryQueryHandler(IOrderRepository repository) : IQueryH
 namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
 
 public record OrderHistoryRequest(
-    int SkipRecords,
-    int TakeRecords,
-    decimal? MinPrice = null,
-    string? SortBy = null,
-    bool SortDescending = true);
+    string? Cursor = null   // Base64 токен
+);
 ```
 
 ---
@@ -1747,7 +1835,7 @@ namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
 
 public class OrderHistorySpecification : Specification<Order, OrderId, OrderSummaryDto>
 {
-    public OrderHistorySpecification(Guid clientId, OrderHistoryRequest filter)
+    public OrderHistorySpecification(Guid clientId, DateTime? cursorDate, OrderId? cursorOrderId, int limit)
         : base(OrderProjections.Summary)
     {
         AddFilter(o => o.ClientId == clientId);
@@ -1755,32 +1843,18 @@ public class OrderHistorySpecification : Specification<Order, OrderId, OrderSumm
         var historyStatuses = new[] { OrderStatus.Paid, OrderStatus.Cancelled, OrderStatus.Refunded };
         AddFilter(o => historyStatuses.Contains(o.Status));
 
-        if (filter.MinPrice.HasValue)
-            AddFilter(o => o.TotalPrice.Sum >= filter.MinPrice.Value);
-
-        ApplySorting(filter.SortBy, filter.SortDescending);
-
-        SetSkipNum(filter.SkipRecords);
-        SetLimitNum(filter.TakeRecords);
-    }
-
-    private void ApplySorting(string? sortBy, bool isDescending)
-    {
-        Expression<Func<Order, object>> expression = sortBy?.ToLower() switch
+        // Keyset Pagination
+        if (cursorDate.HasValue && cursorOrderId is not null)
         {
-            "price" => o => o.TotalPrice.Sum,
-            "date" => o => o.CreationDateUtc,
-            _ => o => o.CreationDateUtc 
-        };
+            // дата меньше курсорной, ИЛИ (дата равна курсорной, но ID меньше курсорного)
+            AddFilter(o => o.CreationDateUtc < cursorDate.Value ||
+                          (o.CreationDateUtc == cursorDate.Value && o.Id < cursorOrderId));
+        }
 
-        if (isDescending) AddOrderByDescending(expression);
-        else AddOrderBy(expression);
-    }
+        AddOrderByDescending(o => o.CreationDateUtc);
+        AddOrderByDescending(o => o.Id);
 
-    public void DropPagination()
-    {
-        DropLimit();
-        DropSkip();
+        SetLimitNum(limit);
     }
 }
 ```
@@ -1792,9 +1866,9 @@ using LegacyLego.Application.Orders.Common;
 
 namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
 
-public sealed record OrdersHistoryResponse(
-    IReadOnlyList<OrderSummaryDto> Orders,
-    int OrdersCount);
+public record OrdersHistoryResponse(
+    IReadOnlyCollection<OrderSummaryDto> Orders,
+    string? NextCursor);
 ```
 
 ---
@@ -4280,7 +4354,7 @@ using LegacyLego.Domain.Shared;
 
 namespace LegacyLego.Domain.ValueObjects;
 
-public sealed class OrderId : ValueObject
+public sealed class OrderId : ValueObject, IComparable<OrderId>
 {
     public Guid Value { get; }
 
@@ -4296,6 +4370,21 @@ public sealed class OrderId : ValueObject
     public override IEnumerable<object> GetAtomicValues()
     {
         yield return Value;
+    }
+
+    public int CompareTo(OrderId? other) => other is null ? 1 : Value.CompareTo(other.Value);
+
+    public static bool operator <(OrderId? left, OrderId? right) => Compare(left, right) < 0;
+    public static bool operator >(OrderId? left, OrderId? right) => Compare(left, right) > 0;
+    public static bool operator <=(OrderId? left, OrderId? right) => Compare(left, right) <= 0;
+    public static bool operator >=(OrderId? left, OrderId? right) => Compare(left, right) >= 0;
+
+    private static int Compare(OrderId? left, OrderId? right)
+    {
+        if (ReferenceEquals(left, right)) return 0;
+        if (left is null) return -1;
+
+        return left.CompareTo(right);
     }
 }
 ```
@@ -8201,6 +8290,8 @@ public static class DependencyInjection
 
             .AddScoped<ICommandBackgroundJobService, HangfireCommandBackgroundJobService>()
 
+            .AddScoped<ICursorSerializer, Base64JsonCursorSerializer>()
+
             .AddHostedService<OutboxBackgroundWorker>();
 
         services.AddHttpClient<IPaymentProvider, MockPaymentProvider>((serviceProvider, client) =>
@@ -8341,6 +8432,7 @@ using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Outbox;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8402,6 +8494,7 @@ public sealed class OutboxBackgroundWorker : BackgroundService
         {
             var context = readScope.ServiceProvider.GetRequiredService<OrderContext>();
             messages = context.Set<OutboxMessage>()
+                .TagWith("OutboxPolling")
                 .Where(m => m.ProcessedOnUtc == null)
                 .OrderBy(m => m.OccurredOnUtc)
                 .Take(TakeRecordsNum)
@@ -10817,6 +10910,55 @@ internal class PaymentRepository(OrderContext context) : IPaymentRepository
 
 ### Services
 
+```cs title="Base64JsonCursorSerializer.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Domain.Shared;
+using System.Text;
+using System.Text.Json;
+
+namespace LegacyLego.Infrastructure.Services;
+
+public class Base64JsonCursorSerializer : ICursorSerializer
+{
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IncludeFields = true
+    };
+
+    public string Serialize<T>(T cursorData) where T : struct
+    {
+        string json = JsonSerializer.Serialize(cursorData, SerializerOptions);
+
+        byte[] bytes = Encoding.UTF8.GetBytes(json);
+        return Convert.ToBase64String(bytes);
+    }
+
+    public Result<T> Deserialize<T>(string cursor) where T : struct
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(cursor))
+                return Result<T>.Failure(new Error("Cursor.Empty", "Курсор не может быть пустым"));
+
+            byte[] bytes = Convert.FromBase64String(cursor);
+            string json = Encoding.UTF8.GetString(bytes);
+
+            var result = JsonSerializer.Deserialize<T>(json, SerializerOptions);
+
+            return result.Equals(default(T))
+                ? Result<T>.Failure(new Error("Cursor.Invalid", "Не удалось десериализовать данные курсора"))
+                : Result<T>.Success(result);
+        }
+        catch (Exception)
+        {
+            return Result<T>.Failure(new Error("Cursor.Corrupted", "Токен курсора поврежден или невалиден"));
+        }
+    }
+}
+```
+
+---
+
 ```cs title="MockPaymentProvider.cs"
 using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Payments.Common;
@@ -10943,7 +11085,11 @@ file sealed record ExternalStripeWebhookSimulation(
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Scalar.AspNetCore" Version="2.16.4" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.10" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
   </ItemGroup>
 
 	<PropertyGroup>
@@ -10969,19 +11115,30 @@ file sealed record ExternalStripeWebhookSimulation(
 
 ```cs title="Program.cs"
 using LegacyLego.Application;
-using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Infrastructure;
-using LegacyLego.Infrastructure.Services;
 using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    // превращает целочисленный указатель enum в строковое представление значения
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddApplication()
     .AddInfrastructure(configuration)
@@ -11192,6 +11349,10 @@ public static class OpenApiExtensions
 ```cs title="OrderEndpoints.cs"
 using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Application.Orders.Commands.Create;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Shared;
 using LegacyLego.Presentation.Orders.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -11208,6 +11369,9 @@ public static class OrderEndpoints
             .WithTags("Orders");
 
         ordersGroup.MapPost("", Create);
+        ordersGroup.MapGet("/active", GetActiveOrders); // Сделали явный чистый эндпоинт
+        ordersGroup.MapGet("/history", GetOrdersHistory);
+        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails);
 
         return app;
     }
@@ -11254,6 +11418,61 @@ public static class OrderEndpoints
         }
 
         return TypedResults.Created($"/orders/{result.Value}", result.Value);
+    }
+
+    private static async Task<IResult> GetActiveOrders(
+        IQueryDispatcher queryDispatcher,
+        ClaimsPrincipal user,
+        CancellationToken ct)
+    {
+        var query = new GetActiveOrdersQuery(GetClientId(user));
+        var result = await queryDispatcher.DispatchAsync(query, ct);
+
+        return ToHttpResponse(result);
+    }
+
+    private static async Task<IResult> GetOrdersHistory(
+        [AsParameters] OrderHistoryRequest request,
+        IQueryDispatcher queryDispatcher,
+        ClaimsPrincipal user,
+        CancellationToken ct)
+    {
+        var query = new GetOrdersHistoryQuery(GetClientId(user), request);
+        var result = await queryDispatcher.DispatchAsync(query, ct);
+
+        return ToHttpResponse(result);
+    }
+
+    private static async Task<IResult> GetOrderDetails(
+        [FromRoute] Guid orderId,
+        IQueryDispatcher queryDispatcher,
+        ClaimsPrincipal user,
+        CancellationToken ct)
+    {
+        var query = new GetOrderDetailsQuery(GetClientId(user), orderId);
+        var result = await queryDispatcher.DispatchAsync(query, ct);
+
+        return ToHttpResponse(result);
+    }
+
+    private static Guid GetClientId(ClaimsPrincipal user)
+    {
+        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Временно для тестов, пока не настроен JWT:
+        if (!Guid.TryParse(clientIdString, out var clientId))
+        {
+            return Guid.Parse("00000000-0000-0000-0000-000000000001");
+        }
+
+        return clientId;
+    }
+
+    private static IResult ToHttpResponse<T>(Result<T> result)
+    {
+        return result.IsSuccess
+            ? Results.Ok(result.Value)
+            : Results.BadRequest(result.Error);
     }
 }
 ```

@@ -1,17 +1,28 @@
 using LegacyLego.Application;
-using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Infrastructure;
-using LegacyLego.Infrastructure.Services;
 using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
+
+builder.Logging.ClearProviders();
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    // превращает целочисленный указатель enum в строковое представление значения
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddApplication()
     .AddInfrastructure(configuration)

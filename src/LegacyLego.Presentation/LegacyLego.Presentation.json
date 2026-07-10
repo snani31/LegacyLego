@@ -47,6 +47,65 @@
         }
       }
     },
+    "/orders/active": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "description": "Управление заказами",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/orders/history": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "description": "Управление заказами",
+        "parameters": [
+          {
+            "name": "Cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "description": "Управление заказами",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/mock/api/webhooks/payment": {
       "post": {
         "tags": [
