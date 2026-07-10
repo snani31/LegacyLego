@@ -10,7 +10,7 @@ namespace LegacyLego.Application.Orders.Queries.OrdersHistory;
 
 public class OrderHistorySpecification : Specification<Order, OrderId, OrderSummaryDto>
 {
-    public OrderHistorySpecification(Guid clientId, OrderHistoryRequest filter)
+    public OrderHistorySpecification(Guid clientId, DateTime? cursorDate, OrderId? cursorOrderId, int limit)
         : base(OrderProjections.Summary)
     {
         AddFilter(o => o.ClientId == clientId);
@@ -18,31 +18,17 @@ public class OrderHistorySpecification : Specification<Order, OrderId, OrderSumm
         var historyStatuses = new[] { OrderStatus.Paid, OrderStatus.Cancelled, OrderStatus.Refunded };
         AddFilter(o => historyStatuses.Contains(o.Status));
 
-        if (filter.MinPrice.HasValue)
-            AddFilter(o => o.TotalPrice.Sum >= filter.MinPrice.Value);
-
-        ApplySorting(filter.SortBy, filter.SortDescending);
-
-        SetSkipNum(filter.SkipRecords);
-        SetLimitNum(filter.TakeRecords);
-    }
-
-    private void ApplySorting(string? sortBy, bool isDescending)
-    {
-        Expression<Func<Order, object>> expression = sortBy?.ToLower() switch
+        // Keyset Pagination
+        if (cursorDate.HasValue && cursorOrderId is not null)
         {
-            "price" => o => o.TotalPrice.Sum,
-            "date" => o => o.CreationDateUtc,
-            _ => o => o.CreationDateUtc 
-        };
+            // дата меньше курсорной, ИЛИ (дата равна курсорной, но ID меньше курсорного)
+            AddFilter(o => o.CreationDateUtc < cursorDate.Value ||
+                          (o.CreationDateUtc == cursorDate.Value && o.Id < cursorOrderId));
+        }
 
-        if (isDescending) AddOrderByDescending(expression);
-        else AddOrderBy(expression);
-    }
+        AddOrderByDescending(o => o.CreationDateUtc);
+        AddOrderByDescending(o => o.Id);
 
-    public void DropPagination()
-    {
-        DropLimit();
-        DropSkip();
+        SetLimitNum(limit);
     }
 }
