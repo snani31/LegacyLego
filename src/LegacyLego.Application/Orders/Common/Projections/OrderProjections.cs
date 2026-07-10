@@ -6,11 +6,11 @@ namespace LegacyLego.Application.Orders.Common.Projections;
 
 public static class OrderProjections
 {
-    public static Expression<Func<Order,OrderSummaryDto>> Summary =>
+    public static Expression<Func<Order, OrderSummaryDto>> Summary =>
         order => new OrderSummaryDto(
             order.Id.Value,
             order.Status,
-            order.Items.Sum(x => x.UnitPrice.Sum),
+            order.Items.Sum(x => x.UnitPrice.Sum * x.Quantity),
             order.Currency.Code,
             order.CreationDateUtc,
             order.Items.Count
