@@ -7,9 +7,9 @@ namespace LegacyLego.Application.Orders.Queries.OrderDetails;
 
 public class OrderDetailsSpecification : Specification<Order, OrderId, OrderDetailsDto>
 {
-    public OrderDetailsSpecification(Guid clientId, Guid orderId) : base(OrderProjections.Details)
+    public OrderDetailsSpecification(Guid clientId, OrderId orderId) : base(OrderProjections.Details)
     {
         AddFilter(order => order.ClientId == clientId);
-        AddFilter(order => order.Id.Value == orderId);
+        AddFilter(order => order.Id == orderId);
     }
 }
