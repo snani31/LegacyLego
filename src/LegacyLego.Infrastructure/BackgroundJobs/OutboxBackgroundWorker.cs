@@ -3,6 +3,7 @@ using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Outbox;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -64,6 +65,7 @@ public sealed class OutboxBackgroundWorker : BackgroundService
         {
             var context = readScope.ServiceProvider.GetRequiredService<OrderContext>();
             messages = context.Set<OutboxMessage>()
+                .TagWith("OutboxPolling")
                 .Where(m => m.ProcessedOnUtc == null)
                 .OrderBy(m => m.OccurredOnUtc)
                 .Take(TakeRecordsNum)

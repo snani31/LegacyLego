@@ -121,6 +121,8 @@ public static class DependencyInjection
 
             .AddScoped<ICommandBackgroundJobService, HangfireCommandBackgroundJobService>()
 
+            .AddScoped<ICursorSerializer, Base64JsonCursorSerializer>()
+
             .AddHostedService<OutboxBackgroundWorker>();
 
         services.AddHttpClient<IPaymentProvider, MockPaymentProvider>((serviceProvider, client) =>
