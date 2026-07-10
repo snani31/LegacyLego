@@ -3,6 +3,7 @@ using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
 using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Diagnostics;
+using LegacyLego.Application.Options;
 using LegacyLego.Application.Payments.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        var options = services.AddOptions<OrderHistoryOptions>()
+            .BindConfiguration(OrderHistoryOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.Scan(scan => scan
             .FromAssemblies(typeof(DependencyInjection).Assembly)
 
