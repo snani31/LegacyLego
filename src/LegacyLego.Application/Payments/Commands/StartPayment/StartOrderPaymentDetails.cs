@@ -1,8 +1,9 @@
-﻿using LegacyLego.Application.Payments.Common;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Payments.Common;
 
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
-public sealed record StartOrderPaymentDetails
+public sealed record StartOrderPaymentDetails : ICustomLogSeverity
 {
     public const string NewPaymentWithNewSessionCode = "StartOrderPayment.NewPaymentWithNewSession";
 
@@ -12,10 +13,20 @@ public sealed record StartOrderPaymentDetails
     public const string ExistingPaymentWithExistingSessionAfterCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionAfterCheckConstraint";
     public const string ExistingPaymentWithExistingSessionBeforeCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionBeforeCheckConstraint";
 
-    public readonly string Code;
-    public readonly string Message;
-    public readonly Guid OrderId;
-    public readonly PaymentSession Session;
+    public string Code { get; }
+    public string Message { get; }
+    public Guid OrderId { get; }
+    public PaymentSession Session { get; }
+
+    public bool IsWarning => Code switch
+    {
+        NewPaymentWithNewSessionCode => false,
+        ExistingPaymentWithNewSessionBeforeCheckConstraintCode => false,
+        ExistingPaymentWithNewSessionAfterCheckConstraintCode => true,
+        ExistingPaymentWithExistingSessionAfterCheckConstraintCode => false,
+        ExistingPaymentWithExistingSessionBeforeCheckConstraintCode => true,
+        _ => false
+    };
 
     private StartOrderPaymentDetails(string code,
     string message,

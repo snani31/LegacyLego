@@ -1,17 +1,25 @@
-﻿using LegacyLego.Domain.Enums;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Refund;
 
-public sealed record RefundOrderDetails
+public sealed record RefundOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyRefundedDetailsCode = "Order.Refund.AlreadyRefunded";
     public const string RefundedSuccessfullyCode = "Order.Refund.RefundedSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyRefundedDetailsCode => true,
+        RefundedSuccessfullyCode => false,
+        _ => false
+    };
 
     private RefundOrderDetails(string Code,
     Guid OrderId,

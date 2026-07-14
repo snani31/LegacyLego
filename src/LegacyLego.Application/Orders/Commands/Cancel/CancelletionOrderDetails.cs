@@ -1,17 +1,25 @@
-﻿using LegacyLego.Domain.Enums;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Cancel;
 
-public sealed record CancelletionOrderDetails
+public sealed record CancelletionOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyCancelledDetailsCode = "Order.Cancelletion.AlreadyCancelled";
     public const string CancelledSuccessfullyCode = "Order.Cancelletion.CancelledSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyCancelledDetailsCode => true,
+        CancelledSuccessfullyCode => false,
+        _ => false
+    };
 
     private CancelletionOrderDetails(string Code,
     Guid OrderId,

@@ -1,9 +1,10 @@
-﻿using LegacyLego.Application.Orders.Commands.Expire;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Orders.Commands.Expire;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
-public sealed record ProcessPaymentDetails
+public sealed record ProcessPaymentDetails : ICustomLogSeverity
 {
     public const string AlreadyProcessedWithTransactionIdCode = "OrderPayment.AlreadyProcessedWithTransactionId";
     public const string AlreadyProcessedCode = "OrderPayment.AlreadyProcessed";
@@ -12,11 +13,21 @@ public sealed record ProcessPaymentDetails
     public const string SetFailedCode = "OrderPayment.SuccessfullyFailed";
     public const string SetRefundedCode = "OrderPayment.SuccessfullyRefunded";
 
-    public readonly string Code;
-    public readonly string Message;
-    public readonly Guid OrderId;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public string Message { get; }
+    public Guid OrderId { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyProcessedWithTransactionIdCode => true,
+        AlreadyProcessedCode => true,
+        SetSuccessedCode => false,
+        SetFailedCode => true,
+        SetRefundedCode => false,
+        _ => false
+    };
 
     private ProcessPaymentDetails(string Code,
     Guid OrderId,

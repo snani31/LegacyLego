@@ -1,17 +1,25 @@
-﻿using LegacyLego.Domain.Enums;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Cancel;
 
-public sealed record PayOrderDetails
+public sealed record PayOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyPaidDetailsCode = "Order.Payment.AlreadyPaid";
     public const string PaidSuccessfullyCode = "Order.Payment.PaidSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public  Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyPaidDetailsCode => true,
+        PaidSuccessfullyCode => false,
+        _ => false
+    };
 
     private PayOrderDetails(string Code,
     Guid OrderId,

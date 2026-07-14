@@ -1,17 +1,25 @@
-﻿using LegacyLego.Domain.Enums;
+﻿using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Expire;
 
-public sealed record ExpirationOrderDetails
+public sealed record ExpirationOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
     public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyExpiredDetailsCode => true,
+        ExpiredSuccessfullyCode => false,
+        _ => false
+    };
 
     private ExpirationOrderDetails(string Code,
     Guid OrderId,
