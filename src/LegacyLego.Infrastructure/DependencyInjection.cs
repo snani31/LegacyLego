@@ -10,6 +10,7 @@ using LegacyLego.Domain.Abstractions;
 using LegacyLego.Infrastructure.BackgroundJobs;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
+using LegacyLego.Infrastructure.Logging.Decoretors;
 using LegacyLego.Infrastructure.Messaging.Abstractions;
 using LegacyLego.Infrastructure.Messaging.Bus;
 using LegacyLego.Infrastructure.Messaging.Dispatchers;
@@ -133,6 +134,16 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.ApiBaseUrl);
         });
 
+        // проверяем, зарегистрирован ли на данный ммент хоть один декорируемый тип для логгера
+        if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
+        {
+            services.Decorate(typeof(ICommandHandler<>), typeof(LoggingCommandHandlerDecorator<>));
+        }
+
+        if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)))
+        {
+            services.Decorate(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
+        }
 
         return services;
     }

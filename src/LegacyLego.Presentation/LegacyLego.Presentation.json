@@ -371,7 +371,37 @@
         }
       },
       "ProcessPaymentDetails": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stateChanged": {
+            "type": "boolean"
+          },
+          "isWarning": {
+            "type": "boolean"
+          }
+        }
       },
       "StartPaymentResponse": {
         "required": [
