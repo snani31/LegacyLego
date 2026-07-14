@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.9.1
+Актуальная версия проекта: 1.9.2
 
 ## Проекты
 
@@ -70,6 +70,7 @@
 │   ├── LegacyLego.Application
 │   │   ├── Abstractions
 │   │   │   ├── Data
+│   │   │   │   ├── ICustomLogSeverity.cs
 │   │   │   │   └── IUnitOfWork.cs
 │   │   │   ├── ExceptionHandling
 │   │   │   │   ├── AppFailureDescription.cs
@@ -262,6 +263,9 @@
 │   │   │   └── OrderContext.cs
 │   │   ├── Diagnostics
 │   │   │   └── InfrastructureExceptionMapper.cs
+│   │   ├── Logging
+│   │   │   └── Decorators
+│   │   │       └── LoggingCommandHandlerDecorator.cs
 │   │   ├── Messaging
 │   │   │   ├── Abstractions
 │   │   │   │   ├── IIntegrationEventBus.cs
@@ -493,6 +497,17 @@ public static class DependencyInjection
 ### Abstractions
 
 #### Data
+
+```cs title="ICustomLogSeverity.cs"
+namespace LegacyLego.Application.Abstractions.Data;
+
+public interface ICustomLogSeverity
+{
+    bool IsWarning => false;
+}
+```
+
+---
 
 ```cs title="IUnitOfWork.cs"
 namespace LegacyLego.Application.Abstractions.Data;
@@ -940,20 +955,28 @@ public class OrderHistoryOptions
 ##### Cancel
 
 ```cs title="CancelletionOrderDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Cancel;
 
-public sealed record CancelletionOrderDetails
+public sealed record CancelletionOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyCancelledDetailsCode = "Order.Cancelletion.AlreadyCancelled";
     public const string CancelledSuccessfullyCode = "Order.Cancelletion.CancelledSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyCancelledDetailsCode => true,
+        CancelledSuccessfullyCode => false,
+        _ => false
+    };
 
     private CancelletionOrderDetails(string Code,
     Guid OrderId,
@@ -1145,20 +1168,28 @@ public class CreateOrderDomainEventHandler(ICommandBackgroundJobService jobServi
 ##### Expire
 
 ```cs title="ExpirationOrderDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Expire;
 
-public sealed record ExpirationOrderDetails
+public sealed record ExpirationOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyExpiredDetailsCode = "Order.Expiretion.AlreadyExpired";
     public const string ExpiredSuccessfullyCode = "Order.Expiretion.ExpiredSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyExpiredDetailsCode => true,
+        ExpiredSuccessfullyCode => false,
+        _ => false
+    };
 
     private ExpirationOrderDetails(string Code,
     Guid OrderId,
@@ -1306,20 +1337,28 @@ public sealed class PayOrderCommandHandler(
 ---
 
 ```cs title="PayOrderDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Cancel;
 
-public sealed record PayOrderDetails
+public sealed record PayOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyPaidDetailsCode = "Order.Payment.AlreadyPaid";
     public const string PaidSuccessfullyCode = "Order.Payment.PaidSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public  Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyPaidDetailsCode => true,
+        PaidSuccessfullyCode => false,
+        _ => false
+    };
 
     private PayOrderDetails(string Code,
     Guid OrderId,
@@ -1409,20 +1448,28 @@ IUnitOfWork unitOfWork) : ICommandHandler<RefundOrderCommand, RefundOrderDetails
 ---
 
 ```cs title="RefundOrderDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Orders.Commands.Refund;
 
-public sealed record RefundOrderDetails
+public sealed record RefundOrderDetails : ICustomLogSeverity
 {
     public const string AlreadyRefundedDetailsCode = "Order.Refund.AlreadyRefunded";
     public const string RefundedSuccessfullyCode = "Order.Refund.RefundedSuccessfully";
 
-    public readonly string Code;
-    public readonly Guid OrderId;
-    public readonly string Message;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public Guid OrderId { get; }
+    public string Message { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyRefundedDetailsCode => true,
+        RefundedSuccessfullyCode => false,
+        _ => false
+    };
 
     private RefundOrderDetails(string Code,
     Guid OrderId,
@@ -1904,12 +1951,13 @@ public class OrderPaymentSucceededDomainEventHandler(ICommandDispatcher dispatch
 ---
 
 ```cs title="ProcessPaymentDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Application.Orders.Commands.Expire;
 using LegacyLego.Domain.Enums;
 
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
-public sealed record ProcessPaymentDetails
+public sealed record ProcessPaymentDetails : ICustomLogSeverity
 {
     public const string AlreadyProcessedWithTransactionIdCode = "OrderPayment.AlreadyProcessedWithTransactionId";
     public const string AlreadyProcessedCode = "OrderPayment.AlreadyProcessed";
@@ -1918,11 +1966,21 @@ public sealed record ProcessPaymentDetails
     public const string SetFailedCode = "OrderPayment.SuccessfullyFailed";
     public const string SetRefundedCode = "OrderPayment.SuccessfullyRefunded";
 
-    public readonly string Code;
-    public readonly string Message;
-    public readonly Guid OrderId;
-    public readonly string CurrentStatus;
-    public readonly bool StateChanged;
+    public string Code { get; }
+    public string Message { get; }
+    public Guid OrderId { get; }
+    public string CurrentStatus { get; }
+    public bool StateChanged { get; }
+
+    public bool IsWarning => Code switch
+    {
+        AlreadyProcessedWithTransactionIdCode => true,
+        AlreadyProcessedCode => true,
+        SetSuccessedCode => false,
+        SetFailedCode => true,
+        SetRefundedCode => false,
+        _ => false
+    };
 
     private ProcessPaymentDetails(string Code,
     Guid OrderId,
@@ -2432,11 +2490,12 @@ public sealed class StartOrderPaymentCommandHandler(
 ---
 
 ```cs title="StartOrderPaymentDetails.cs"
+using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Application.Payments.Common;
 
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
-public sealed record StartOrderPaymentDetails
+public sealed record StartOrderPaymentDetails : ICustomLogSeverity
 {
     public const string NewPaymentWithNewSessionCode = "StartOrderPayment.NewPaymentWithNewSession";
 
@@ -2446,10 +2505,20 @@ public sealed record StartOrderPaymentDetails
     public const string ExistingPaymentWithExistingSessionAfterCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionAfterCheckConstraint";
     public const string ExistingPaymentWithExistingSessionBeforeCheckConstraintCode = "StartOrderPayment.ExistingPaymentWithExistingSessionBeforeCheckConstraint";
 
-    public readonly string Code;
-    public readonly string Message;
-    public readonly Guid OrderId;
-    public readonly PaymentSession Session;
+    public string Code { get; }
+    public string Message { get; }
+    public Guid OrderId { get; }
+    public PaymentSession Session { get; }
+
+    public bool IsWarning => Code switch
+    {
+        NewPaymentWithNewSessionCode => false,
+        ExistingPaymentWithNewSessionBeforeCheckConstraintCode => false,
+        ExistingPaymentWithNewSessionAfterCheckConstraintCode => true,
+        ExistingPaymentWithExistingSessionAfterCheckConstraintCode => false,
+        ExistingPaymentWithExistingSessionBeforeCheckConstraintCode => true,
+        _ => false
+    };
 
     private StartOrderPaymentDetails(string code,
     string message,
@@ -8148,8 +8217,9 @@ public class PricePlusTests
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -8179,6 +8249,7 @@ using LegacyLego.Domain.Abstractions;
 using LegacyLego.Infrastructure.BackgroundJobs;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
+using LegacyLego.Infrastructure.Logging.Decoretors;
 using LegacyLego.Infrastructure.Messaging.Abstractions;
 using LegacyLego.Infrastructure.Messaging.Bus;
 using LegacyLego.Infrastructure.Messaging.Dispatchers;
@@ -8302,6 +8373,16 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.ApiBaseUrl);
         });
 
+        // проверяем, зарегистрирован ли на данный ммент хоть один декорируемый тип для логгера
+        if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
+        {
+            services.Decorate(typeof(ICommandHandler<>), typeof(LoggingCommandHandlerDecorator<>));
+        }
+
+        if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)))
+        {
+            services.Decorate(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
+        }
 
         return services;
     }
@@ -9245,6 +9326,118 @@ public sealed class InfrastructureExceptionMapper : IExceptionMapper
 
         description = null;
         return false;
+    }
+}
+```
+
+---
+
+### Logging
+
+#### Decorators
+
+```cs title="LoggingCommandHandlerDecorator.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.Messaging.Command;
+using LegacyLego.Domain.Shared;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+
+namespace LegacyLego.Infrastructure.Logging.Decoretors;
+
+public sealed class LoggingCommandHandlerDecorator<TCommand>(
+    ICommandHandler<TCommand> _inner,
+    ILogger<LoggingCommandHandlerDecorator<TCommand>> _logger)
+    : ICommandHandler<TCommand>
+    where TCommand : ICommand
+{
+    public async Task<Result> HandleAsync(TCommand command, CancellationToken cancellationToken)
+    {
+        var commandName = typeof(TCommand).Name;
+
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CommandType"] = commandName,
+            ["CommandData"] = command!
+        });
+
+        var stopwatch = Stopwatch.StartNew();
+        var result = await _inner.HandleAsync(command, cancellationToken);
+        stopwatch.Stop();
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation(
+                "Команда {CommandName} успешно выполнена за {ElapsedMs} мс.",
+                commandName,
+                stopwatch.ElapsedMilliseconds);
+        }
+        else
+        {
+            _logger.LogError(
+                "Ошибка выполнения команды {CommandName} ({ElapsedMs} мс). Код ошибки: {ErrorCode}. Причина: {ErrorMessage}",
+                commandName,
+                stopwatch.ElapsedMilliseconds,
+                result.Error.Code,
+                result.Error.Message);
+        }
+
+        return result;
+    }
+}
+
+public sealed class LoggingCommandHandlerDecorator<TCommand, TResponse>(
+    ICommandHandler<TCommand, TResponse> _inner,
+    ILogger<LoggingCommandHandlerDecorator<TCommand, TResponse>> _logger)
+    : ICommandHandler<TCommand, TResponse>
+    where TCommand : ICommand<TResponse>
+{
+    public async Task<Result<TResponse>> HandleAsync(TCommand command, CancellationToken cancellationToken)
+    {
+        var commandName = typeof(TCommand).Name;
+
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CommandType"] = commandName,
+            ["CommandData"] = command!
+        });
+
+        var stopwatch = Stopwatch.StartNew();
+        var result = await _inner.HandleAsync(command, cancellationToken);
+        stopwatch.Stop();
+
+        if (result.IsSuccess)
+        {
+            var isWarning = result.Value is ICustomLogSeverity customLog && customLog.IsWarning;
+
+            if (isWarning)
+            {
+                _logger.LogWarning(
+                    "Команда {CommandName} выполнена с предупреждением за {ElapsedMs} мс. Результат: {@Details}",
+                    commandName,
+                    stopwatch.ElapsedMilliseconds,
+                    result.Value);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Команда {CommandName} успешно выполнена за {ElapsedMs} мс. Результат: {@Details}",
+                    commandName,
+                    stopwatch.ElapsedMilliseconds,
+                    result.Value);
+            }
+        }
+        else
+        {
+            _logger.LogError(
+                "Ошибка выполнения команды {CommandName} ({ElapsedMs} мс). Код ошибки: {ErrorCode}. Причина: {ErrorMessage}",
+                commandName,
+                stopwatch.ElapsedMilliseconds,
+                result.Error.Code,
+                result.Error.Message);
+        }
+
+        return result;
     }
 }
 ```
@@ -11122,7 +11315,6 @@ using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
 using Scalar.AspNetCore;
 using Serilog;
-using Serilog.Events;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -11131,45 +11323,61 @@ var configuration = builder.Configuration;
 configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
 
 builder.Logging.ClearProviders();
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
+try
 {
-    // превращает целочисленный указатель enum в строковое представление значения
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+    Log.Information("Запуск приложения LegacyLego...");
 
-builder.Services.AddApplication()
-    .AddInfrastructure(configuration)
-    .AddPresentationOpenApi();
-
-builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-
-var app = builder.Build();
-
-app.UseExceptionHandler(); // стоит самый первый в пайплайне
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-
-    app.MapScalarApiReference("/docs/scalar", options =>
+    builder.Services.ConfigureHttpJsonOptions(options =>
     {
-        options.WithTitle("LegacyLego Documentation")
-            .WithTheme(ScalarTheme.DeepSpace)
-            .WithClassicLayout()
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        // превращает целочисленный указатель enum в строковое представление значения
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+    builder.Services.AddApplication()
+        .AddInfrastructure(configuration)
+        .AddPresentationOpenApi();
+
+    builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
+
+    var app = builder.Build();
+
+    app.UseExceptionHandler(); // стоит самый первый в пайплайне
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+
+        app.MapScalarApiReference("/docs/scalar", options =>
+        {
+            options.WithTitle("LegacyLego Documentation")
+                .WithTheme(ScalarTheme.DeepSpace)
+                .WithClassicLayout()
+                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        });
+    }
+
+    app.UseStaticFiles();
+
+    app.MapOrdersEndpoints();
+    app.MapPaymentEndpoints();
+
+    app.Run();
 }
-
-app.UseStaticFiles();
-
-app.MapOrdersEndpoints();
-app.MapPaymentEndpoints();
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Приложение LegacyLego аварийно завершило работу во время запуска");
+}
+finally
+{
+    Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
+}
 ```
 
 ---

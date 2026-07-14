@@ -1,5 +1,6 @@
 volumes:
  postgres-legacy-lego-data:
+ seq-legacy-lego-data:
 
 networks:
   legacy-lego-network:
@@ -27,3 +28,19 @@ services:
   restart: unless-stopped
   volumes:
    - postgres-legacy-lego-data:/var/lib/postgresql/data
+ legacy-lego-seq:
+  image: datalust/seq:2025.2
+  container_name: legacy-lego-seq
+  env_file:
+   - .env
+  networks:
+   - legacy-lego-network
+  environment:
+   - ACCEPT_EULA=Y
+   - SEQ_PASSWORD=${SEQ_PASSWORD}
+  ports:
+   - "8081:80"
+   - "5341:5341"
+  volumes:
+   - seq-legacy-lego-data:/data
+  restart: unless-stopped
