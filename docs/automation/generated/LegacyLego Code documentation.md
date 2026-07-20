@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.9.2
+Актуальная версия проекта: 1.9.3
 
 ## Проекты
 
@@ -247,6 +247,21 @@
 │   │   ├── BackgroundJobs
 │   │   │   ├── HangfireCommandBackgroundJobService.cs
 │   │   │   └── OutboxBackgroundWorker.cs
+│   │   ├── Caching
+│   │   │   ├── Abstractions
+│   │   │   │   ├── ICacheInvalidator.cs
+│   │   │   │   ├── ICacheService.cs
+│   │   │   │   └── IEntityInvalidator.cs
+│   │   │   ├── Decorators
+│   │   │   │   └── Query
+│   │   │   │       └── Order
+│   │   │   │           ├── GetOrderDetailsQueryCachingDecorator.cs
+│   │   │   │           └── GetOrdersHistoryQueryCachingDecorator.cs
+│   │   │   ├── Invalidators
+│   │   │   │   └── OrderEntityInvalidator.cs
+│   │   │   └── Services
+│   │   │       ├── CacheInvalidator.cs
+│   │   │       └── RedisCacheService.cs
 │   │   ├── Common
 │   │   │   └── SpecificationEvaluator.cs
 │   │   ├── Configuration
@@ -287,6 +302,7 @@
 │   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.Designer.cs
 │   │   │   └── OrderContextModelSnapshot.cs
 │   │   ├── Options
+│   │   │   ├── CacheOptions.cs
 │   │   │   ├── DatabaseOptions.cs
 │   │   │   ├── HangfireOptions.cs
 │   │   │   ├── OutboxBackgroundWorkerOptions.cs
@@ -8214,6 +8230,7 @@ public class PricePlusTests
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
@@ -8245,8 +8262,17 @@ using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
 using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
 using LegacyLego.Infrastructure.BackgroundJobs;
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
+using LegacyLego.Infrastructure.Caching.Invalidators;
+using LegacyLego.Infrastructure.Caching.Services;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
 using LegacyLego.Infrastructure.Logging.Decoretors;
@@ -8261,6 +8287,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
+using Order = LegacyLego.Domain.Aggregates.Order;
 
 namespace LegacyLego.Infrastructure;
 
@@ -8288,6 +8316,11 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<CacheOptions>()
+            .BindConfiguration(CacheOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
                               ?? new DatabaseOptions();
 
@@ -8304,12 +8337,12 @@ public static class DependencyInjection
             .AddClasses(classes => classes.AssignableTo(typeof(IIntegrationEventConsumer<>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime())
-            
+
             .AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(options => 
+            .UsePostgreSqlStorage(options =>
             {
                 options.UseNpgsqlConnection(databaseOptions.ConnectionString);
             }, hangfirePostgreSqlStorageOptions))
@@ -8373,7 +8406,6 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.ApiBaseUrl);
         });
 
-        // проверяем, зарегистрирован ли на данный ммент хоть один декорируемый тип для логгера
         if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
         {
             services.Decorate(typeof(ICommandHandler<>), typeof(LoggingCommandHandlerDecorator<>));
@@ -8383,6 +8415,27 @@ public static class DependencyInjection
         {
             services.Decorate(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
         }
+
+        #region Настройка кэширования
+        services.AddSingleton<ICacheService, RedisCacheService>();
+
+        services.AddScoped<ICacheInvalidator, CacheInvalidator>();
+
+        services.AddScoped<IEntityInvalidator<Order>, OrderEntityInvalidator>();
+
+        services.Decorate<IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>,
+            GetOrdersHistoryQueryCachingDecorator>();
+
+        services.Decorate<IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto>,
+            GetOrderDetailsQueryCachingDecorator>();
+
+        string redisConnectionString = configuration["RedisConnectionString"]!;
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            return ConnectionMultiplexer.Connect(redisConnectionString);
+        }); 
+        #endregion
 
         return services;
     }
@@ -8394,9 +8447,12 @@ public static class DependencyInjection
 ```cs title="UnitOfWork.cs"
 using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Outbox;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+
 
 namespace LegacyLego.Infrastructure;
 
@@ -8404,18 +8460,42 @@ public sealed class UnitOfWork: IUnitOfWork
 {
     private readonly OrderContext _orderContext;
     private readonly TimeProvider _timeProvider;
+    private readonly ICacheInvalidator _cacheInvalidator;
 
-    public UnitOfWork(OrderContext orderContext, TimeProvider timeProvider)
+    public UnitOfWork(
+        OrderContext orderContext,
+        TimeProvider timeProvider,
+        ICacheInvalidator cacheInvalidator)
     {
         _orderContext = orderContext;
         _timeProvider = timeProvider;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         OutboxingDomainEvents();
 
-        return await _orderContext.SaveChangesAsync(cancellationToken);
+        var modifiedEntities = GetModifiedEntities();
+
+        // 3. Сохраняем всё в БД в рамках единой транзакции
+        var result = await _orderContext.SaveChangesAsync(cancellationToken);
+
+        // 4. Если запись в БД прошла успешно — запускаем конвейер инвалидации
+        if (result > 0 && modifiedEntities.Any())
+        {
+            await _cacheInvalidator.InvalidateAsync(modifiedEntities, cancellationToken);
+        }
+
+        return result;
+    }
+
+    private List<object> GetModifiedEntities()
+    {
+        return _orderContext.ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified)
+            .Select(e => e.Entity)
+            .ToList();
     }
 
     private void OutboxingDomainEvents()
@@ -8630,6 +8710,344 @@ public sealed class OutboxBackgroundWorker : BackgroundService
 
             await context.SaveChangesAsync(ct);
         }
+    }
+}
+```
+
+---
+
+### Caching
+
+#### Abstractions
+
+```cs title="ICacheInvalidator.cs"
+namespace LegacyLego.Infrastructure.Caching.Abstractions;
+
+public interface ICacheInvalidator
+{
+    public Task InvalidateAsync(IEnumerable<object> entities, CancellationToken ct);
+}
+```
+
+---
+
+```cs title="ICacheService.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Infrastructure.Caching.Abstractions;
+
+public interface ICacheService
+{
+    public Task<Result<T>> GetOrCreateAsync<T>(
+        string cacheGroup,
+        string specificKey,
+        Func<Task<Result<T>>> factory,
+        TimeSpan ttl,
+        CancellationToken ct);
+}
+```
+
+---
+
+```cs title="IEntityInvalidator.cs"
+namespace LegacyLego.Infrastructure.Caching.Abstractions;
+
+public interface IEntityInvalidator<in TEntity> where TEntity : class
+{
+    public Task InvalidateAsync(IEnumerable<TEntity> entities, CancellationToken ct);
+}
+```
+
+---
+
+#### Decorators
+
+##### Query
+
+###### Order
+
+```cs title="GetOrderDetailsQueryCachingDecorator.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.Options;
+namespace LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
+
+public sealed class GetOrderDetailsQueryCachingDecorator
+    : IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto>
+{
+    private readonly IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto> _inner;
+    private readonly ICacheService _cacheService;
+    private readonly IOptionsMonitor<CacheOptions> _cacheOptions;
+
+    public GetOrderDetailsQueryCachingDecorator(
+        IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto> inner,
+        ICacheService cacheService,
+        IOptionsMonitor<CacheOptions> cacheOptions)
+    {
+        _inner = inner;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions;
+    }
+
+    public Task<Result<OrderDetailsDto>> HandleAsync(GetOrderDetailsQuery query, CancellationToken ct)
+    {
+        var cacheGroup = $"order:{query.OrderId}";
+
+        var specificKey = "details";
+
+        return _cacheService.GetOrCreateAsync(
+            cacheGroup,
+            specificKey,
+            factory: () => _inner.HandleAsync(query, ct),
+            ttl: TimeSpan.FromMinutes(_cacheOptions.CurrentValue.OrderDetailsMinutesTtl),
+            ct);
+    }
+}
+```
+
+---
+
+```cs title="GetOrdersHistoryQueryCachingDecorator.cs"
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.Options;
+
+namespace LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
+
+public sealed class GetOrdersHistoryQueryCachingDecorator
+    : IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>
+{
+    private readonly IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse> _inner;
+    private readonly ICacheService _cacheService;
+    private readonly IOptionsMonitor<CacheOptions> _cacheOptions;
+
+    public GetOrdersHistoryQueryCachingDecorator(
+        IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse> inner,
+        ICacheService cacheService,
+        IOptionsMonitor<CacheOptions> cacheOptions)
+    {
+        _inner = inner;
+        _cacheService = cacheService;
+        _cacheOptions = cacheOptions;
+    }
+
+    public Task<Result<OrdersHistoryResponse>> HandleAsync(GetOrdersHistoryQuery query, CancellationToken ct)
+    {
+        var cacheGroup = $"orders:{query.UserId}";
+
+        var safeCursor = string.IsNullOrWhiteSpace(query.Filter.Cursor) ? "first" : query.Filter.Cursor;
+        var specificKey = $"cursor:{safeCursor}";
+
+        return _cacheService.GetOrCreateAsync(
+            cacheGroup,
+            specificKey,
+            factory: () => _inner.HandleAsync(query, ct),
+            ttl: TimeSpan.FromMinutes(_cacheOptions.CurrentValue.OrdersHistoryMinutesTtl),
+            ct);
+    }
+}
+```
+
+---
+
+#### Invalidators
+
+```cs title="OrderEntityInvalidator.cs"
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
+using Order = LegacyLego.Domain.Aggregates.Order;
+
+namespace LegacyLego.Infrastructure.Caching.Invalidators;
+
+public sealed class OrderEntityInvalidator : IEntityInvalidator<Order>
+{
+    private readonly IConnectionMultiplexer _redis;
+    private readonly IOptionsMonitor<CacheOptions> _cacheOptions;
+
+    public OrderEntityInvalidator(
+        IConnectionMultiplexer redis,
+        IOptionsMonitor<CacheOptions> cacheOptions)
+    {
+        _redis = redis;
+        _cacheOptions = cacheOptions;
+    }
+
+    public async Task InvalidateAsync(IEnumerable<Order> entities, CancellationToken ct)
+    {
+        var db = _redis.GetDatabase();
+        var batch = db.CreateBatch();
+        var groupTtl = TimeSpan.FromDays(_cacheOptions.CurrentValue.OrderGroupDaysTtl);
+
+        foreach (var order in entities)
+        {
+            var userVersionKey = $"orders:{order.ClientId}:version";
+            var orderVersionKey = $"order:{order.Id.Value}:version";
+
+            _ = batch.StringIncrementAsync(userVersionKey);
+            _ = batch.StringIncrementAsync(orderVersionKey);
+
+            _ = batch.KeyExpireAsync(userVersionKey, groupTtl);
+            _ = batch.KeyExpireAsync(orderVersionKey, groupTtl);
+        }
+
+        batch.Execute();
+        await Task.CompletedTask;
+    }
+}
+```
+
+---
+
+#### Services
+
+```cs title="CacheInvalidator.cs"
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace LegacyLego.Infrastructure.Caching.Services;
+
+public sealed class CacheInvalidator : ICacheInvalidator
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public CacheInvalidator(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public async Task InvalidateAsync(IEnumerable<object> entities, CancellationToken ct)
+    {
+        var groupedEntities = entities.GroupBy(e => e.GetType());
+
+        foreach (var group in groupedEntities)
+        {
+            var entityType = group.Key;
+
+            var invalidatorType = typeof(IEntityInvalidator<>).MakeGenericType(entityType);
+
+            var invalidator = _serviceProvider.GetService(invalidatorType);
+
+            if (invalidator is null)
+                continue;
+
+            var method = invalidatorType.GetMethod(nameof(IEntityInvalidator<object>.InvalidateAsync));
+
+            if (method is not null)
+            {
+                var typedList = CastList(group, entityType);
+
+                await (Task)method.Invoke(invalidator, [typedList, ct])!;
+            }
+        }
+    }
+
+    private static object CastList(IEnumerable<object> source, Type targetType)
+    {
+        var castMethod = typeof(Enumerable)
+            .GetMethod(nameof(Enumerable.Cast))!
+            .MakeGenericMethod(targetType);
+
+        var toListMethod = typeof(Enumerable)
+            .GetMethod(nameof(Enumerable.ToList))!
+            .MakeGenericMethod(targetType);
+
+        var casted = castMethod.Invoke(null, [source]);
+        return toListMethod.Invoke(null, [casted])!;
+    }
+}
+```
+
+---
+
+```cs title="RedisCacheService.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
+using System.Text.Json;
+
+namespace LegacyLego.Infrastructure.Caching.Services;
+
+public sealed class RedisCacheService : ICacheService
+{
+    private readonly ILogger<RedisCacheService> _logger;
+    private readonly IConnectionMultiplexer _redis;
+    private readonly IOptionsMonitor<CacheOptions> _cacheOptions;
+
+    public RedisCacheService(IConnectionMultiplexer redis,
+        ILogger<RedisCacheService> logger,
+        IOptionsMonitor<CacheOptions> cacheOptions)
+    {
+        _redis = redis;
+        _logger = logger;
+        _cacheOptions = cacheOptions;
+    }
+
+    public async Task<Result<T>> GetOrCreateAsync<T>(
+        string cacheGroup,
+        string specificKey,
+        Func<Task<Result<T>>> factory,
+        TimeSpan ttl,
+        CancellationToken ct)
+    {
+        var db = _redis.GetDatabase();
+
+        var versionKey = $"{cacheGroup}:version";
+        var version = await db.StringGetAsync(versionKey);
+
+        if (!version.HasValue)
+        {
+            var groupTtl = TimeSpan.FromDays(_cacheOptions.CurrentValue.OrderGroupDaysTtl);
+            await db.StringSetAsync(versionKey, "1", groupTtl, When.NotExists);
+            version = "1";
+        }
+
+        var dataKey = $"{cacheGroup}:v{version}:{specificKey}";
+
+        var cachedData = await db.StringGetAsync(dataKey);
+        if (cachedData.HasValue) // Кэш-хит
+        {
+            try
+            {
+                var deserialized = JsonSerializer.Deserialize<T>((byte[])cachedData!);
+                if (deserialized is not null)
+                {
+                    _logger.LogDebug("Cache HIT for key: {CacheKey}", dataKey);
+                    return Result<T>.Success(deserialized);
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Failed to deserialize cache payload for key: {CacheKey}. Falling back to database.",
+                    dataKey);
+            }
+        }
+
+        // Кэш-мисс
+        _logger.LogDebug("Cache MISS for key: {CacheKey}. Fetching data from source.", dataKey);
+        var result = await factory();
+
+        if (result.IsSuccess)
+        {
+            var serialized = JsonSerializer.Serialize(result.Value);
+            await db.StringSetAsync(dataKey, serialized, ttl);
+        }
+
+        return result;
     }
 }
 ```
@@ -10884,6 +11302,28 @@ namespace LegacyLego.Infrastructure.Migrations
 ---
 
 ### Options
+
+```cs title="CacheOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class CacheOptions
+{
+    public const string SectionName = "CacheOptions";
+
+    [Range(10, 30, ErrorMessage = "OrdersHistoryTtl должен быть от 10 до 30 минут.")]
+    public int OrdersHistoryMinutesTtl { get; set; } = 10;
+
+    [Range(10, 60, ErrorMessage = "OrderDetailsTtl должен быть от 10 до 60 минут.")]
+    public int OrderDetailsMinutesTtl { get; set; } = 30;
+
+    [Range(1, 7, ErrorMessage = "OrderGroupDaysTtl должен быть от 1 до 7 дней.")]
+    public int OrderGroupDaysTtl { get; set; } = 1;
+}
+```
+
+---
 
 ```cs title="DatabaseOptions.cs"
 using System.ComponentModel.DataAnnotations;

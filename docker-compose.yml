@@ -1,6 +1,7 @@
 volumes:
  postgres-legacy-lego-data:
  seq-legacy-lego-data:
+ redis-legacy-lego-data:
 
 networks:
   legacy-lego-network:
@@ -43,4 +44,32 @@ services:
    - "5341:5341"
   volumes:
    - seq-legacy-lego-data:/data
+  restart: unless-stopped
+ legacy-lego-redis: 
+  image: redis:7-alpine 
+  container_name: legacy-lego-redis
+  networks:
+   - legacy-lego-network
+  ports:
+   - "6379:6379"
+  volumes:
+   - redis-legacy-lego-data:/data
+  command: redis-server --save 60 1 --loglevel warning
+  healthcheck:
+   test: ["CMD", "redis-cli", "ping"]
+   interval: 5s
+   timeout: 3s
+   retries: 3
+  restart: unless-stopped
+ legacy-lego-redis-commander:
+  image: rediscommander/redis-commander:snyk-fix-1841981ea4b1abcbc4c13e21d5d2997d
+  container_name: legacy-lego-redis-commander
+  environment:
+   - REDIS_HOSTS=local:legacy-lego-redis:6379
+   - HTTP_USER=${REDIS_COMMANDER_USER}
+   - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD}
+  ports:
+   - "8082:8081"
+  networks:
+   - legacy-lego-network
   restart: unless-stopped
