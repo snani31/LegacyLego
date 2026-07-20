@@ -6,8 +6,17 @@ using LegacyLego.Application.Abstractions.ExternalServices;
 using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Abstractions.Messaging.Event.Integration;
+using LegacyLego.Application.Abstractions.Messaging.Query;
+using LegacyLego.Application.Orders.Queries.ActiveOrders;
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
 using LegacyLego.Domain.Abstractions;
+using LegacyLego.Domain.Aggregates;
 using LegacyLego.Infrastructure.BackgroundJobs;
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
+using LegacyLego.Infrastructure.Caching.Invalidators;
+using LegacyLego.Infrastructure.Caching.Services;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
 using LegacyLego.Infrastructure.Logging.Decoretors;
@@ -22,6 +31,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
+using Order = LegacyLego.Domain.Aggregates.Order;
 
 namespace LegacyLego.Infrastructure;
 
@@ -49,6 +60,11 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<CacheOptions>()
+            .BindConfiguration(CacheOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
                               ?? new DatabaseOptions();
 
@@ -65,12 +81,12 @@ public static class DependencyInjection
             .AddClasses(classes => classes.AssignableTo(typeof(IIntegrationEventConsumer<>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime())
-            
+
             .AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(options => 
+            .UsePostgreSqlStorage(options =>
             {
                 options.UseNpgsqlConnection(databaseOptions.ConnectionString);
             }, hangfirePostgreSqlStorageOptions))
@@ -134,7 +150,6 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.ApiBaseUrl);
         });
 
-        // проверяем, зарегистрирован ли на данный ммент хоть один декорируемый тип для логгера
         if (services.Any(s => s.ServiceType.IsGenericType && s.ServiceType.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
         {
             services.Decorate(typeof(ICommandHandler<>), typeof(LoggingCommandHandlerDecorator<>));
@@ -144,6 +159,27 @@ public static class DependencyInjection
         {
             services.Decorate(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
         }
+
+        #region Настройка кэширования
+        services.AddSingleton<ICacheService, RedisCacheService>();
+
+        services.AddScoped<ICacheInvalidator, CacheInvalidator>();
+
+        services.AddScoped<IEntityInvalidator<Order>, OrderEntityInvalidator>();
+
+        services.Decorate<IQueryHandler<GetOrdersHistoryQuery, OrdersHistoryResponse>,
+            GetOrdersHistoryQueryCachingDecorator>();
+
+        services.Decorate<IQueryHandler<GetOrderDetailsQuery, OrderDetailsDto>,
+            GetOrderDetailsQueryCachingDecorator>();
+
+        string redisConnectionString = configuration["RedisConnectionString"]!;
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            return ConnectionMultiplexer.Connect(redisConnectionString);
+        }); 
+        #endregion
 
         return services;
     }
