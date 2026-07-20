@@ -1,8 +1,11 @@
 ﻿using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Outbox;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+
 
 namespace LegacyLego.Infrastructure;
 
@@ -10,18 +13,42 @@ public sealed class UnitOfWork: IUnitOfWork
 {
     private readonly OrderContext _orderContext;
     private readonly TimeProvider _timeProvider;
+    private readonly ICacheInvalidator _cacheInvalidator;
 
-    public UnitOfWork(OrderContext orderContext, TimeProvider timeProvider)
+    public UnitOfWork(
+        OrderContext orderContext,
+        TimeProvider timeProvider,
+        ICacheInvalidator cacheInvalidator)
     {
         _orderContext = orderContext;
         _timeProvider = timeProvider;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         OutboxingDomainEvents();
 
-        return await _orderContext.SaveChangesAsync(cancellationToken);
+        var modifiedEntities = GetModifiedEntities();
+
+        // 3. Сохраняем всё в БД в рамках единой транзакции
+        var result = await _orderContext.SaveChangesAsync(cancellationToken);
+
+        // 4. Если запись в БД прошла успешно — запускаем конвейер инвалидации
+        if (result > 0 && modifiedEntities.Any())
+        {
+            await _cacheInvalidator.InvalidateAsync(modifiedEntities, cancellationToken);
+        }
+
+        return result;
+    }
+
+    private List<object> GetModifiedEntities()
+    {
+        return _orderContext.ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified)
+            .Select(e => e.Entity)
+            .ToList();
     }
 
     private void OutboxingDomainEvents()
