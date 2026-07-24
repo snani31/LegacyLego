@@ -4,6 +4,7 @@ using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Reflection;
@@ -11,7 +12,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
+configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), true);
 
 builder.Logging.ClearProviders();
 
@@ -40,6 +41,11 @@ try
     var app = builder.Build();
 
     app.UseExceptionHandler(); // стоит самый первый в пайплайне
+
+    app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
 
     if (app.Environment.IsDevelopment())
     {
