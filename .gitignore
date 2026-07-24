@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # Temporary backup Drawio files
 *.bkp
+
+# Nginx secrets data
+.htpasswd
