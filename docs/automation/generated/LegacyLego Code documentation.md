@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.9.3
+Актуальная версия проекта: 1.9.4
 
 ## Проекты
 
@@ -29,396 +29,3219 @@
 
 ```txt title="TreeStructure"
 .
-├── docker
-│   ├── nginx
-│   │   └── nginx.conf
-│   └── docker-compose.yaml
-├── docs
-│   ├── architecture
-│   │   ├── 'Order ER-scheme.docx'
-│   │   ├── 'OrderPayment ER-scheme.docx'
-│   │   └── 'state transition matrix.docx'
-│   ├── automation
-│   │   ├── generated
-│   │   │   └── 'LegacyLego Code documentation.md'
-│   │   ├── templates
-│   │   │   └── 'LegacyLego Code documentation template.md'
-│   │   └── automation-guide.md
-│   ├── decisions
-│   │   └── 0001-automation-of-code-listings.md
-│   └── diagrams
-│       ├── out
-│       │   ├── ER
-│       │   │   ├── 'ER Diagram.jpg'
-│       │   │   ├── OrderAggregateErScheme.jpg
-│       │   │   └── OrderPaymentAggregateErScheme.jpg
-│       │   ├── ActivityDiagramOrderLifeCycle_v2.jpg
-│       │   ├── OrderClassDiagram.jpg
-│       │   ├── OrderClassDiagram_v1.jpg
-│       │   ├── SolutionStructureTreeDiagram.jpg
-│       │   └── StoreOrderingSystemDiagram_v2.jpg
-│       └── src
-│           ├── ER
-│           │   ├── 'ER Diagram.drawio'
-│           │   ├── 'Order Aggregate ER-Scheme.drawio'
-│           │   └── 'OrderPayment Aggregate ER-Scheme.drawio'
-│           ├── ActivityDiagramOrderLifeCycle.drawio
-│           ├── OrderClassDiagram.drawio
-│           ├── SolutionStructureTreeDiagram.drawio
-│           └── StoreOrderingSystemDiagram.drawio
-├── src
-│   ├── LegacyLego.Application
-│   │   ├── Abstractions
-│   │   │   ├── Data
-│   │   │   │   ├── ICustomLogSeverity.cs
-│   │   │   │   └── IUnitOfWork.cs
-│   │   │   ├── ExceptionHandling
-│   │   │   │   ├── AppFailureDescription.cs
-│   │   │   │   ├── ExceptionFailureKind.cs
-│   │   │   │   └── IExceptionMapper.cs
-│   │   │   ├── ExternalServices
-│   │   │   │   ├── ICommandBackgroundJobService.cs
-│   │   │   │   ├── ICursorSerializer.cs
-│   │   │   │   └── IPaymentProvider.cs
-│   │   │   └── Messaging
-│   │   │       ├── Command
-│   │   │       │   ├── IBaseCommand.cs
-│   │   │       │   ├── ICommand.cs
-│   │   │       │   └── ICommandHandler.cs
-│   │   │       ├── Event
-│   │   │       │   ├── Domain
-│   │   │       │   │   └── IDomainEventHandler.cs
-│   │   │       │   └── Integration
-│   │   │       │       ├── IIntegrationEvent.cs
-│   │   │       │       └── IIntegrationEventPublisher.cs
-│   │   │       ├── Query
-│   │   │       │   ├── IQuery.cs
-│   │   │       │   └── IQueryHandler.cs
-│   │   │       ├── ICommandDispatcher.cs
-│   │   │       ├── IDomainEventDispatcher.cs
-│   │   │       ├── IEventPublisher.cs
-│   │   │       └── IQueryDispatcher.cs
-│   │   ├── Common
-│   │   ├── Diagnostics
-│   │   │   └── DomainExceptionMapper.cs
-│   │   ├── Errors
-│   │   │   └── PaymentProviderErrors.cs
-│   │   ├── ExceptionalErrors
-│   │   │   └── UnitOfWorkExceptionalErrors.cs
-│   │   ├── Exceptions
-│   │   │   ├── InfrastructureException.cs
-│   │   │   ├── PersistenceException.cs
-│   │   │   └── UniqueConstraintViolation.cs
-│   │   ├── Options
-│   │   │   └── OrderHistoryOptions.cs
-│   │   ├── Orders
-│   │   │   ├── Commands
-│   │   │   │   ├── Cancel
-│   │   │   │   │   ├── CancelletionOrderDetails.cs
-│   │   │   │   │   ├── CancelOrderCommand.cs
-│   │   │   │   │   └── CancelOrderCommandHandler.cs
-│   │   │   │   ├── Create
-│   │   │   │   │   ├── CreateOrderCommand.cs
-│   │   │   │   │   ├── CreateOrderCommandHandler.cs
-│   │   │   │   │   └── CreateOrderDomainEventHandler.cs
-│   │   │   │   ├── Expire
-│   │   │   │   │   ├── ExpirationOrderDetails.cs
-│   │   │   │   │   ├── ExpireOrderCommand.cs
-│   │   │   │   │   └── ExpireOrderCommandHandler.cs
-│   │   │   │   ├── Pay
-│   │   │   │   │   ├── PayOrderCommand.cs
-│   │   │   │   │   ├── PayOrderCommandHandler.cs
-│   │   │   │   │   └── PayOrderDetails.cs
-│   │   │   │   └── Refund
-│   │   │   │       ├── RefundOrderCommand.cs
-│   │   │   │       ├── RefundOrderCommandHandler.cs
-│   │   │   │       └── RefundOrderDetails.cs
-│   │   │   ├── Common
-│   │   │   │   ├── Mappers
-│   │   │   │   ├── Projections
-│   │   │   │   │   └── OrderProjections.cs
-│   │   │   │   ├── OrderAddressDto.cs
-│   │   │   │   ├── OrderItemDto.cs
-│   │   │   │   └── OrderSummaryDto.cs
-│   │   │   ├── Errors
-│   │   │   │   └── OrderApplicationErrors.cs
-│   │   │   └── Queries
-│   │   │       ├── ActiveOrders
-│   │   │       │   ├── ActiveOrderSpecification.cs
-│   │   │       │   ├── GetActiveOrdersQuery.cs
-│   │   │       │   └── GetActiveOrdersQueryHandler.cs
-│   │   │       ├── OrderDetails
-│   │   │       │   ├── ActiveOrderSpecification.cs
-│   │   │       │   ├── GetOrderDetailsQuery.cs
-│   │   │       │   ├── GetOrderDetailsQueryHandler.cs
-│   │   │       │   └── OrderDetailsDto.cs
-│   │   │       └── OrdersHistory
-│   │   │           ├── GetOrdersHistoryQuery.cs
-│   │   │           ├── GetOrdersHistoryQueryHandler.cs
-│   │   │           ├── OrderHistoryRequest.cs
-│   │   │           ├── OrderHistorySpecification.cs
-│   │   │           └── OrdersHistoryResponse.cs
-│   │   ├── Payments
-│   │   │   ├── Commands
-│   │   │   │   ├── PocessPaymentWebhook
-│   │   │   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
-│   │   │   │   │   ├── ProcessPaymentDetails.cs
-│   │   │   │   │   ├── ProcessPaymentErrors.cs
-│   │   │   │   │   ├── ProcessPaymentWebhookCommand.cs
-│   │   │   │   │   └── ProcessPaymentWebhookCommandHandler.cs
-│   │   │   │   ├── RefundRequested
-│   │   │   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
-│   │   │   │   └── StartPayment
-│   │   │   │       ├── StartOrderPaymentCommand.cs
-│   │   │   │       ├── StartOrderPaymentCommandHandler.cs
-│   │   │   │       ├── StartOrderPaymentDetails.cs
-│   │   │   │       └── StartOrderPaymentErrors.cs
-│   │   │   ├── Common
-│   │   │   │   ├── PaymentSession.cs
-│   │   │   │   └── PaymentWebhook.cs
-│   │   │   ├── IntegrationEvents
-│   │   │   │   └── OrderPaymentRefundRequestedIntegrationEvent.cs
-│   │   │   └── Services
-│   │   │       └── PaymentLookup.cs
-│   │   ├── DependencyInjection.cs
-│   │   └── LegacyLego.Application.csproj
-│   ├── LegacyLego.Domain
-│   │   ├── Abstractions
-│   │   │   ├── IOrderRepository.cs
-│   │   │   └── IPaymentRepository.cs
-│   │   ├── Aggregates
-│   │   │   ├── Order.cs
-│   │   │   └── OrderPayment.cs
-│   │   ├── DomainEvents
-│   │   │   ├── OrderCanceled.cs
-│   │   │   ├── OrderCreated.cs
-│   │   │   ├── OrderExpired.cs
-│   │   │   ├── OrderPaid.cs
-│   │   │   ├── OrderPaymentCreated.cs
-│   │   │   ├── OrderPaymentFailed.cs
-│   │   │   ├── OrderPaymentRefunded.cs
-│   │   │   ├── OrderPaymentRefundedWithoutSuccess.cs
-│   │   │   ├── OrderPaymentRefundRequested.cs
-│   │   │   ├── OrderPaymentSucceeded.cs
-│   │   │   └── OrderRefunded.cs
-│   │   ├── Enums
-│   │   │   ├── OrderAction.cs
-│   │   │   ├── OrderStatus.cs
-│   │   │   ├── PaymentAction.cs
-│   │   │   └── PaymentStatus.cs
-│   │   ├── Errors
-│   │   │   ├── CurrencyErrors.cs
-│   │   │   ├── ExternalSessionErrors.cs
-│   │   │   ├── OrderErrors.cs
-│   │   │   ├── OrderItemErrors.cs
-│   │   │   ├── OrderPaymentErrors.cs
-│   │   │   └── PriceErrors.cs
-│   │   ├── ExceptionalErrors
-│   │   │   ├── CurrencyExceptionalErrors.cs
-│   │   │   ├── ExternalSessionExceptionalErrors.cs
-│   │   │   ├── OrderExceptionalErrors.cs
-│   │   │   ├── PriceExceptionalErrors.cs
-│   │   │   └── ResultExceptionalErrors.cs
-│   │   ├── Exceptions
-│   │   │   ├── InvalidDomainStateException.cs
-│   │   │   └── InvariantViolationException.cs
-│   │   ├── Shared
-│   │   │   ├── AggregateRoot.cs
-│   │   │   ├── DomainException.cs
-│   │   │   ├── Entity.cs
-│   │   │   ├── Error.cs
-│   │   │   ├── ExceptionalError.cs
-│   │   │   ├── IDomainEvent.cs
-│   │   │   ├── IHasDomainEvents.cs
-│   │   │   ├── Result.cs
-│   │   │   ├── ResultT.cs
-│   │   │   ├── Specification.cs
-│   │   │   └── ValueObject.cs
-│   │   ├── ValueObjects
-│   │   │   ├── Currency.cs
-│   │   │   ├── ExternalSession.cs
-│   │   │   ├── OrderAddress.cs
-│   │   │   ├── OrderId.cs
-│   │   │   ├── OrderItem.cs
-│   │   │   ├── OrderPaymentId.cs
-│   │   │   └── Price.cs
-│   │   └── LegacyLego.Domain.csproj
-│   ├── LegacyLego.Infrastructure
-│   │   ├── BackgroundJobs
-│   │   │   ├── HangfireCommandBackgroundJobService.cs
-│   │   │   └── OutboxBackgroundWorker.cs
-│   │   ├── Caching
-│   │   │   ├── Abstractions
-│   │   │   │   ├── ICacheInvalidator.cs
-│   │   │   │   ├── ICacheService.cs
-│   │   │   │   └── IEntityInvalidator.cs
-│   │   │   ├── Decorators
-│   │   │   │   └── Query
-│   │   │   │       └── Order
-│   │   │   │           ├── GetOrderDetailsQueryCachingDecorator.cs
-│   │   │   │           └── GetOrdersHistoryQueryCachingDecorator.cs
-│   │   │   ├── Invalidators
-│   │   │   │   └── OrderEntityInvalidator.cs
-│   │   │   └── Services
-│   │   │       ├── CacheInvalidator.cs
-│   │   │       └── RedisCacheService.cs
-│   │   ├── Common
-│   │   │   └── SpecificationEvaluator.cs
-│   │   ├── Configuration
-│   │   │   ├── Common
-│   │   │   │   ├── EntityTypeBuilderExtensions.cs
-│   │   │   │   ├── PostgresTypes.cs
-│   │   │   │   └── PropertyBuilderExtensions.cs
-│   │   │   ├── ExternalSessionConfiguration.cs
-│   │   │   ├── OrderConfiguration.cs
-│   │   │   ├── OrderItemConfiguration.cs
-│   │   │   ├── OrderPaymentConfiguration.cs
-│   │   │   └── OutboxMessageConfiguration.cs
-│   │   ├── Context
-│   │   │   └── OrderContext.cs
-│   │   ├── Diagnostics
-│   │   │   └── InfrastructureExceptionMapper.cs
-│   │   ├── Logging
-│   │   │   └── Decorators
-│   │   │       └── LoggingCommandHandlerDecorator.cs
-│   │   ├── Messaging
-│   │   │   ├── Abstractions
-│   │   │   │   ├── IIntegrationEventBus.cs
-│   │   │   │   └── IIntegrationEventConsumer.cs
-│   │   │   ├── Bus
-│   │   │   │   └── InMemoryIntegrationEventBus.cs
-│   │   │   ├── Consumers
-│   │   │   │   └── OrderPaymentRefundRequestedIntegrationConsumer.cs
-│   │   │   ├── Dispatchers
-│   │   │   │   ├── CommandDispatcher.cs
-│   │   │   │   ├── DomainEventDispatcher.cs
-│   │   │   │   └── QueryDispatcher.cs
-│   │   │   └── Publishers
-│   │   │       └── LocalIntegrationEventPublisher.cs
-│   │   ├── Migrations
-│   │   │   ├── 20260622101458__Init.cs
-│   │   │   ├── 20260622101458__Init.Designer.cs
-│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.cs
-│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.Designer.cs
-│   │   │   └── OrderContextModelSnapshot.cs
-│   │   ├── Options
-│   │   │   ├── CacheOptions.cs
-│   │   │   ├── DatabaseOptions.cs
-│   │   │   ├── HangfireOptions.cs
-│   │   │   ├── OutboxBackgroundWorkerOptions.cs
-│   │   │   └── PaymentProviderOptions.cs
-│   │   ├── Outbox
-│   │   │   └── OutboxMessage.cs
-│   │   ├── Repositories
-│   │   │   ├── OrderRepository.cs
-│   │   │   └── PaymentRepository.cs
-│   │   ├── Services
-│   │   │   ├── Base64JsonCursorSerializer.cs
-│   │   │   └── MockPaymentProvider.cs
-│   │   ├── DependencyInjection.cs
-│   │   ├── LegacyLego.Infrastructure.csproj
-│   │   ├── LegacyLego.Infrastructure.csproj.user
-│   │   └── UnitOfWork.cs
-│   └── LegacyLego.Presentation
-│       ├── Middleware
-│       │   └── DynamicGlobalExceptionHandler.cs
-│       ├── OpenApi
-│       │   ├── ApiMetadataTransformer.cs
-│       │   └── OpenApiExtensions.cs
-│       ├── Orders
-│       │   ├── Dto
-│       │   │   └── CreateOrderRequest.cs
-│       │   └── OrderEndpoints.cs
-│       ├── Payments
-│       │   ├── Dto
-│       │   │   ├── PaymentProviderWebhookRequest.cs
-│       │   │   └── StartPaymentResponse.cs
-│       │   ├── PaymentEndpoints.cs
-│       │   └── PaymentWebhookMapper.cs
-│       ├── Properties
-│       │   └── launchSettings.json
-│       ├── Shared
-│       ├── wwwroot
-│       │   └── mock-checkout.html
-│       ├── appsettings.Development.json
-│       ├── appsettings.json
-│       ├── LegacyLego.Presentation.csproj
-│       ├── LegacyLego.Presentation.csproj.user
-│       ├── LegacyLego.Presentation.json
-│       └── Program.cs
-├── tests
-│   └── LegacyLego.Domain.Tests
-│       ├── Common
-│       │   ├── Builders
-│       │   │   └── OrderBuilder.cs
-│       │   └── Factories
-│       │       ├── OrderDataFactory.cs
-│       │       └── OrderPaymentDataFactory.cs
-│       ├── CurrencyTests
-│       │   ├── Equality
-│       │   │   └── CurrencyEqualityTests.cs
-│       │   └── FromCode
-│       │       └── CurrencyFromCodeTests.cs
-│       ├── ExternalSessionTests
-│       │   ├── Create
-│       │   │   └── ExternalSessionCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── ExternalSessionEqualityTests.cs
-│       │   └── IsExpired
-│       │       └── ExternalSessionCreateTests.cs
-│       ├── OrderItemTests
-│       │   ├── Create
-│       │   │   └── OrderItemCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── OrderItemEqualityTests.cs
-│       │   └── GetTotalPriceTests
-│       │       └── OrderItemGetTotalPriceTests.cs
-│       ├── OrderPaymentTests
-│       │   ├── AttachSession
-│       │   │   └── OrderPaymentAttachSessionTests.cs
-│       │   ├── Create
-│       │   │   └── OrderPaymentCreateTests.cs
-│       │   └── StateTransitions
-│       │       ├── MarkAsFailed
-│       │       │   └── OrderPaymentMarkAsFailedTests.cs
-│       │       ├── MarkAsRefunded
-│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
-│       │       ├── MarkAsRefundRequested
-│       │       │   └── OrderPaymentMarkAsRefundRequestedTests.cs
-│       │       └── MarkAsSucceeded
-│       │           └── OrderPaymentMarkAsSucceededTests.cs
-│       ├── OrderTests
-│       │   ├── Create
-│       │   │   └── OrderCreateTests.cs
-│       │   ├── StateTransitions
-│       │   │   ├── Cancel
-│       │   │   │   └── OrderCancelTests.cs
-│       │   │   ├── Expire
-│       │   │   │   └── OrderExpireTests.cs
-│       │   │   ├── Pay
-│       │   │   │   └── OrderPayTests.cs
-│       │   │   └── Refund
-│       │   │       └── OrderRefundTests.cs
-│       │   └── TotalPrice
-│       │       └── OrderTotalPriceTests.cs
-│       ├── PriceTests
-│       │   ├── Create
-│       │   │   └── PriceCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── PriceEqualityTests.cs
-│       │   ├── MultiplyByQuantity
-│       │   │   └── PriceMultiplyByQuantityTests.cs
-│       │   └── Plus
-│       │       └── PricePlusTests.cs
-│       ├── GlobalUsings.cs
-│       └── LegacyLego.Domain.Tests.csproj
-├── tools
-│   └── update-project-listing-docs.ps1
-├── docker-compose.prod.yml
-├── docker-compose.yml
-├── LegacyLego.slnx
-├── Presentation.Dockerfile
-└── README.md
+├── ar-SA
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── Assets
+│   ├── Awake
+│   │   ├── Awake.ico
+│   │   ├── disabled.ico
+│   │   ├── expirable.ico
+│   │   ├── indefinite.ico
+│   │   ├── normal.ico
+│   │   ├── scheduled.ico
+│   │   └── timed.ico
+│   ├── ColorPicker
+│   │   └── colorPicker.cur
+│   ├── ImageResizer
+│   │   ├── ImageResizer.ico
+│   │   ├── LargeTile.png
+│   │   ├── SmallTile.png
+│   │   ├── SplashScreen.png
+│   │   ├── Square44x44Logo.png
+│   │   ├── Square150x150Logo.png
+│   │   ├── storelogo.png
+│   │   └── Wide310x150Logo.png
+│   ├── Monaco
+│   │   ├── customLanguages
+│   │   │   ├── gitignore.js
+│   │   │   ├── reg.js
+│   │   │   └── srt.js
+│   │   ├── monacoSRC
+│   │   │   └── min
+│   │   │       └── vs
+│   │   │           ├── base
+│   │   │           │   ├── browser
+│   │   │           │   │   └── ui
+│   │   │           │   ├── common
+│   │   │           │   │   └── worker
+│   │   │           │   └── worker
+│   │   │           │       └── workerMain.js
+│   │   │           ├── basic-languages
+│   │   │           │   ├── abap
+│   │   │           │   │   └── abap.js
+│   │   │           │   ├── apex
+│   │   │           │   │   └── apex.js
+│   │   │           │   ├── azcli
+│   │   │           │   │   └── azcli.js
+│   │   │           │   ├── bat
+│   │   │           │   │   └── bat.js
+│   │   │           │   ├── bicep
+│   │   │           │   │   └── bicep.js
+│   │   │           │   ├── cameligo
+│   │   │           │   │   └── cameligo.js
+│   │   │           │   ├── clojure
+│   │   │           │   │   └── clojure.js
+│   │   │           │   ├── coffee
+│   │   │           │   │   └── coffee.js
+│   │   │           │   ├── cpp
+│   │   │           │   │   └── cpp.js
+│   │   │           │   ├── csharp
+│   │   │           │   │   └── csharp.js
+│   │   │           │   ├── csp
+│   │   │           │   │   └── csp.js
+│   │   │           │   ├── css
+│   │   │           │   │   └── css.js
+│   │   │           │   ├── cypher
+│   │   │           │   │   └── cypher.js
+│   │   │           │   ├── dart
+│   │   │           │   │   └── dart.js
+│   │   │           │   ├── dockerfile
+│   │   │           │   │   └── dockerfile.js
+│   │   │           │   ├── ecl
+│   │   │           │   │   └── ecl.js
+│   │   │           │   ├── elixir
+│   │   │           │   │   └── elixir.js
+│   │   │           │   ├── flow9
+│   │   │           │   │   └── flow9.js
+│   │   │           │   ├── freemarker2
+│   │   │           │   │   └── freemarker2.js
+│   │   │           │   ├── fsharp
+│   │   │           │   │   └── fsharp.js
+│   │   │           │   ├── go
+│   │   │           │   │   └── go.js
+│   │   │           │   ├── graphql
+│   │   │           │   │   └── graphql.js
+│   │   │           │   ├── handlebars
+│   │   │           │   │   └── handlebars.js
+│   │   │           │   ├── hcl
+│   │   │           │   │   └── hcl.js
+│   │   │           │   ├── html
+│   │   │           │   │   └── html.js
+│   │   │           │   ├── ini
+│   │   │           │   │   └── ini.js
+│   │   │           │   ├── java
+│   │   │           │   │   └── java.js
+│   │   │           │   ├── javascript
+│   │   │           │   │   └── javascript.js
+│   │   │           │   ├── julia
+│   │   │           │   │   └── julia.js
+│   │   │           │   ├── kotlin
+│   │   │           │   │   └── kotlin.js
+│   │   │           │   ├── less
+│   │   │           │   │   └── less.js
+│   │   │           │   ├── lexon
+│   │   │           │   │   └── lexon.js
+│   │   │           │   ├── liquid
+│   │   │           │   │   └── liquid.js
+│   │   │           │   ├── lua
+│   │   │           │   │   └── lua.js
+│   │   │           │   ├── m3
+│   │   │           │   │   └── m3.js
+│   │   │           │   ├── markdown
+│   │   │           │   │   └── markdown.js
+│   │   │           │   ├── mdx
+│   │   │           │   │   └── mdx.js
+│   │   │           │   ├── mips
+│   │   │           │   │   └── mips.js
+│   │   │           │   ├── msdax
+│   │   │           │   │   └── msdax.js
+│   │   │           │   ├── mysql
+│   │   │           │   │   └── mysql.js
+│   │   │           │   ├── objective-c
+│   │   │           │   │   └── objective-c.js
+│   │   │           │   ├── pascal
+│   │   │           │   │   └── pascal.js
+│   │   │           │   ├── pascaligo
+│   │   │           │   │   └── pascaligo.js
+│   │   │           │   ├── perl
+│   │   │           │   │   └── perl.js
+│   │   │           │   ├── pgsql
+│   │   │           │   │   └── pgsql.js
+│   │   │           │   ├── php
+│   │   │           │   │   └── php.js
+│   │   │           │   ├── pla
+│   │   │           │   │   └── pla.js
+│   │   │           │   ├── postiats
+│   │   │           │   │   └── postiats.js
+│   │   │           │   ├── powerquery
+│   │   │           │   │   └── powerquery.js
+│   │   │           │   ├── powershell
+│   │   │           │   │   └── powershell.js
+│   │   │           │   ├── protobuf
+│   │   │           │   │   └── protobuf.js
+│   │   │           │   ├── pug
+│   │   │           │   │   └── pug.js
+│   │   │           │   ├── python
+│   │   │           │   │   └── python.js
+│   │   │           │   ├── qsharp
+│   │   │           │   │   └── qsharp.js
+│   │   │           │   ├── r
+│   │   │           │   │   └── r.js
+│   │   │           │   ├── razor
+│   │   │           │   │   └── razor.js
+│   │   │           │   ├── redis
+│   │   │           │   │   └── redis.js
+│   │   │           │   ├── redshift
+│   │   │           │   │   └── redshift.js
+│   │   │           │   ├── restructuredtext
+│   │   │           │   │   └── restructuredtext.js
+│   │   │           │   ├── ruby
+│   │   │           │   │   └── ruby.js
+│   │   │           │   ├── rust
+│   │   │           │   │   └── rust.js
+│   │   │           │   ├── sb
+│   │   │           │   │   └── sb.js
+│   │   │           │   ├── scala
+│   │   │           │   │   └── scala.js
+│   │   │           │   ├── scheme
+│   │   │           │   │   └── scheme.js
+│   │   │           │   ├── scss
+│   │   │           │   │   └── scss.js
+│   │   │           │   ├── shell
+│   │   │           │   │   └── shell.js
+│   │   │           │   ├── solidity
+│   │   │           │   │   └── solidity.js
+│   │   │           │   ├── sophia
+│   │   │           │   │   └── sophia.js
+│   │   │           │   ├── sparql
+│   │   │           │   │   └── sparql.js
+│   │   │           │   ├── sql
+│   │   │           │   │   └── sql.js
+│   │   │           │   ├── st
+│   │   │           │   │   └── st.js
+│   │   │           │   ├── swift
+│   │   │           │   │   └── swift.js
+│   │   │           │   ├── systemverilog
+│   │   │           │   │   └── systemverilog.js
+│   │   │           │   ├── tcl
+│   │   │           │   │   └── tcl.js
+│   │   │           │   ├── twig
+│   │   │           │   │   └── twig.js
+│   │   │           │   ├── typescript
+│   │   │           │   │   └── typescript.js
+│   │   │           │   ├── vb
+│   │   │           │   │   └── vb.js
+│   │   │           │   ├── wgsl
+│   │   │           │   │   └── wgsl.js
+│   │   │           │   ├── xml
+│   │   │           │   │   └── xml.js
+│   │   │           │   └── yaml
+│   │   │           │       └── yaml.js
+│   │   │           ├── editor
+│   │   │           │   ├── editor.main.css
+│   │   │           │   ├── editor.main.js
+│   │   │           │   ├── editor.main.nls.de.js
+│   │   │           │   ├── editor.main.nls.es.js
+│   │   │           │   ├── editor.main.nls.fr.js
+│   │   │           │   ├── editor.main.nls.it.js
+│   │   │           │   ├── editor.main.nls.ja.js
+│   │   │           │   ├── editor.main.nls.js
+│   │   │           │   ├── editor.main.nls.ko.js
+│   │   │           │   ├── editor.main.nls.ru.js
+│   │   │           │   ├── editor.main.nls.zh-cn.js
+│   │   │           │   └── editor.main.nls.zh-tw.js
+│   │   │           ├── language
+│   │   │           │   ├── css
+│   │   │           │   │   ├── cssMode.js
+│   │   │           │   │   └── cssWorker.js
+│   │   │           │   ├── html
+│   │   │           │   │   ├── htmlMode.js
+│   │   │           │   │   └── htmlWorker.js
+│   │   │           │   ├── json
+│   │   │           │   │   ├── jsonMode.js
+│   │   │           │   │   └── jsonWorker.js
+│   │   │           │   └── typescript
+│   │   │           │       ├── tsMode.js
+│   │   │           │       └── tsWorker.js
+│   │   │           └── loader.js
+│   │   ├── customTokenThemeRules.js
+│   │   ├── index.html
+│   │   ├── monaco_languages.json
+│   │   └── monacoSpecialLanguages.js
+│   ├── PowerLauncher
+│   │   ├── app_error.dark.png
+│   │   ├── app_error.light.png
+│   │   └── RunAsset.ico
+│   ├── ShortcutGuide
+│   │   ├── 0.svg
+│   │   ├── 1.svg
+│   │   ├── 2.svg
+│   │   ├── 3.svg
+│   │   ├── 4.svg
+│   │   ├── 5.svg
+│   │   ├── 6.svg
+│   │   ├── 7.svg
+│   │   ├── 8.svg
+│   │   ├── 9.svg
+│   │   ├── no_active_window.svg
+│   │   ├── overlay.svg
+│   │   └── overlay_portrait.svg
+│   └── Workspaces
+│       ├── DefaultIcon.ico
+│       └── Workspaces.ico
+├── cs-CZ
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── de-DE
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── DSCModules
+│   ├── Microsoft.PowerToys.Configure.psd1
+│   └── Microsoft.PowerToys.Configure.psm1
+├── es-ES
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── fa-IR
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── fr-FR
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── he-IL
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── hu-HU
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── it-IT
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── ja-JP
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── KeyboardManagerEditor
+│   ├── Microsoft.Toolkit.Win32.UI.XamlHost.dll
+│   ├── Microsoft.UI.Xaml.dll
+│   ├── msvcp140.dll
+│   ├── msvcp140_app.dll
+│   ├── PowerToys.KeyboardManagerEditor.exe
+│   ├── resources.pri
+│   ├── vcruntime140.dll
+│   ├── vcruntime140_1.dll
+│   ├── vcruntime140_1_app.dll
+│   └── vcruntime140_app.dll
+├── KeyboardManagerEngine
+│   └── PowerToys.KeyboardManagerEngine.exe
+├── ko-KR
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── modules
+│   ├── Awake
+│   ├── ColorPicker
+│   ├── FancyZones
+│   ├── FileExplorerPreview
+│   ├── FileLocksmith
+│   ├── Hosts
+│   ├── ImageResizer
+│   ├── launcher
+│   ├── MeasureTool
+│   ├── MouseUtils
+│   │   └── MouseJumpUI
+│   ├── PowerAccent
+│   └── PowerOCR
+├── nl-NL
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── pl-PL
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── pt-BR
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── pt-PT
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── ru-RU
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── RunPlugins
+│   ├── Calculator
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── Images
+│   │   │   ├── calculator.dark.png
+│   │   │   └── calculator.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Calculator.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Calculator.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Calculator.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Folder
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── Images
+│   │   │   ├── copy.dark.png
+│   │   │   ├── copy.light.png
+│   │   │   ├── delete.dark.png
+│   │   │   ├── delete.light.png
+│   │   │   ├── file.dark.png
+│   │   │   ├── file.light.png
+│   │   │   ├── folder.dark.png
+│   │   │   ├── folder.light.png
+│   │   │   ├── user.dark.png
+│   │   │   ├── user.light.png
+│   │   │   ├── Warning.dark.png
+│   │   │   └── Warning.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.Plugin.Folder.resources.dll
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.Plugin.Folder.deps.json
+│   │   ├── Microsoft.Plugin.Folder.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── History
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── Images
+│   │   │   ├── history.dark.png
+│   │   │   └── history.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.History.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.History.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.History.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Indexer
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── Images
+│   │   │   ├── indexer.dark.png
+│   │   │   ├── indexer.light.png
+│   │   │   ├── Warning.dark.png
+│   │   │   └── Warning.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.Plugin.Indexer.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.Plugin.Indexer.deps.json
+│   │   ├── Microsoft.Plugin.Indexer.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── OneNote
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── Images
+│   │   │   ├── oneNote.dark.png
+│   │   │   └── oneNote.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.OneNote.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.OneNote.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.OneNote.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── PowerToys
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── Images
+│   │   │   ├── ColorPicker.png
+│   │   │   ├── CropAndLock.png
+│   │   │   ├── EnvironmentVariables.png
+│   │   │   ├── FancyZones.png
+│   │   │   ├── Hosts.png
+│   │   │   ├── PowerOcr.png
+│   │   │   ├── PowerToys.dark.png
+│   │   │   ├── PowerToys.light.png
+│   │   │   ├── RegistryPreview.png
+│   │   │   ├── ScreenRuler.png
+│   │   │   ├── ShortcutGuide.png
+│   │   │   └── Workspaces.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.PowerToys.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.PowerToys.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.PowerToys.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Program
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── Images
+│   │   │   ├── app.dark.png
+│   │   │   ├── app.light.png
+│   │   │   ├── disable.dark.png
+│   │   │   ├── disable.light.png
+│   │   │   ├── folder.dark.png
+│   │   │   ├── folder.light.png
+│   │   │   ├── shell.dark.png
+│   │   │   ├── shell.light.png
+│   │   │   ├── user.dark.png
+│   │   │   └── user.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.Plugin.Program.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.Plugin.Program.deps.json
+│   │   ├── Microsoft.Plugin.Program.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Registry
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── Images
+│   │   │   ├── reg.dark.png
+│   │   │   └── reg.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Registry.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Registry.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Registry.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Service
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── Images
+│   │   │   ├── service.dark.png
+│   │   │   └── service.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.Service.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Service.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.Service.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Shell
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── Images
+│   │   │   ├── shell.dark.png
+│   │   │   ├── shell.light.png
+│   │   │   ├── user.dark.png
+│   │   │   └── user.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.Plugin.Shell.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.Plugin.Shell.deps.json
+│   │   ├── Microsoft.Plugin.Shell.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── System
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── Images
+│   │   │   ├── firmwareSettings.dark.png
+│   │   │   ├── firmwareSettings.light.png
+│   │   │   ├── lock.dark.png
+│   │   │   ├── lock.light.png
+│   │   │   ├── logoff.dark.png
+│   │   │   ├── logoff.light.png
+│   │   │   ├── networkAdapter.dark.png
+│   │   │   ├── networkAdapter.light.png
+│   │   │   ├── recyclebin.dark.png
+│   │   │   ├── recyclebin.light.png
+│   │   │   ├── restart.dark.png
+│   │   │   ├── restart.light.png
+│   │   │   ├── shutdown.dark.png
+│   │   │   ├── shutdown.light.png
+│   │   │   ├── sleep.dark.png
+│   │   │   └── sleep.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.System.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.System.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.System.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── TimeDate
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── Images
+│   │   │   ├── calendar.dark.png
+│   │   │   ├── calendar.light.png
+│   │   │   ├── time.dark.png
+│   │   │   ├── time.light.png
+│   │   │   ├── timeDate.dark.png
+│   │   │   ├── timeDate.light.png
+│   │   │   ├── Warning.dark.png
+│   │   │   └── Warning.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.TimeDate.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.TimeDate.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.TimeDate.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── UnitConverter
+│   │   ├── ar-SA
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── Images
+│   │   │   ├── unitconverter.dark.png
+│   │   │   └── unitconverter.light.png
+│   │   ├── it-IT
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Community.PowerToys.Run.Plugin.UnitConverter.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Community.PowerToys.Run.Plugin.UnitConverter.deps.json
+│   │   ├── Community.PowerToys.Run.Plugin.UnitConverter.dll
+│   │   ├── Dia2Lib.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── Uri
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── Images
+│   │   │   ├── uri.dark.png
+│   │   │   └── uri.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.Plugin.Uri.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.Plugin.Uri.deps.json
+│   │   ├── Microsoft.Plugin.Uri.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── ValueGenerator
+│   │   ├── ar-SA
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── Images
+│   │   │   ├── ValueGenerator.dark.png
+│   │   │   ├── ValueGenerator.light.png
+│   │   │   ├── Warning.dark.png
+│   │   │   └── Warning.light.png
+│   │   ├── it-IT
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Community.PowerToys.Run.Plugin.ValueGenerator.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Community.PowerToys.Run.Plugin.ValueGenerator.deps.json
+│   │   ├── Community.PowerToys.Run.Plugin.ValueGenerator.dll
+│   │   ├── Dia2Lib.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── VSCodeWorkspaces
+│   │   ├── ar-SA
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── Images
+│   │   │   ├── code.dark.png
+│   │   │   ├── code.light.png
+│   │   │   ├── folder.png
+│   │   │   └── monitor.png
+│   │   ├── it-IT
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.deps.json
+│   │   ├── Community.PowerToys.Run.Plugin.VSCodeWorkspaces.dll
+│   │   ├── Dia2Lib.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── WebSearch
+│   │   ├── ar-SA
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── Images
+│   │   │   ├── WebSearch.dark.png
+│   │   │   └── WebSearch.light.png
+│   │   ├── it-IT
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Community.PowerToys.Run.Plugin.WebSearch.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Community.PowerToys.Run.Plugin.WebSearch.deps.json
+│   │   ├── Community.PowerToys.Run.Plugin.WebSearch.dll
+│   │   ├── Dia2Lib.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── WindowsSettings
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── Images
+│   │   │   ├── WindowsSettings.dark.png
+│   │   │   └── WindowsSettings.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsSettings.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.WindowsSettings.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.WindowsSettings.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   ├── WindowsTerminal
+│   │   ├── ar-SA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── cs-CZ
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── de-DE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── es-ES
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── fa-IR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── fr-FR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── he-IL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── hu-HU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── Images
+│   │   │   ├── WindowsTerminal.dark.png
+│   │   │   └── WindowsTerminal.light.png
+│   │   ├── it-IT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── ja-JP
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── ko-KR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── nl-NL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── pl-PL
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── pt-BR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── pt-PT
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── ru-RU
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── sv-SE
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── tr-TR
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── uk-UA
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── zh-CN
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── zh-TW
+│   │   │   └── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.resources.dll
+│   │   ├── backup_restore_settings.json
+│   │   ├── Dia2Lib.dll
+│   │   ├── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.deps.json
+│   │   ├── Microsoft.PowerToys.Run.Plugin.WindowsTerminal.dll
+│   │   ├── plugin.json
+│   │   ├── PowerToys.Interop.dll
+│   │   ├── PowerToys.ManagedTelemetry.dll
+│   │   ├── PowerToys.MouseJump.Common.dll
+│   │   ├── PowerToys.ZoomItSettingsInterop.dll
+│   │   └── TraceReloggerLib.dll
+│   └── WindowWalker
+│       ├── ar-SA
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── cs-CZ
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── de-DE
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── es-ES
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── fa-IR
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── fr-FR
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── he-IL
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── hu-HU
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── Images
+│       │   ├── info.dark.png
+│       │   ├── info.light.png
+│       │   ├── windowwalker.dark.png
+│       │   └── windowwalker.light.png
+│       ├── it-IT
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── ja-JP
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── ko-KR
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── nl-NL
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── pl-PL
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── pt-BR
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── pt-PT
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── ru-RU
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── sv-SE
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── tr-TR
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── uk-UA
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── zh-CN
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── zh-TW
+│       │   └── Microsoft.Plugin.WindowWalker.resources.dll
+│       ├── backup_restore_settings.json
+│       ├── Dia2Lib.dll
+│       ├── Microsoft.Plugin.WindowWalker.deps.json
+│       ├── Microsoft.Plugin.WindowWalker.dll
+│       ├── plugin.json
+│       ├── PowerToys.Interop.dll
+│       ├── PowerToys.ManagedTelemetry.dll
+│       ├── PowerToys.MouseJump.Common.dll
+│       ├── PowerToys.ZoomItSettingsInterop.dll
+│       └── TraceReloggerLib.dll
+├── Settings
+├── sv-SE
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── Tools
+│   ├── PowerToys.BugReportTool.exe
+│   └── PowerToys.StylesReportTool.exe
+├── tr-TR
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── uk-UA
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── WinUI3Apps
+│   ├── af-ZA
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ar-SA
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── Assets
+│   │   ├── AdvancedPaste
+│   │   │   ├── AdvancedPaste.ico
+│   │   │   ├── AdvancedPaste.png
+│   │   │   ├── AIIcon.png
+│   │   │   ├── Gradient.png
+│   │   │   ├── LockScreenLogo.scale-200.png
+│   │   │   ├── SemanticKernel.svg
+│   │   │   ├── SplashScreen.scale-200.png
+│   │   │   ├── Square44x44Logo.scale-200.png
+│   │   │   ├── Square44x44Logo.targetsize-24_altform-unplated.png
+│   │   │   ├── Square150x150Logo.scale-200.png
+│   │   │   ├── StoreLogo.png
+│   │   │   └── Wide310x150Logo.scale-200.png
+│   │   ├── EnvironmentVariables
+│   │   │   ├── EnvironmentVariables.ico
+│   │   │   ├── LockScreenLogo.scale-200.png
+│   │   │   ├── SplashScreen.scale-200.png
+│   │   │   ├── Square44x44Logo.scale-200.png
+│   │   │   ├── Square44x44Logo.targetsize-24_altform-unplated.png
+│   │   │   ├── Square150x150Logo.scale-200.png
+│   │   │   ├── StoreLogo.png
+│   │   │   └── Wide310x150Logo.scale-200.png
+│   │   ├── FileLocksmith
+│   │   │   ├── AppList.scale-100.png
+│   │   │   ├── AppList.scale-125.png
+│   │   │   ├── AppList.scale-150.png
+│   │   │   ├── AppList.scale-200.png
+│   │   │   ├── AppList.scale-400.png
+│   │   │   ├── FileLocksmith.ico
+│   │   │   ├── Icon.ico
+│   │   │   ├── LargeTile.png
+│   │   │   ├── SmallTile.png
+│   │   │   ├── SplashScreen.png
+│   │   │   ├── Square44x44Logo.png
+│   │   │   ├── Square150x150Logo.png
+│   │   │   ├── storelogo.png
+│   │   │   └── Wide310x150Logo.png
+│   │   ├── Hosts
+│   │   │   ├── AppList.scale-100.png
+│   │   │   ├── AppList.scale-125.png
+│   │   │   ├── AppList.scale-150.png
+│   │   │   ├── AppList.scale-200.png
+│   │   │   ├── AppList.scale-400.png
+│   │   │   └── Hosts.ico
+│   │   ├── NewPlus
+│   │   │   ├── Templates
+│   │   │   │   ├── 'Example folder'
+│   │   │   │   │   ├── 'Another example txt file.txt'
+│   │   │   │   │   └── 'Example txt file.txt'
+│   │   │   │   └── 'Any files or folders placed in the template folder are available via New+.txt'
+│   │   │   ├── LargeTile.png
+│   │   │   ├── New_dark.ico
+│   │   │   ├── New_light.ico
+│   │   │   ├── Open_templates_dark.ico
+│   │   │   ├── Open_templates_light.ico
+│   │   │   ├── SmallTile.png
+│   │   │   ├── SplashScreen.png
+│   │   │   ├── Square44x44Logo.png
+│   │   │   ├── Square150x150Logo.png
+│   │   │   ├── StoreLogo.png
+│   │   │   └── Wide310x150Logo.png
+│   │   ├── Peek
+│   │   │   ├── AppList.scale-100.png
+│   │   │   ├── AppList.scale-125.png
+│   │   │   ├── AppList.scale-150.png
+│   │   │   ├── AppList.scale-200.png
+│   │   │   ├── AppList.scale-400.png
+│   │   │   ├── DefaultFileIcon.svg
+│   │   │   └── Icon.ico
+│   │   ├── PowerRename
+│   │   │   ├── file.png
+│   │   │   ├── folder.png
+│   │   │   ├── LargeTile.png
+│   │   │   ├── PowerRenameUI.ico
+│   │   │   ├── SmallTile.png
+│   │   │   ├── SplashScreen.png
+│   │   │   ├── Square44x44Logo.png
+│   │   │   ├── Square150x150Logo.png
+│   │   │   ├── storelogo.png
+│   │   │   └── Wide310x150Logo.png
+│   │   ├── RegistryPreview
+│   │   │   ├── data32.png
+│   │   │   ├── deleted-folder32.png
+│   │   │   ├── deleted-value32.png
+│   │   │   ├── error32.png
+│   │   │   ├── folder32.png
+│   │   │   ├── index.html
+│   │   │   ├── RegistryPreview.ico
+│   │   │   └── string32.png
+│   │   └── Settings
+│   │       ├── Icons
+│   │       │   ├── Advanced.png
+│   │       │   ├── AdvancedPaste.png
+│   │       │   ├── AlwaysOnTop.png
+│   │       │   ├── Awake.png
+│   │       │   ├── CmdPal.png
+│   │       │   ├── ColorPicker.png
+│   │       │   ├── CommandNotFound.png
+│   │       │   ├── CropAndLock.png
+│   │       │   ├── EnvironmentVariables.png
+│   │       │   ├── FancyZones.png
+│   │       │   ├── FileExplorerPreview.png
+│   │       │   ├── FileLocksmith.png
+│   │       │   ├── FileManagement.png
+│   │       │   ├── FindMyMouse.png
+│   │       │   ├── Hosts.png
+│   │       │   ├── ImageResizer.png
+│   │       │   ├── InputOutput.png
+│   │       │   ├── KeyboardManager.png
+│   │       │   ├── MouseCrosshairs.png
+│   │       │   ├── MouseHighlighter.png
+│   │       │   ├── MouseJump.png
+│   │       │   ├── MouseUtils.png
+│   │       │   ├── MouseWithoutBorders.png
+│   │       │   ├── NewPlus.png
+│   │       │   ├── Peek.png
+│   │       │   ├── PowerRename.png
+│   │       │   ├── PowerToys.png
+│   │       │   ├── PowerToysRun.png
+│   │       │   ├── QuickAccent.png
+│   │       │   ├── RegistryPreview.png
+│   │       │   ├── ScreenRuler.png
+│   │       │   ├── SemanticKernel.png
+│   │       │   ├── ShortcutGuide.png
+│   │       │   ├── SystemTools.png
+│   │       │   ├── TextExtractor.png
+│   │       │   ├── WindowingAndLayouts.png
+│   │       │   ├── Workspaces.png
+│   │       │   └── ZoomIt.png
+│   │       ├── Modules
+│   │       │   ├── OOBE
+│   │       │   │   ├── AdvancedPaste.gif
+│   │       │   │   ├── AlwaysOnTop.png
+│   │       │   │   ├── Awake.png
+│   │       │   │   ├── CmdNotFound.png
+│   │       │   │   ├── CmdPal.png
+│   │       │   │   ├── ColorPicker.gif
+│   │       │   │   ├── CropAndLock.gif
+│   │       │   │   ├── EnvironmentVariables.png
+│   │       │   │   ├── FancyZones.gif
+│   │       │   │   ├── FileExplorer.png
+│   │       │   │   ├── FileLocksmith.gif
+│   │       │   │   ├── HostsFileEditor.png
+│   │       │   │   ├── ImageResizer.gif
+│   │       │   │   ├── KBM.gif
+│   │       │   │   ├── MouseUtils.gif
+│   │       │   │   ├── MouseWithoutBorders.png
+│   │       │   │   ├── NewPlus.png
+│   │       │   │   ├── Peek.png
+│   │       │   │   ├── PowerRename.gif
+│   │       │   │   ├── PTHero.png
+│   │       │   │   ├── PTHeroShort.png
+│   │       │   │   ├── QuickAccent.gif
+│   │       │   │   ├── RegistryPreview.png
+│   │       │   │   ├── Run.gif
+│   │       │   │   ├── ScreenRuler.gif
+│   │       │   │   ├── ShortcutGuide.png
+│   │       │   │   ├── TextExtractor.gif
+│   │       │   │   ├── Workspaces.png
+│   │       │   │   └── ZoomIt.gif
+│   │       │   ├── AdvancedPaste.png
+│   │       │   ├── AlwaysOnTop.png
+│   │       │   ├── APDialog.dark.png
+│   │       │   ├── APDialog.light.png
+│   │       │   ├── Awake.png
+│   │       │   ├── CmdNotFound.png
+│   │       │   ├── CmdPal.png
+│   │       │   ├── ColorPicker.png
+│   │       │   ├── CropAndLock.png
+│   │       │   ├── EnvironmentVariables.png
+│   │       │   ├── FancyZones.png
+│   │       │   ├── FileExplorerPreview.png
+│   │       │   ├── FileLocksmith.png
+│   │       │   ├── HostsFileEditor.png
+│   │       │   ├── ImageResizer.png
+│   │       │   ├── KBM.png
+│   │       │   ├── MouseUtils.png
+│   │       │   ├── MouseWithoutBorders.png
+│   │       │   ├── NewPlus.png
+│   │       │   ├── Peek.png
+│   │       │   ├── PowerLauncher.png
+│   │       │   ├── PowerRename.png
+│   │       │   ├── PT.png
+│   │       │   ├── QuickAccent.png
+│   │       │   ├── RegistryPreview.png
+│   │       │   ├── Run.png
+│   │       │   ├── ScreenRuler.png
+│   │       │   ├── ShortcutGuide.png
+│   │       │   ├── TextExtractor.png
+│   │       │   ├── Wallpaper.png
+│   │       │   ├── Workspaces.png
+│   │       │   └── ZoomIt.png
+│   │       ├── Scripts
+│   │       │   ├── CheckCmdNotFoundRequirements.ps1
+│   │       │   ├── DisableModule.ps1
+│   │       │   ├── EnableModule.ps1
+│   │       │   ├── InstallPowerShell7.ps1
+│   │       │   ├── InstallWinGetClientModule.ps1
+│   │       │   └── UpgradeModule.ps1
+│   │       ├── icon.ico
+│   │       ├── LockScreenLogo.scale-200.png
+│   │       ├── logo.png
+│   │       ├── Logo.scale-200.png
+│   │       ├── logo44.png
+│   │       ├── logo150.png
+│   │       ├── SplashScreen.png
+│   │       ├── SplashScreen.scale-200.png
+│   │       ├── Square44x44Logo.scale-200.png
+│   │       ├── Square44x44Logo.targetsize-24_altform-unplated.png
+│   │       ├── Square150x150Logo.scale-200.png
+│   │       ├── StoreLogo.png
+│   │       ├── StoreLogo.scale-100.png
+│   │       └── Wide310x150Logo.scale-200.png
+│   ├── az-Latn-AZ
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── bg-BG
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── bs-Latn-BA
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ca-ES
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── CmdPal
+│   │   ├── Dependencies
+│   │   │   └── x64
+│   │   │       └── Microsoft.VCLibs.x64.14.00.Desktop.appx
+│   │   └── Microsoft.CmdPal.UI_0.2.1.0_x64.msix
+│   ├── cs-CZ
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── cy-GB
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── da-DK
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── de-DE
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── el-GR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── en-GB
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── en-us
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── es-ES
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── es-MX
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── et-EE
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── eu-ES
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── fa-IR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── fi-FI
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── fr-CA
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── fr-FR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── gl-ES
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── he-IL
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── hi-IN
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── hr-HR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── hu-HU
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── id-ID
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── is-IS
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── it-IT
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ja-JP
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ka-GE
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── kk-KZ
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ko-KR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── lt-LT
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── lv-LV
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── Microsoft.UI.Xaml
+│   │   └── Assets
+│   │       ├── map.html
+│   │       └── NoiseAsset_256x256_PNG.png
+│   ├── ms-MY
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── nb-NO
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── nl-NL
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── nn-NO
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── pl-PL
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── pt-BR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── pt-PT
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ro-RO
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── ru-RU
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sk-SK
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sl-SI
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sq-AL
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sr-Cyrl-RS
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sr-Latn-RS
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── sv-SE
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── th-TH
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── tr-TR
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── uk-UA
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── vi-VN
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── zh-CN
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── zh-TW
+│   │   ├── Microsoft.ui.xaml.dll.mui
+│   │   └── Microsoft.UI.Xaml.Phone.dll.mui
+│   ├── Accessibility.dll
+│   ├── Azure.AI.OpenAI.dll
+│   ├── Azure.Core.dll
+│   ├── backup_restore_settings.json
+│   ├── clretwrc.dll
+│   ├── clrgc.dll
+│   ├── clrgcexp.dll
+│   ├── clrjit.dll
+│   ├── ColorCode.Core.dll
+│   ├── ColorCode.WinUI.dll
+│   ├── CommunityToolkit.Common.dll
+│   ├── CommunityToolkit.Mvvm.dll
+│   ├── CommunityToolkit.WinUI.Animations.dll
+│   ├── CommunityToolkit.WinUI.Collections.dll
+│   ├── CommunityToolkit.WinUI.Controls.Primitives.dll
+│   ├── CommunityToolkit.WinUI.Controls.Segmented.dll
+│   ├── CommunityToolkit.WinUI.Controls.SettingsControls.dll
+│   ├── CommunityToolkit.WinUI.Controls.Sizers.dll
+│   ├── CommunityToolkit.WinUI.Converters.dll
+│   ├── CommunityToolkit.WinUI.dll
+│   ├── CommunityToolkit.WinUI.Extensions.dll
+│   ├── CommunityToolkit.WinUI.Helpers.dll
+│   ├── CommunityToolkit.WinUI.Triggers.dll
+│   ├── CommunityToolkit.WinUI.UI.Controls.Core.dll
+│   ├── CommunityToolkit.WinUI.UI.Controls.DataGrid.dll
+│   ├── CommunityToolkit.WinUI.UI.Controls.Markdown.dll
+│   ├── CommunityToolkit.WinUI.UI.Controls.Primitives.dll
+│   ├── CommunityToolkit.WinUI.UI.dll
+│   ├── concrt140.dll
+│   ├── ControlzEx.dll
+│   ├── coreclr.dll
+│   ├── CoreMessagingXP.dll
+│   ├── D3DCompiler_47_cor3.dll
+│   ├── dcompi.dll
+│   ├── Dia2Lib.dll
+│   ├── DirectWriteForwarder.dll
+│   ├── dwmcorei.dll
+│   ├── DwmSceneI.dll
+│   ├── DWriteCore.dll
+│   ├── FileLocksmithContextMenuPackage.msix
+│   ├── hostfxr.dll
+│   ├── hostpolicy.dll
+│   ├── HtmlAgilityPack.dll
+│   ├── Markdig.Signed.dll
+│   ├── marshal.dll
+│   ├── MessagePack.Annotations.dll
+│   ├── MessagePack.dll
+│   ├── mfc140.dll
+│   ├── mfc140chs.dll
+│   ├── mfc140cht.dll
+│   ├── mfc140deu.dll
+│   ├── mfc140enu.dll
+│   ├── mfc140esn.dll
+│   ├── mfc140fra.dll
+│   ├── mfc140ita.dll
+│   ├── mfc140jpn.dll
+│   ├── mfc140kor.dll
+│   ├── mfc140rus.dll
+│   ├── mfc140u.dll
+│   ├── mfcm140.dll
+│   ├── mfcm140u.dll
+│   ├── Microsoft.Bcl.AsyncInterfaces.dll
+│   ├── Microsoft.Bcl.HashCode.dll
+│   ├── Microsoft.CSharp.dll
+│   ├── Microsoft.Diagnostics.FastSerialization.dll
+│   ├── Microsoft.Diagnostics.NETCore.Client.dll
+│   ├── Microsoft.Diagnostics.Tracing.TraceEvent.dll
+│   ├── Microsoft.DiaSymReader.Native.amd64.dll
+│   ├── Microsoft.DirectManipulation.dll
+│   ├── Microsoft.Extensions.Configuration.Abstractions.dll
+│   ├── Microsoft.Extensions.Configuration.Binder.dll
+│   ├── Microsoft.Extensions.Configuration.CommandLine.dll
+│   ├── Microsoft.Extensions.Configuration.dll
+│   ├── Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+│   ├── Microsoft.Extensions.Configuration.FileExtensions.dll
+│   ├── Microsoft.Extensions.Configuration.Json.dll
+│   ├── Microsoft.Extensions.Configuration.UserSecrets.dll
+│   ├── Microsoft.Extensions.DependencyInjection.Abstractions.dll
+│   ├── Microsoft.Extensions.DependencyInjection.dll
+│   ├── Microsoft.Extensions.Diagnostics.Abstractions.dll
+│   ├── Microsoft.Extensions.Diagnostics.dll
+│   ├── Microsoft.Extensions.FileProviders.Abstractions.dll
+│   ├── Microsoft.Extensions.FileProviders.Physical.dll
+│   ├── Microsoft.Extensions.FileSystemGlobbing.dll
+│   ├── Microsoft.Extensions.Hosting.Abstractions.dll
+│   ├── Microsoft.Extensions.Hosting.dll
+│   ├── Microsoft.Extensions.Logging.Abstractions.dll
+│   ├── Microsoft.Extensions.Logging.Configuration.dll
+│   ├── Microsoft.Extensions.Logging.Console.dll
+│   ├── Microsoft.Extensions.Logging.Debug.dll
+│   ├── Microsoft.Extensions.Logging.dll
+│   ├── Microsoft.Extensions.Logging.EventLog.dll
+│   ├── Microsoft.Extensions.Logging.EventSource.dll
+│   ├── Microsoft.Extensions.ObjectPool.dll
+│   ├── Microsoft.Extensions.Options.ConfigurationExtensions.dll
+│   ├── Microsoft.Extensions.Options.dll
+│   ├── Microsoft.Extensions.Primitives.dll
+│   ├── Microsoft.Graphics.Display.dll
+│   ├── Microsoft.InputStateManager.dll
+│   ├── Microsoft.InteractiveExperiences.Projection.dll
+│   ├── Microsoft.Internal.FrameworkUdk.dll
+│   ├── Microsoft.NET.StringTools.dll
+│   ├── Microsoft.Security.Authentication.OAuth.Projection.dll
+│   ├── Microsoft.SemanticKernel.Abstractions.dll
+│   ├── Microsoft.SemanticKernel.Connectors.OpenAI.dll
+│   ├── Microsoft.SemanticKernel.Core.dll
+│   ├── Microsoft.SemanticKernel.dll
+│   ├── Microsoft.UI.Composition.OSSupport.dll
+│   ├── Microsoft.UI.dll
+│   ├── Microsoft.UI.Input.dll
+│   ├── Microsoft.UI.pri
+│   ├── Microsoft.UI.Windowing.Core.dll
+│   ├── Microsoft.UI.Windowing.dll
+│   ├── Microsoft.UI.Xaml.Controls.dll
+│   ├── Microsoft.UI.Xaml.Controls.pri
+│   ├── Microsoft.ui.xaml.dll
+│   ├── Microsoft.UI.Xaml.Internal.dll
+│   ├── Microsoft.UI.Xaml.Phone.dll
+│   ├── Microsoft.ui.xaml.resources.19h1.dll
+│   ├── Microsoft.ui.xaml.resources.common.dll
+│   ├── Microsoft.VisualBasic.Core.dll
+│   ├── Microsoft.VisualBasic.dll
+│   ├── Microsoft.VisualBasic.Forms.dll
+│   ├── Microsoft.VisualStudio.Threading.dll
+│   ├── Microsoft.VisualStudio.Validation.dll
+│   ├── Microsoft.Web.WebView2.Core.dll
+│   ├── Microsoft.Web.WebView2.Core.Projection.dll
+│   ├── Microsoft.Win32.Primitives.dll
+│   ├── Microsoft.Win32.Registry.AccessControl.dll
+│   ├── Microsoft.Win32.Registry.dll
+│   ├── Microsoft.Win32.SystemEvents.dll
+│   ├── Microsoft.Windows.ApplicationModel.Background.Projection.dll
+│   ├── Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll
+│   ├── Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll
+│   ├── Microsoft.Windows.ApplicationModel.Resources.dll
+│   ├── Microsoft.Windows.ApplicationModel.Resources.Projection.dll
+│   ├── Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll
+│   ├── Microsoft.Windows.AppLifecycle.Projection.dll
+│   ├── Microsoft.Windows.AppNotifications.Builder.Projection.dll
+│   ├── Microsoft.Windows.AppNotifications.Projection.dll
+│   ├── Microsoft.Windows.BadgeNotifications.Projection.dll
+│   ├── Microsoft.Windows.Management.Deployment.Projection.dll
+│   ├── Microsoft.Windows.Media.Capture.Projection.dll
+│   ├── Microsoft.Windows.PushNotifications.Projection.dll
+│   ├── Microsoft.Windows.SDK.NET.dll
+│   ├── Microsoft.Windows.Security.AccessControl.Projection.dll
+│   ├── Microsoft.Windows.Storage.Projection.dll
+│   ├── Microsoft.Windows.System.Power.Projection.dll
+│   ├── Microsoft.Windows.System.Projection.dll
+│   ├── Microsoft.Windows.Widgets.dll
+│   ├── Microsoft.Windows.Widgets.Projection.dll
+│   ├── Microsoft.WindowsAppRuntime.Bootstrap.dll
+│   ├── Microsoft.WindowsAppRuntime.Bootstrap.Net.dll
+│   ├── Microsoft.WindowsAppRuntime.dll
+│   ├── Microsoft.WindowsAppRuntime.Insights.Resource.dll
+│   ├── Microsoft.WinUI.dll
+│   ├── Microsoft.Xaml.Behaviors.dll
+│   ├── Microsoft.Xaml.Interactions.dll
+│   ├── Microsoft.Xaml.Interactivity.dll
+│   ├── MRM.dll
+│   ├── mscordaccore.dll
+│   ├── mscordaccore_amd64_amd64_9.0.525.21509.dll
+│   ├── mscordbi.dll
+│   ├── mscorlib.dll
+│   ├── mscorrc.dll
+│   ├── msquic.dll
+│   ├── msvcp140.dll
+│   ├── msvcp140_1.dll
+│   ├── msvcp140_2.dll
+│   ├── msvcp140_atomic_wait.dll
+│   ├── msvcp140_codecvt_ids.dll
+│   ├── Nerdbank.Streams.dll
+│   ├── netstandard.dll
+│   ├── NewPlusPackage.msix
+│   ├── Newtonsoft.Json.dll
+│   ├── OpenAI.dll
+│   ├── Peek.Common.dll
+│   ├── Peek.Common.pri
+│   ├── Peek.FilePreviewer.dll
+│   ├── Peek.FilePreviewer.pri
+│   ├── PenImc_cor3.dll
+│   ├── PowerRenameContextMenuPackage.msix
+│   ├── PowerRenameUI.ico
+│   ├── PowerToys.AdvancedPaste.deps.json
+│   ├── PowerToys.AdvancedPaste.dll
+│   ├── PowerToys.AdvancedPaste.exe
+│   ├── PowerToys.AdvancedPaste.pri
+│   ├── PowerToys.AdvancedPaste.runtimeconfig.json
+│   ├── PowerToys.AllExperiments.dll
+│   ├── PowerToys.Common.UI.dll
+│   ├── PowerToys.EnvironmentVariables.deps.json
+│   ├── PowerToys.EnvironmentVariables.dll
+│   ├── PowerToys.EnvironmentVariables.exe
+│   ├── PowerToys.EnvironmentVariables.pri
+│   ├── PowerToys.EnvironmentVariables.runtimeconfig.json
+│   ├── PowerToys.EnvironmentVariablesModuleInterface.dll
+│   ├── PowerToys.EnvironmentVariablesUILib.dll
+│   ├── PowerToys.EnvironmentVariablesUILib.pri
+│   ├── PowerToys.FileLocksmithContextMenu.dll
+│   ├── PowerToys.FileLocksmithExt.dll
+│   ├── PowerToys.FileLocksmithLib.Interop.dll
+│   ├── PowerToys.FileLocksmithUI.deps.json
+│   ├── PowerToys.FileLocksmithUI.dll
+│   ├── PowerToys.FileLocksmithUI.exe
+│   ├── PowerToys.FileLocksmithUI.pri
+│   ├── PowerToys.FileLocksmithUI.runtimeconfig.json
+│   ├── PowerToys.FilePreviewCommon.dll
+│   ├── PowerToys.GPOWrapper.dll
+│   ├── PowerToys.Hosts.deps.json
+│   ├── PowerToys.Hosts.dll
+│   ├── PowerToys.Hosts.exe
+│   ├── PowerToys.Hosts.pri
+│   ├── PowerToys.Hosts.runtimeconfig.json
+│   ├── PowerToys.HostsModuleInterface.dll
+│   ├── PowerToys.HostsUILib.dll
+│   ├── PowerToys.HostsUILib.pri
+│   ├── PowerToys.Interop.dll
+│   ├── PowerToys.ManagedCommon.dll
+│   ├── PowerToys.ManagedTelemetry.dll
+│   ├── PowerToys.MeasureToolCore.dll
+│   ├── PowerToys.MeasureToolModuleInterface.dll
+│   ├── PowerToys.MeasureToolUI.deps.json
+│   ├── PowerToys.MeasureToolUI.dll
+│   ├── PowerToys.MeasureToolUI.exe
+│   ├── PowerToys.MeasureToolUI.pri
+│   ├── PowerToys.MeasureToolUI.runtimeconfig.json
+│   ├── PowerToys.MouseJump.Common.dll
+│   ├── PowerToys.NewPlus.ShellExtension.dll
+│   ├── PowerToys.NewPlus.ShellExtension.win10.dll
+│   ├── PowerToys.Peek.dll
+│   ├── PowerToys.Peek.UI.deps.json
+│   ├── PowerToys.Peek.UI.dll
+│   ├── PowerToys.Peek.UI.exe
+│   ├── PowerToys.Peek.UI.pri
+│   ├── PowerToys.Peek.UI.runtimeconfig.json
+│   ├── PowerToys.PowerRename.exe
+│   ├── PowerToys.PowerRename.pri
+│   ├── PowerToys.PowerRenameContextMenu.dll
+│   ├── PowerToys.PowerRenameExt.dll
+│   ├── PowerToys.RegistryPreview.deps.json
+│   ├── PowerToys.RegistryPreview.dll
+│   ├── PowerToys.RegistryPreview.exe
+│   ├── PowerToys.RegistryPreview.pri
+│   ├── PowerToys.RegistryPreview.runtimeconfig.json
+│   ├── PowerToys.RegistryPreviewExt.dll
+│   ├── PowerToys.RegistryPreviewUILib.dll
+│   ├── PowerToys.RegistryPreviewUILib.pri
+│   ├── PowerToys.Settings.deps.json
+│   ├── PowerToys.Settings.dll
+│   ├── PowerToys.Settings.exe
+│   ├── PowerToys.Settings.pri
+│   ├── PowerToys.Settings.runtimeconfig.json
+│   ├── PowerToys.Settings.UI.Lib.dll
+│   ├── PowerToys.ZoomItSettingsInterop.dll
+│   ├── PresentationCore.dll
+│   ├── PresentationFramework-SystemCore.dll
+│   ├── PresentationFramework-SystemData.dll
+│   ├── PresentationFramework-SystemDrawing.dll
+│   ├── PresentationFramework-SystemXml.dll
+│   ├── PresentationFramework-SystemXmlLinq.dll
+│   ├── PresentationFramework.Aero.dll
+│   ├── PresentationFramework.Aero2.dll
+│   ├── PresentationFramework.AeroLite.dll
+│   ├── PresentationFramework.Classic.dll
+│   ├── PresentationFramework.dll
+│   ├── PresentationFramework.Fluent.dll
+│   ├── PresentationFramework.Luna.dll
+│   ├── PresentationFramework.Royale.dll
+│   ├── PresentationNative_cor3.dll
+│   ├── PresentationUI.dll
+│   ├── PushNotificationsLongRunningTask.ProxyStub.dll
+│   ├── ReachFramework.dll
+│   ├── RestartAgent.exe
+│   ├── ReverseMarkdown.dll
+│   ├── SharpCompress.dll
+│   ├── sni.dll
+│   ├── StreamJsonRpc.dll
+│   ├── System.AppContext.dll
+│   ├── System.Buffers.dll
+│   ├── System.ClientModel.dll
+│   ├── System.CodeDom.dll
+│   ├── System.Collections.Concurrent.dll
+│   ├── System.Collections.dll
+│   ├── System.Collections.Immutable.dll
+│   ├── System.Collections.NonGeneric.dll
+│   ├── System.Collections.Specialized.dll
+│   ├── System.ComponentModel.Annotations.dll
+│   ├── System.ComponentModel.Composition.dll
+│   ├── System.ComponentModel.Composition.Registration.dll
+│   ├── System.ComponentModel.DataAnnotations.dll
+│   ├── System.ComponentModel.dll
+│   ├── System.ComponentModel.EventBasedAsync.dll
+│   ├── System.ComponentModel.Primitives.dll
+│   ├── System.ComponentModel.TypeConverter.dll
+│   ├── System.Configuration.ConfigurationManager.dll
+│   ├── System.Configuration.dll
+│   ├── System.Console.dll
+│   ├── System.Core.dll
+│   ├── System.Data.Common.dll
+│   ├── System.Data.DataSetExtensions.dll
+│   ├── System.Data.dll
+│   ├── System.Data.Odbc.dll
+│   ├── System.Data.OleDb.dll
+│   ├── System.Data.SqlClient.dll
+│   ├── System.Design.dll
+│   ├── System.Diagnostics.Contracts.dll
+│   ├── System.Diagnostics.Debug.dll
+│   ├── System.Diagnostics.DiagnosticSource.dll
+│   ├── System.Diagnostics.EventLog.dll
+│   ├── System.Diagnostics.EventLog.Messages.dll
+│   ├── System.Diagnostics.FileVersionInfo.dll
+│   ├── System.Diagnostics.PerformanceCounter.dll
+│   ├── System.Diagnostics.Process.dll
+│   ├── System.Diagnostics.StackTrace.dll
+│   ├── System.Diagnostics.TextWriterTraceListener.dll
+│   ├── System.Diagnostics.Tools.dll
+│   ├── System.Diagnostics.TraceSource.dll
+│   ├── System.Diagnostics.Tracing.dll
+│   ├── System.DirectoryServices.AccountManagement.dll
+│   ├── System.DirectoryServices.dll
+│   ├── System.DirectoryServices.Protocols.dll
+│   ├── System.dll
+│   ├── System.Drawing.Common.dll
+│   ├── System.Drawing.Design.dll
+│   ├── System.Drawing.dll
+│   ├── System.Drawing.Primitives.dll
+│   ├── System.Dynamic.Runtime.dll
+│   ├── System.Formats.Asn1.dll
+│   ├── System.Formats.Nrbf.dll
+│   ├── System.Formats.Tar.dll
+│   ├── System.Globalization.Calendars.dll
+│   ├── System.Globalization.dll
+│   ├── System.Globalization.Extensions.dll
+│   ├── System.IO.Abstractions.dll
+│   ├── System.IO.Compression.Brotli.dll
+│   ├── System.IO.Compression.dll
+│   ├── System.IO.Compression.FileSystem.dll
+│   ├── System.IO.Compression.Native.dll
+│   ├── System.IO.Compression.ZipFile.dll
+│   ├── System.IO.dll
+│   ├── System.IO.FileSystem.AccessControl.dll
+│   ├── System.IO.FileSystem.dll
+│   ├── System.IO.FileSystem.DriveInfo.dll
+│   ├── System.IO.FileSystem.Primitives.dll
+│   ├── System.IO.FileSystem.Watcher.dll
+│   ├── System.IO.IsolatedStorage.dll
+│   ├── System.IO.MemoryMappedFiles.dll
+│   ├── System.IO.Packaging.dll
+│   ├── System.IO.Pipelines.dll
+│   ├── System.IO.Pipes.AccessControl.dll
+│   ├── System.IO.Pipes.dll
+│   ├── System.IO.Ports.dll
+│   ├── System.IO.UnmanagedMemoryStream.dll
+│   ├── System.Linq.dll
+│   ├── System.Linq.Expressions.dll
+│   ├── System.Linq.Parallel.dll
+│   ├── System.Linq.Queryable.dll
+│   ├── System.Management.dll
+│   ├── System.Memory.Data.dll
+│   ├── System.Memory.dll
+│   ├── System.Net.dll
+│   ├── System.Net.Http.dll
+│   ├── System.Net.Http.Json.dll
+│   ├── System.Net.HttpListener.dll
+│   ├── System.Net.Mail.dll
+│   ├── System.Net.NameResolution.dll
+│   ├── System.Net.NetworkInformation.dll
+│   ├── System.Net.Ping.dll
+│   ├── System.Net.Primitives.dll
+│   ├── System.Net.Quic.dll
+│   ├── System.Net.Requests.dll
+│   ├── System.Net.Security.dll
+│   ├── System.Net.ServicePoint.dll
+│   ├── System.Net.Sockets.dll
+│   ├── System.Net.WebClient.dll
+│   ├── System.Net.WebHeaderCollection.dll
+│   ├── System.Net.WebProxy.dll
+│   ├── System.Net.WebSockets.Client.dll
+│   ├── System.Net.WebSockets.dll
+│   ├── System.Numerics.dll
+│   ├── System.Numerics.Vectors.dll
+│   ├── System.ObjectModel.dll
+│   ├── System.Printing.dll
+│   ├── System.Private.CoreLib.dll
+│   ├── System.Private.DataContractSerialization.dll
+│   ├── System.Private.ServiceModel.dll
+│   ├── System.Private.Uri.dll
+│   ├── System.Private.Windows.Core.dll
+│   ├── System.Private.Xml.dll
+│   ├── System.Private.Xml.Linq.dll
+│   ├── System.Reflection.Context.dll
+│   ├── System.Reflection.DispatchProxy.dll
+│   ├── System.Reflection.dll
+│   ├── System.Reflection.Emit.dll
+│   ├── System.Reflection.Emit.ILGeneration.dll
+│   ├── System.Reflection.Emit.Lightweight.dll
+│   ├── System.Reflection.Extensions.dll
+│   ├── System.Reflection.Metadata.dll
+│   ├── System.Reflection.Primitives.dll
+│   ├── System.Reflection.TypeExtensions.dll
+│   ├── System.Resources.Extensions.dll
+│   ├── System.Resources.Reader.dll
+│   ├── System.Resources.ResourceManager.dll
+│   ├── System.Resources.Writer.dll
+│   ├── System.Runtime.Caching.dll
+│   ├── System.Runtime.CompilerServices.Unsafe.dll
+│   ├── System.Runtime.CompilerServices.VisualC.dll
+│   ├── System.Runtime.dll
+│   ├── System.Runtime.Extensions.dll
+│   ├── System.Runtime.Handles.dll
+│   ├── System.Runtime.InteropServices.dll
+│   ├── System.Runtime.InteropServices.JavaScript.dll
+│   ├── System.Runtime.InteropServices.RuntimeInformation.dll
+│   ├── System.Runtime.Intrinsics.dll
+│   ├── System.Runtime.Loader.dll
+│   ├── System.Runtime.Numerics.dll
+│   ├── System.Runtime.Serialization.dll
+│   ├── System.Runtime.Serialization.Formatters.dll
+│   ├── System.Runtime.Serialization.Json.dll
+│   ├── System.Runtime.Serialization.Primitives.dll
+│   ├── System.Runtime.Serialization.Xml.dll
+│   ├── System.Security.AccessControl.dll
+│   ├── System.Security.Claims.dll
+│   ├── System.Security.Cryptography.Algorithms.dll
+│   ├── System.Security.Cryptography.Cng.dll
+│   ├── System.Security.Cryptography.Csp.dll
+│   ├── System.Security.Cryptography.dll
+│   ├── System.Security.Cryptography.Encoding.dll
+│   ├── System.Security.Cryptography.OpenSsl.dll
+│   ├── System.Security.Cryptography.Pkcs.dll
+│   ├── System.Security.Cryptography.Primitives.dll
+│   ├── System.Security.Cryptography.ProtectedData.dll
+│   ├── System.Security.Cryptography.X509Certificates.dll
+│   ├── System.Security.Cryptography.Xml.dll
+│   ├── System.Security.dll
+│   ├── System.Security.Permissions.dll
+│   ├── System.Security.Principal.dll
+│   ├── System.Security.Principal.Windows.dll
+│   ├── System.Security.SecureString.dll
+│   ├── System.ServiceModel.dll
+│   ├── System.ServiceModel.Duplex.dll
+│   ├── System.ServiceModel.Http.dll
+│   ├── System.ServiceModel.NetTcp.dll
+│   ├── System.ServiceModel.Primitives.dll
+│   ├── System.ServiceModel.Security.dll
+│   ├── System.ServiceModel.Syndication.dll
+│   ├── System.ServiceModel.Web.dll
+│   ├── System.ServiceProcess.dll
+│   ├── System.ServiceProcess.ServiceController.dll
+│   ├── System.Speech.dll
+│   ├── System.Text.Encoding.CodePages.dll
+│   ├── System.Text.Encoding.dll
+│   ├── System.Text.Encoding.Extensions.dll
+│   ├── System.Text.Encodings.Web.dll
+│   ├── System.Text.Json.dll
+│   ├── System.Text.RegularExpressions.dll
+│   ├── System.Threading.AccessControl.dll
+│   ├── System.Threading.Channels.dll
+│   ├── System.Threading.dll
+│   ├── System.Threading.Overlapped.dll
+│   ├── System.Threading.Tasks.Dataflow.dll
+│   ├── System.Threading.Tasks.dll
+│   ├── System.Threading.Tasks.Extensions.dll
+│   ├── System.Threading.Tasks.Parallel.dll
+│   ├── System.Threading.Thread.dll
+│   ├── System.Threading.ThreadPool.dll
+│   ├── System.Threading.Timer.dll
+│   ├── System.Transactions.dll
+│   ├── System.Transactions.Local.dll
+│   ├── System.ValueTuple.dll
+│   ├── System.Web.dll
+│   ├── System.Web.HttpUtility.dll
+│   ├── System.Web.Services.Description.dll
+│   ├── System.Windows.Controls.Ribbon.dll
+│   ├── System.Windows.dll
+│   ├── System.Windows.Extensions.dll
+│   ├── System.Windows.Forms.Design.dll
+│   ├── System.Windows.Forms.Design.Editors.dll
+│   ├── System.Windows.Forms.dll
+│   ├── System.Windows.Forms.Primitives.dll
+│   ├── System.Windows.Input.Manipulations.dll
+│   ├── System.Windows.Presentation.dll
+│   ├── System.Xaml.dll
+│   ├── System.Xml.dll
+│   ├── System.Xml.Linq.dll
+│   ├── System.Xml.ReaderWriter.dll
+│   ├── System.Xml.Serialization.dll
+│   ├── System.Xml.XDocument.dll
+│   ├── System.Xml.XmlDocument.dll
+│   ├── System.Xml.XmlSerializer.dll
+│   ├── System.Xml.XPath.dll
+│   ├── System.Xml.XPath.XDocument.dll
+│   ├── TestableIO.System.IO.Abstractions.dll
+│   ├── TestableIO.System.IO.Abstractions.Wrappers.dll
+│   ├── Testably.Abstractions.FileSystem.Interface.dll
+│   ├── TraceReloggerLib.dll
+│   ├── UIAutomationClient.dll
+│   ├── UIAutomationClientSideProviders.dll
+│   ├── UIAutomationProvider.dll
+│   ├── UIAutomationTypes.dll
+│   ├── UtfUnknown.dll
+│   ├── vcamp140.dll
+│   ├── vccorlib140.dll
+│   ├── vcomp140.dll
+│   ├── vcruntime140.dll
+│   ├── vcruntime140_1.dll
+│   ├── vcruntime140_cor3.dll
+│   ├── vcruntime140_threads.dll
+│   ├── WebView2Loader.dll
+│   ├── WindowsAppRuntime.DeploymentExtensions.OneCore.dll
+│   ├── WindowsAppRuntime.png
+│   ├── WindowsAppSdk.AppxDeploymentExtensions.Desktop-EventLog-Instrumentation.dll
+│   ├── WindowsAppSdk.AppxDeploymentExtensions.Desktop.dll
+│   ├── WindowsBase.dll
+│   ├── WindowsFormsIntegration.dll
+│   ├── WinRT.Runtime.dll
+│   ├── WinUIEdit.dll
+│   ├── WinUIEx.dll
+│   ├── wpfgfx_cor3.dll
+│   ├── wuceffectsi.dll
+│   └── ZstdSharp.dll
+├── zh-CN
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── zh-TW
+│   ├── PowerToys.Awake.resources.dll
+│   ├── PowerToys.ColorPickerUI.resources.dll
+│   ├── PowerToys.FancyZonesEditor.resources.dll
+│   ├── PowerToys.GcodePreviewHandler.resources.dll
+│   ├── PowerToys.ImageResizer.resources.dll
+│   ├── PowerToys.MarkdownPreviewHandler.resources.dll
+│   ├── PowerToys.MonacoPreviewHandler.resources.dll
+│   ├── PowerToys.PdfPreviewHandler.resources.dll
+│   ├── PowerToys.PowerLauncher.resources.dll
+│   ├── PowerToys.PowerOCR.resources.dll
+│   ├── PowerToys.QoiPreviewHandler.resources.dll
+│   ├── PowerToys.SvgPreviewHandler.resources.dll
+│   └── PowerToys.WorkspacesEditor.resources.dll
+├── Accessibility.dll
+├── backup_restore_settings.json
+├── clretwrc.dll
+├── clrgc.dll
+├── clrgcexp.dll
+├── clrjit.dll
+├── CmdPalKeyboardService.dll
+├── CmdPalKeyboardService.pri
+├── concrt140.dll
+├── ControlzEx.dll
+├── coreclr.dll
+├── D3DCompiler_47_cor3.dll
+├── Dia2Lib.dll
+├── DirectWriteForwarder.dll
+├── e_sqlite3.dll
+├── HelixToolkit.Core.Wpf.dll
+├── HelixToolkit.dll
+├── hostfxr.dll
+├── hostpolicy.dll
+├── hyjiacan.py4n.dll
+├── ImageResizerContextMenuPackage.msix
+├── Interop.Microsoft.Office.Interop.OneNote.dll
+├── LazyCache.dll
+├── License.rtf
+├── Mages.Core.dll
+├── Markdig.Signed.dll
+├── MessagePack.Annotations.dll
+├── MessagePack.dll
+├── mfc140.dll
+├── mfc140chs.dll
+├── mfc140cht.dll
+├── mfc140deu.dll
+├── mfc140enu.dll
+├── mfc140esn.dll
+├── mfc140fra.dll
+├── mfc140ita.dll
+├── mfc140jpn.dll
+├── mfc140kor.dll
+├── mfc140rus.dll
+├── mfc140u.dll
+├── mfcm140.dll
+├── mfcm140u.dll
+├── Microsoft.Bcl.AsyncInterfaces.dll
+├── Microsoft.CSharp.dll
+├── Microsoft.Data.Sqlite.dll
+├── Microsoft.Diagnostics.FastSerialization.dll
+├── Microsoft.Diagnostics.NETCore.Client.dll
+├── Microsoft.Diagnostics.Tracing.TraceEvent.dll
+├── Microsoft.DiaSymReader.Native.amd64.dll
+├── Microsoft.Extensions.Caching.Abstractions.dll
+├── Microsoft.Extensions.Caching.Memory.dll
+├── Microsoft.Extensions.Configuration.Abstractions.dll
+├── Microsoft.Extensions.Configuration.Binder.dll
+├── Microsoft.Extensions.Configuration.CommandLine.dll
+├── Microsoft.Extensions.Configuration.dll
+├── Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+├── Microsoft.Extensions.Configuration.FileExtensions.dll
+├── Microsoft.Extensions.Configuration.Json.dll
+├── Microsoft.Extensions.Configuration.UserSecrets.dll
+├── Microsoft.Extensions.DependencyInjection.Abstractions.dll
+├── Microsoft.Extensions.DependencyInjection.dll
+├── Microsoft.Extensions.Diagnostics.Abstractions.dll
+├── Microsoft.Extensions.Diagnostics.dll
+├── Microsoft.Extensions.FileProviders.Abstractions.dll
+├── Microsoft.Extensions.FileProviders.Physical.dll
+├── Microsoft.Extensions.FileSystemGlobbing.dll
+├── Microsoft.Extensions.Hosting.Abstractions.dll
+├── Microsoft.Extensions.Hosting.dll
+├── Microsoft.Extensions.Hosting.WindowsServices.dll
+├── Microsoft.Extensions.Logging.Abstractions.dll
+├── Microsoft.Extensions.Logging.Configuration.dll
+├── Microsoft.Extensions.Logging.Console.dll
+├── Microsoft.Extensions.Logging.Debug.dll
+├── Microsoft.Extensions.Logging.dll
+├── Microsoft.Extensions.Logging.EventLog.dll
+├── Microsoft.Extensions.Logging.EventSource.dll
+├── Microsoft.Extensions.ObjectPool.dll
+├── Microsoft.Extensions.Options.ConfigurationExtensions.dll
+├── Microsoft.Extensions.Options.dll
+├── Microsoft.Extensions.Primitives.dll
+├── Microsoft.NET.StringTools.dll
+├── Microsoft.Toolkit.Uwp.Notifications.dll
+├── Microsoft.Toolkit.Win32.UI.XamlHost.dll
+├── Microsoft.Toolkit.Win32.UI.XamlHost.pri
+├── Microsoft.UI.Xaml.dll
+├── Microsoft.UI.Xaml.pri
+├── Microsoft.VisualBasic.Core.dll
+├── Microsoft.VisualBasic.dll
+├── Microsoft.VisualBasic.Forms.dll
+├── Microsoft.VisualStudio.Threading.dll
+├── Microsoft.VisualStudio.Validation.dll
+├── Microsoft.Web.WebView2.Core.dll
+├── Microsoft.Web.WebView2.WinForms.dll
+├── Microsoft.Web.WebView2.Wpf.dll
+├── Microsoft.Win32.Primitives.dll
+├── Microsoft.Win32.Registry.AccessControl.dll
+├── Microsoft.Win32.Registry.dll
+├── Microsoft.Win32.SystemEvents.dll
+├── Microsoft.Windows.SDK.NET.dll
+├── Microsoft.Xaml.Behaviors.dll
+├── ModernWpf.Controls.dll
+├── ModernWpf.dll
+├── mscordaccore.dll
+├── mscordaccore_amd64_amd64_9.0.525.21509.dll
+├── mscordbi.dll
+├── mscorlib.dll
+├── mscorrc.dll
+├── msquic.dll
+├── msvcp140.dll
+├── msvcp140_1.dll
+├── msvcp140_2.dll
+├── msvcp140_atomic_wait.dll
+├── msvcp140_codecvt_ids.dll
+├── Nerdbank.Streams.dll
+├── netstandard.dll
+├── Newtonsoft.Json.dll
+├── NLog.dll
+├── NLog.Extensions.Logging.dll
+├── Notice.md
+├── PenImc_cor3.dll
+├── PowerAccent.Core.dll
+├── PowerToys.ActionRunner.exe
+├── PowerToys.AdvancedPasteModuleInterface.dll
+├── PowerToys.AlwaysOnTop.exe
+├── PowerToys.AlwaysOnTopModuleInterface.dll
+├── PowerToys.Awake.deps.json
+├── PowerToys.Awake.dll
+├── PowerToys.Awake.exe
+├── PowerToys.Awake.runtimeconfig.json
+├── PowerToys.AwakeModuleInterface.dll
+├── PowerToys.BackgroundActivatorDLL.dll
+├── PowerToys.CmdNotFoundModuleInterface.dll
+├── PowerToys.CmdPalModuleInterface.dll
+├── PowerToys.ColorPicker.dll
+├── PowerToys.ColorPickerUI.deps.json
+├── PowerToys.ColorPickerUI.dll
+├── PowerToys.ColorPickerUI.exe
+├── PowerToys.ColorPickerUI.runtimeconfig.json
+├── PowerToys.Common.UI.dll
+├── PowerToys.CropAndLock.exe
+├── PowerToys.CropAndLockModuleInterface.dll
+├── PowerToys.exe
+├── PowerToys.FancyZones.exe
+├── PowerToys.FancyZonesEditor.deps.json
+├── PowerToys.FancyZonesEditor.dll
+├── PowerToys.FancyZonesEditor.exe
+├── PowerToys.FancyZonesEditor.runtimeconfig.json
+├── PowerToys.FancyZonesEditorCommon.dll
+├── PowerToys.FancyZonesModuleInterface.dll
+├── PowerToys.FilePreviewCommon.dll
+├── PowerToys.FindMyMouse.dll
+├── PowerToys.GcodePreviewHandler.deps.json
+├── PowerToys.GcodePreviewHandler.dll
+├── PowerToys.GcodePreviewHandler.exe
+├── PowerToys.GcodePreviewHandler.runtimeconfig.json
+├── PowerToys.GcodePreviewHandlerCpp.dll
+├── PowerToys.GcodeThumbnailProvider.deps.json
+├── PowerToys.GcodeThumbnailProvider.dll
+├── PowerToys.GcodeThumbnailProvider.exe
+├── PowerToys.GcodeThumbnailProvider.runtimeconfig.json
+├── PowerToys.GcodeThumbnailProviderCpp.dll
+├── PowerToys.GPOWrapper.dll
+├── PowerToys.GPOWrapperProjection.dll
+├── PowerToys.ImageResizer.deps.json
+├── PowerToys.ImageResizer.dll
+├── PowerToys.ImageResizer.exe
+├── PowerToys.ImageResizer.runtimeconfig.json
+├── PowerToys.ImageResizerContextMenu.dll
+├── PowerToys.ImageResizerExt.dll
+├── PowerToys.Interop.dll
+├── PowerToys.KeyboardManager.dll
+├── PowerToys.KeyboardManagerEditorLibraryWrapper.dll
+├── PowerToys.Launcher.dll
+├── PowerToys.ManagedCommon.dll
+├── PowerToys.ManagedTelemetry.dll
+├── PowerToys.MarkdownPreviewHandler.deps.json
+├── PowerToys.MarkdownPreviewHandler.dll
+├── PowerToys.MarkdownPreviewHandler.exe
+├── PowerToys.MarkdownPreviewHandler.runtimeconfig.json
+├── PowerToys.MarkdownPreviewHandlerCpp.dll
+├── PowerToys.MonacoPreviewHandler.deps.json
+├── PowerToys.MonacoPreviewHandler.dll
+├── PowerToys.MonacoPreviewHandler.exe
+├── PowerToys.MonacoPreviewHandler.runtimeconfig.json
+├── PowerToys.MonacoPreviewHandlerCpp.dll
+├── PowerToys.MouseHighlighter.dll
+├── PowerToys.MouseJump.Common.deps.json
+├── PowerToys.MouseJump.Common.dll
+├── PowerToys.MouseJump.dll
+├── PowerToys.MouseJumpUI.deps.json
+├── PowerToys.MouseJumpUI.dll
+├── PowerToys.MouseJumpUI.exe
+├── PowerToys.MouseJumpUI.runtimeconfig.json
+├── PowerToys.MousePointerCrosshairs.dll
+├── PowerToys.MouseWithoutBorders.deps.json
+├── PowerToys.MouseWithoutBorders.dll
+├── PowerToys.MouseWithoutBorders.exe
+├── PowerToys.MouseWithoutBorders.runtimeconfig.json
+├── PowerToys.MouseWithoutBordersHelper.deps.json
+├── PowerToys.MouseWithoutBordersHelper.dll
+├── PowerToys.MouseWithoutBordersHelper.exe
+├── PowerToys.MouseWithoutBordersHelper.runtimeconfig.json
+├── PowerToys.MouseWithoutBordersModuleInterface.dll
+├── PowerToys.MouseWithoutBordersService.deps.json
+├── PowerToys.MouseWithoutBordersService.dll
+├── PowerToys.MouseWithoutBordersService.exe
+├── PowerToys.MouseWithoutBordersService.runtimeconfig.json
+├── PowerToys.PdfPreviewHandler.deps.json
+├── PowerToys.PdfPreviewHandler.dll
+├── PowerToys.PdfPreviewHandler.exe
+├── PowerToys.PdfPreviewHandler.runtimeconfig.json
+├── PowerToys.PdfPreviewHandlerCpp.dll
+├── PowerToys.PdfThumbnailProvider.deps.json
+├── PowerToys.PdfThumbnailProvider.dll
+├── PowerToys.PdfThumbnailProvider.exe
+├── PowerToys.PdfThumbnailProvider.runtimeconfig.json
+├── PowerToys.PdfThumbnailProviderCpp.dll
+├── PowerToys.PowerAccent.deps.json
+├── PowerToys.PowerAccent.dll
+├── PowerToys.PowerAccent.exe
+├── PowerToys.PowerAccent.runtimeconfig.json
+├── PowerToys.PowerAccentKeyboardService.dll
+├── PowerToys.PowerAccentModuleInterface.dll
+├── PowerToys.PowerLauncher.deps.json
+├── PowerToys.PowerLauncher.dll
+├── PowerToys.PowerLauncher.exe
+├── PowerToys.PowerLauncher.runtimeconfig.json
+├── PowerToys.PowerLauncher.Telemetry.dll
+├── PowerToys.PowerOCR.deps.json
+├── PowerToys.PowerOCR.dll
+├── PowerToys.PowerOCR.exe
+├── PowerToys.PowerOCR.runtimeconfig.json
+├── PowerToys.PowerOCRModuleInterface.dll
+├── PowerToys.powerpreview.dll
+├── PowerToys.PreviewHandlerCommon.deps.json
+├── PowerToys.PreviewHandlerCommon.dll
+├── PowerToys.QoiPreviewHandler.deps.json
+├── PowerToys.QoiPreviewHandler.dll
+├── PowerToys.QoiPreviewHandler.exe
+├── PowerToys.QoiPreviewHandler.runtimeconfig.json
+├── PowerToys.QoiPreviewHandlerCpp.dll
+├── PowerToys.QoiThumbnailProvider.deps.json
+├── PowerToys.QoiThumbnailProvider.dll
+├── PowerToys.QoiThumbnailProvider.exe
+├── PowerToys.QoiThumbnailProvider.runtimeconfig.json
+├── PowerToys.QoiThumbnailProviderCpp.dll
+├── PowerToys.Settings.UI.Lib.dll
+├── PowerToys.ShortcutGuide.exe
+├── PowerToys.ShortcutGuideModuleInterface.dll
+├── PowerToys.StlThumbnailProvider.deps.json
+├── PowerToys.StlThumbnailProvider.dll
+├── PowerToys.StlThumbnailProvider.exe
+├── PowerToys.StlThumbnailProvider.runtimeconfig.json
+├── PowerToys.StlThumbnailProviderCpp.dll
+├── PowerToys.SvgPreviewHandler.deps.json
+├── PowerToys.SvgPreviewHandler.dll
+├── PowerToys.SvgPreviewHandler.exe
+├── PowerToys.SvgPreviewHandler.runtimeconfig.json
+├── PowerToys.SvgPreviewHandlerCpp.dll
+├── PowerToys.SvgThumbnailProvider.deps.json
+├── PowerToys.SvgThumbnailProvider.dll
+├── PowerToys.SvgThumbnailProvider.exe
+├── PowerToys.SvgThumbnailProvider.runtimeconfig.json
+├── PowerToys.SvgThumbnailProviderCpp.dll
+├── PowerToys.Update.exe
+├── PowerToys.WorkspacesCsharpLibrary.deps.json
+├── PowerToys.WorkspacesCsharpLibrary.dll
+├── PowerToys.WorkspacesEditor.deps.json
+├── PowerToys.WorkspacesEditor.dll
+├── PowerToys.WorkspacesEditor.exe
+├── PowerToys.WorkspacesEditor.runtimeconfig.json
+├── PowerToys.WorkspacesLauncher.exe
+├── PowerToys.WorkspacesLauncherUI.deps.json
+├── PowerToys.WorkspacesLauncherUI.dll
+├── PowerToys.WorkspacesLauncherUI.exe
+├── PowerToys.WorkspacesLauncherUI.runtimeconfig.json
+├── PowerToys.WorkspacesModuleInterface.dll
+├── PowerToys.WorkspacesSnapshotTool.exe
+├── PowerToys.WorkspacesWindowArranger.exe
+├── PowerToys.ZoomIt.exe
+├── PowerToys.ZoomItModuleInterface.dll
+├── PowerToys.ZoomItSettingsInterop.dll
+├── PresentationCore.dll
+├── PresentationFramework-SystemCore.dll
+├── PresentationFramework-SystemData.dll
+├── PresentationFramework-SystemDrawing.dll
+├── PresentationFramework-SystemXml.dll
+├── PresentationFramework-SystemXmlLinq.dll
+├── PresentationFramework.Aero.dll
+├── PresentationFramework.Aero2.dll
+├── PresentationFramework.AeroLite.dll
+├── PresentationFramework.Classic.dll
+├── PresentationFramework.dll
+├── PresentationFramework.Fluent.dll
+├── PresentationFramework.Luna.dll
+├── PresentationFramework.Royale.dll
+├── PresentationNative_cor3.dll
+├── PresentationUI.dll
+├── ReachFramework.dll
+├── ScipBe.Common.Office.OneNote.dll
+├── sni.dll
+├── SQLitePCLRaw.batteries_v2.dll
+├── SQLitePCLRaw.core.dll
+├── SQLitePCLRaw.provider.e_sqlite3.dll
+├── StreamJsonRpc.dll
+├── System.AppContext.dll
+├── System.Buffers.dll
+├── System.CodeDom.dll
+├── System.Collections.Concurrent.dll
+├── System.Collections.dll
+├── System.Collections.Immutable.dll
+├── System.Collections.NonGeneric.dll
+├── System.Collections.Specialized.dll
+├── System.CommandLine.dll
+├── System.ComponentModel.Annotations.dll
+├── System.ComponentModel.Composition.dll
+├── System.ComponentModel.Composition.Registration.dll
+├── System.ComponentModel.DataAnnotations.dll
+├── System.ComponentModel.dll
+├── System.ComponentModel.EventBasedAsync.dll
+├── System.ComponentModel.Primitives.dll
+├── System.ComponentModel.TypeConverter.dll
+├── System.Configuration.ConfigurationManager.dll
+├── System.Configuration.dll
+├── System.Console.dll
+├── System.Core.dll
+├── System.Data.Common.dll
+├── System.Data.DataSetExtensions.dll
+├── System.Data.dll
+├── System.Data.Odbc.dll
+├── System.Data.OleDb.dll
+├── System.Data.SqlClient.dll
+├── System.Design.dll
+├── System.Diagnostics.Contracts.dll
+├── System.Diagnostics.Debug.dll
+├── System.Diagnostics.DiagnosticSource.dll
+├── System.Diagnostics.EventLog.dll
+├── System.Diagnostics.EventLog.Messages.dll
+├── System.Diagnostics.FileVersionInfo.dll
+├── System.Diagnostics.PerformanceCounter.dll
+├── System.Diagnostics.Process.dll
+├── System.Diagnostics.StackTrace.dll
+├── System.Diagnostics.TextWriterTraceListener.dll
+├── System.Diagnostics.Tools.dll
+├── System.Diagnostics.TraceSource.dll
+├── System.Diagnostics.Tracing.dll
+├── System.DirectoryServices.AccountManagement.dll
+├── System.DirectoryServices.dll
+├── System.DirectoryServices.Protocols.dll
+├── System.dll
+├── System.Drawing.Common.dll
+├── System.Drawing.Design.dll
+├── System.Drawing.dll
+├── System.Drawing.Primitives.dll
+├── System.Dynamic.Runtime.dll
+├── System.Formats.Asn1.dll
+├── System.Formats.Nrbf.dll
+├── System.Formats.Tar.dll
+├── System.Globalization.Calendars.dll
+├── System.Globalization.dll
+├── System.Globalization.Extensions.dll
+├── System.IO.Abstractions.dll
+├── System.IO.Compression.Brotli.dll
+├── System.IO.Compression.dll
+├── System.IO.Compression.FileSystem.dll
+├── System.IO.Compression.Native.dll
+├── System.IO.Compression.ZipFile.dll
+├── System.IO.dll
+├── System.IO.FileSystem.AccessControl.dll
+├── System.IO.FileSystem.dll
+├── System.IO.FileSystem.DriveInfo.dll
+├── System.IO.FileSystem.Primitives.dll
+├── System.IO.FileSystem.Watcher.dll
+├── System.IO.IsolatedStorage.dll
+├── System.IO.MemoryMappedFiles.dll
+├── System.IO.Packaging.dll
+├── System.IO.Pipelines.dll
+├── System.IO.Pipes.AccessControl.dll
+├── System.IO.Pipes.dll
+├── System.IO.Ports.dll
+├── System.IO.UnmanagedMemoryStream.dll
+├── System.Linq.dll
+├── System.Linq.Expressions.dll
+├── System.Linq.Parallel.dll
+├── System.Linq.Queryable.dll
+├── System.Management.dll
+├── System.Memory.dll
+├── System.Net.dll
+├── System.Net.Http.dll
+├── System.Net.Http.Json.dll
+├── System.Net.HttpListener.dll
+├── System.Net.Mail.dll
+├── System.Net.NameResolution.dll
+├── System.Net.NetworkInformation.dll
+├── System.Net.Ping.dll
+├── System.Net.Primitives.dll
+├── System.Net.Quic.dll
+├── System.Net.Requests.dll
+├── System.Net.Security.dll
+├── System.Net.ServicePoint.dll
+├── System.Net.Sockets.dll
+├── System.Net.WebClient.dll
+├── System.Net.WebHeaderCollection.dll
+├── System.Net.WebProxy.dll
+├── System.Net.WebSockets.Client.dll
+├── System.Net.WebSockets.dll
+├── System.Numerics.dll
+├── System.Numerics.Vectors.dll
+├── System.ObjectModel.dll
+├── System.Printing.dll
+├── System.Private.CoreLib.dll
+├── System.Private.DataContractSerialization.dll
+├── System.Private.ServiceModel.dll
+├── System.Private.Uri.dll
+├── System.Private.Windows.Core.dll
+├── System.Private.Xml.dll
+├── System.Private.Xml.Linq.dll
+├── System.Reactive.dll
+├── System.Reflection.Context.dll
+├── System.Reflection.DispatchProxy.dll
+├── System.Reflection.dll
+├── System.Reflection.Emit.dll
+├── System.Reflection.Emit.ILGeneration.dll
+├── System.Reflection.Emit.Lightweight.dll
+├── System.Reflection.Extensions.dll
+├── System.Reflection.Metadata.dll
+├── System.Reflection.Primitives.dll
+├── System.Reflection.TypeExtensions.dll
+├── System.Resources.Extensions.dll
+├── System.Resources.Reader.dll
+├── System.Resources.ResourceManager.dll
+├── System.Resources.Writer.dll
+├── System.Runtime.Caching.dll
+├── System.Runtime.CompilerServices.Unsafe.dll
+├── System.Runtime.CompilerServices.VisualC.dll
+├── System.Runtime.dll
+├── System.Runtime.Extensions.dll
+├── System.Runtime.Handles.dll
+├── System.Runtime.InteropServices.dll
+├── System.Runtime.InteropServices.JavaScript.dll
+├── System.Runtime.InteropServices.RuntimeInformation.dll
+├── System.Runtime.Intrinsics.dll
+├── System.Runtime.Loader.dll
+├── System.Runtime.Numerics.dll
+├── System.Runtime.Serialization.dll
+├── System.Runtime.Serialization.Formatters.dll
+├── System.Runtime.Serialization.Json.dll
+├── System.Runtime.Serialization.Primitives.dll
+├── System.Runtime.Serialization.Xml.dll
+├── System.Security.AccessControl.dll
+├── System.Security.Claims.dll
+├── System.Security.Cryptography.Algorithms.dll
+├── System.Security.Cryptography.Cng.dll
+├── System.Security.Cryptography.Csp.dll
+├── System.Security.Cryptography.dll
+├── System.Security.Cryptography.Encoding.dll
+├── System.Security.Cryptography.OpenSsl.dll
+├── System.Security.Cryptography.Pkcs.dll
+├── System.Security.Cryptography.Primitives.dll
+├── System.Security.Cryptography.ProtectedData.dll
+├── System.Security.Cryptography.X509Certificates.dll
+├── System.Security.Cryptography.Xml.dll
+├── System.Security.dll
+├── System.Security.Permissions.dll
+├── System.Security.Principal.dll
+├── System.Security.Principal.Windows.dll
+├── System.Security.SecureString.dll
+├── System.ServiceModel.dll
+├── System.ServiceModel.Duplex.dll
+├── System.ServiceModel.Http.dll
+├── System.ServiceModel.NetTcp.dll
+├── System.ServiceModel.Primitives.dll
+├── System.ServiceModel.Security.dll
+├── System.ServiceModel.Syndication.dll
+├── System.ServiceModel.Web.dll
+├── System.ServiceProcess.dll
+├── System.ServiceProcess.ServiceController.dll
+├── System.Speech.dll
+├── System.Text.Encoding.CodePages.dll
+├── System.Text.Encoding.dll
+├── System.Text.Encoding.Extensions.dll
+├── System.Text.Encodings.Web.dll
+├── System.Text.Json.dll
+├── System.Text.RegularExpressions.dll
+├── System.Threading.AccessControl.dll
+├── System.Threading.Channels.dll
+├── System.Threading.dll
+├── System.Threading.Overlapped.dll
+├── System.Threading.Tasks.Dataflow.dll
+├── System.Threading.Tasks.dll
+├── System.Threading.Tasks.Extensions.dll
+├── System.Threading.Tasks.Parallel.dll
+├── System.Threading.Thread.dll
+├── System.Threading.ThreadPool.dll
+├── System.Threading.Timer.dll
+├── System.Transactions.dll
+├── System.Transactions.Local.dll
+├── System.ValueTuple.dll
+├── System.Web.dll
+├── System.Web.HttpUtility.dll
+├── System.Web.Services.Description.dll
+├── System.Windows.Controls.Ribbon.dll
+├── System.Windows.dll
+├── System.Windows.Extensions.dll
+├── System.Windows.Forms.Design.dll
+├── System.Windows.Forms.Design.Editors.dll
+├── System.Windows.Forms.dll
+├── System.Windows.Forms.Primitives.dll
+├── System.Windows.Input.Manipulations.dll
+├── System.Windows.Presentation.dll
+├── System.Xaml.dll
+├── System.Xml.dll
+├── System.Xml.Linq.dll
+├── System.Xml.ReaderWriter.dll
+├── System.Xml.Serialization.dll
+├── System.Xml.XDocument.dll
+├── System.Xml.XmlDocument.dll
+├── System.Xml.XmlSerializer.dll
+├── System.Xml.XPath.dll
+├── System.Xml.XPath.XDocument.dll
+├── TestableIO.System.IO.Abstractions.dll
+├── TestableIO.System.IO.Abstractions.Wrappers.dll
+├── Testably.Abstractions.FileSystem.Interface.dll
+├── TraceReloggerLib.dll
+├── UIAutomationClient.dll
+├── UIAutomationClientSideProviders.dll
+├── UIAutomationProvider.dll
+├── UIAutomationTypes.dll
+├── UnicodeInformation.dll
+├── UnitsNet.dll
+├── UtfUnknown.dll
+├── vcamp140.dll
+├── vccorlib140.dll
+├── vcomp140.dll
+├── vcruntime140.dll
+├── vcruntime140_1.dll
+├── vcruntime140_cor3.dll
+├── vcruntime140_threads.dll
+├── WebView2Loader.dll
+├── WindowsBase.dll
+├── WindowsFormsIntegration.dll
+├── WinRT.Runtime.dll
+├── Wox.Infrastructure.dll
+├── Wox.Plugin.dll
+├── Wpf.Ui.dll
+└── wpfgfx_cor3.dll
 ```
 
 ---
@@ -9720,6 +12543,30 @@ public class OrderContext : DbContext
 
 ---
 
+### Design
+
+```cs title="OrderContextFactory.cs"
+using LegacyLego.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+
+namespace LegacyLego.Infrastructure.Design;
+
+public sealed class OrderContextFactory : IDesignTimeDbContextFactory<OrderContext>
+{
+    public OrderContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<OrderContext>();
+
+        optionsBuilder.UseNpgsql("Host=localhost;Database=dummy;Username=dummy;Password=dummy");
+
+        return new OrderContext(optionsBuilder.Options);
+    }
+}
+```
+
+---
+
 ### Diagnostics
 
 ```cs title="InfrastructureExceptionMapper.cs"
@@ -11753,6 +14600,7 @@ using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Reflection;
@@ -11760,7 +14608,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), false);
+configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), true);
 
 builder.Logging.ClearProviders();
 
@@ -11789,6 +14637,11 @@ try
     var app = builder.Build();
 
     app.UseExceptionHandler(); // стоит самый первый в пайплайне
+
+    app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
 
     if (app.Environment.IsDevelopment())
     {
