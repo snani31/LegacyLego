@@ -107,6 +107,19 @@ services:
    timeout: 3s
    retries: 3
   restart: unless-stopped
+# Redis Commander (Монитор кэша)
+ legacy-lego-redis-commander:
+  image: rediscommander/redis-commander:snyk-fix-1841981ea4b1abcbc4c13e21d5d2997d
+  environment:
+   - REDIS_HOSTS=local:legacy-lego-redis:6379
+  #  - HTTP_USER=${REDIS_COMMANDER_USER}
+  #  - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD}
+   - URL_PREFIX=/redcomm
+  expose:
+   - "8081"
+  networks:
+   - legacy-lego-network-prod
+  restart: unless-stopped
 
  # Seq (Логирование)
  legacy-lego-seq:
