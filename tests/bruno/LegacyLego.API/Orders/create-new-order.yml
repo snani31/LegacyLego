@@ -1,0 +1,47 @@
+info:
+  name: Create New Order
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{host}}/orders"
+  body:
+    type: json
+    data: |-
+      {
+        "currencyCode": "RUB",
+        "orderAddress": {
+          "country": "Russia",
+          "city": "Kitlim",
+          "street": "Lenina13",
+          "postalCode": "14812"
+        },
+        "items": [
+          {
+            "title": "Lego 1",
+            "quantity": 1,
+            "productId": "{{$guid}}",
+            "unitPriceAmount": 10000.00
+          },
+          {
+            "title": "Lego 2",
+            "quantity": 2,
+            "productId": "{{$guid}}",
+            "unitPriceAmount": 5000.00
+          },
+          {
+            "title": "lego 3",
+            "quantity": 10,
+            "productId": "{{$guid}}",
+            "unitPriceAmount": 4000.00
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

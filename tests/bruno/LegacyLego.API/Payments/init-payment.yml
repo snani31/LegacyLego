@@ -1,0 +1,19 @@
+info:
+  name: Init Payment
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{host}}/mock/:orderId/pay"
+  params:
+    - name: orderId
+      value: fa6103f2-1f27-460d-a341-4610edd2ea4c
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

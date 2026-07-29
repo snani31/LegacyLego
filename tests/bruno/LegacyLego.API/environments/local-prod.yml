@@ -1,0 +1,5 @@
+name: local-prod
+variables:
+  - name: host
+    value: http://localhost
+    description: ""
