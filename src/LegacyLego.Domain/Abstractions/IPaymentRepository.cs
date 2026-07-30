@@ -11,6 +11,8 @@ public interface IPaymentRepository
 
     public Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
+    public Task<OrderPayment?> GetByExternalSessionIdAsync(string externalSessionId, CancellationToken cancellationToken = default);
+
     public Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
     public void Add(OrderPayment payment);
