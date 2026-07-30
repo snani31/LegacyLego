@@ -3,7 +3,8 @@
 namespace LegacyLego.Application.Payments.Common;
 
 public record PaymentWebhook(
-    string TransactionId,
+    string ExternalSessionId,
+    string? TransactionId,
     Guid OrderId,
     decimal Amount,
     string Currency,

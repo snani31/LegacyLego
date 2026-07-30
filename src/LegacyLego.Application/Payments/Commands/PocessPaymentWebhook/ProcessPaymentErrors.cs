@@ -9,6 +9,7 @@ public static class ProcessPaymentErrors
     public const string TotalPricesMismatchCode = "ProcessPayment.TotalPricesMismatch";
     public const string UnknownStatusCode = "ProcessPayment.UnknownStatus";
     public const string TransactionConflictCode = "ProcessPayment.TransactionConflict";
+    public const string PaymentNotFoundForWebhookCode = "ProcessPayment.PaymentNotFoundForWebhook";
 
     public static Error GetInvalidAmountCodeError(decimal amount)
     {
@@ -36,6 +37,15 @@ public static class ProcessPaymentErrors
         return new(
             Code: TransactionConflictCode,
             Message: $"For successed payment system get more then one different transactions by {TransactionId} and {webhookTransactionId} transactionId's");
+    }
+
+    public static Error GetPaymentNotFoundForWebhookError(string webhookExternalSessionId, string? webhookTransactionId)
+    {
+        return new(
+            Code: TransactionConflictCode,
+            Message: $"Payment was not fount for this webhook with " +
+            $"ExternalSessionId: {webhookExternalSessionId} and" +
+            $"TransactionId: {webhookTransactionId ?? "null"}");
     }
 
 }

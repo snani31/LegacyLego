@@ -14,6 +14,7 @@ public static class PaymentWebhookMapper
     public static ProcessPaymentWebhookCommand MapToPaymentWebhookCommand(PaymentProviderWebhookRequest request)
     {
         var webhook = new PaymentWebhook(
+            ExternalSessionId: request.ExternalSessionId,
             TransactionId: request.TransactionId,
             OrderId: request.OrderId,
             Amount: request.Amount,

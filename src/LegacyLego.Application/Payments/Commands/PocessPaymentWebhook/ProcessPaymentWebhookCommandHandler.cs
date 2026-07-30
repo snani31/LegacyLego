@@ -12,7 +12,7 @@ using LegacyLego.Domain.ValueObjects;
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
 public sealed class ProcessPaymentWebhookCommandHandler(
-    PaymentLookup paymentLookup,
+    IPaymentRepository paymentRepository,
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork) : ICommandHandler<ProcessPaymentWebhookCommand, ProcessPaymentDetails>
 {
@@ -26,7 +26,16 @@ public sealed class ProcessPaymentWebhookCommandHandler(
         if (order is null)
             return Result<ProcessPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
 
-        var payment = await paymentLookup.GetOrCreateAsync(webhook.TransactionId, orderId, ct);
+        var payment = webhook.TransactionId == null ?
+            null : await paymentRepository.GetByTransactionIdAsync(webhook.TransactionId!, ct);
+
+        payment ??= await paymentRepository.GetByExternalSessionIdAsync(webhook.ExternalSessionId, ct);
+
+        if (payment is null)
+        {
+            return Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetPaymentNotFoundForWebhookError(webhook.ExternalSessionId, webhook.ExternalSessionId));
+        }
 
         var result = webhook.Status switch
         {

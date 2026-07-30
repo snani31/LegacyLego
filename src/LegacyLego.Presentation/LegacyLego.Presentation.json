@@ -301,6 +301,7 @@
       },
       "PaymentProviderWebhookRequest": {
         "required": [
+          "externalSessionId",
           "transactionId",
           "orderId",
           "amount",
@@ -309,8 +310,14 @@
         ],
         "type": "object",
         "properties": {
-          "transactionId": {
+          "externalSessionId": {
             "type": "string"
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "orderId": {
             "type": "string",

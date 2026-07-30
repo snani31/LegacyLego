@@ -39,7 +39,6 @@
 </div>
 
 <script>
-    // 1. Читаем параметры из URL
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('orderId');
     const amount = params.get('amount');
@@ -57,8 +56,14 @@
 
         const finalAmount = isFraud ? parseFloat(amount) - 100 : parseFloat(amount);
 
+        // генерация уникального номера транзакции в моке (имитация поведения настоящего провайдера)
+        const generatedTransactionId = (status === 'success')
+            ? 'tx_' + crypto.randomUUID()
+            : null;
+
         const payload = {
-            transactionId: externalSessionId,
+            externalSessionId: externalSessionId, // ID сессии из URL
+            transactionId: generatedTransactionId, // Уникальный номер транзакции
             orderId: orderId,
             amount: finalAmount,
             currency: currency,
@@ -66,7 +71,6 @@
         };
 
         try {
-            // Маршрут к твоему вебхуку (убедись, что порт и путь верные)
             const response = await fetch('/mock/api/webhooks/payment', {
                 method: 'POST',
                 headers: {
