@@ -19,6 +19,7 @@ volumes:
 services:
   # LegacyLego Api
   legacy-lego-api:
+    container_name: legacy-lego-prod-api
     build:
       context: .
       dockerfile: Presentation.Dockerfile
@@ -42,6 +43,7 @@ services:
 
   # Nginx
   legacy-lego-nginx:
+    container_name: legacy-lego-prod-nginx
     image: nginx:1.27-alpine
     ports:
       - "80:80"
@@ -60,6 +62,7 @@ services:
 
   # Мигратор БД
   legacy-lego-migrator:
+    container_name: legacy-lego-prod-migrator
     build:
       context: .
       dockerfile: Presentation.Dockerfile
@@ -75,6 +78,7 @@ services:
 
   # СУБД PostgreSQL
   legacy-lego-postgres:
+    container_name: legacy-lego-prod-postgres
     image: postgres:16-alpine
     env_file:
       - .env
@@ -95,6 +99,7 @@ services:
 
   # Redis (Распределённое кэширование)
   legacy-lego-redis:
+    container_name: legacy-lego-prod-redis
     image: redis:7-alpine
     networks:
       - legacy-lego-network-prod
@@ -112,6 +117,7 @@ services:
 
   # Redis Commander (Монитор кэша)
   legacy-lego-redis-commander:
+    container_name: legacy-lego-prod-redis-commander
     image: rediscommander/redis-commander:snyk-fix-1841981ea4b1abcbc4c13e21d5d2997d
     environment:
       - REDIS_HOSTS=local:legacy-lego-redis:6379
@@ -126,6 +132,7 @@ services:
 
   # Seq (Логирование)
   legacy-lego-seq:
+    container_name: legacy-lego-prod-seq
     image: datalust/seq:2025.2
     env_file:
       - .env
@@ -143,6 +150,7 @@ services:
 
   # Goaccess (логгирование сетевых обращений Nginx)
   legacy-lego-goaccess:
+    container_name: legacy-lego-prod-goaccess
     image: allinurl/goaccess
     networks:
       - legacy-lego-network-prod
@@ -166,4 +174,24 @@ services:
     #   -o /var/www/goaccess/index.html
     #   --port=7890
     #   --ws-url=ws://localhost:7890
+    restart: unless-stopped
+
+  # Homepage Infrastructure Dashboard (Local-Prod)
+  legacy-lego-dashboard:
+    container_name: legacy-lego-prod-dashboard
+    image: ghcr.io/gethomepage/homepage:latest
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=localhost:8090,localhost,127.0.0.1:8090,127.0.0.1
+      #- HOMEPAGE_ALLOWED_HOSTS=localhost,localhost:8080,127.0.0.1,legacy-lego-nginx
+    ports:
+      - "127.0.0.1:8090:3000" # доступ только с текущего устройства
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infrastructure/dashboard/local-prod:/app/config
+      - ./infrastructure/dashboard/shared/images:/app/public/icons
+      - ./infrastructure/dashboard/local-prod/public/credentials.html:/app/public/credentials.html
+      - ./infrastructure/dashboard/local-prod/public/credentials.js:/app/public/credentials.js
+      - ./infrastructure/dashboard/local-prod/public/credentials.js.example:/app/public/credentials.js.example
+    networks:
+      - legacy-lego-network-prod
     restart: unless-stopped

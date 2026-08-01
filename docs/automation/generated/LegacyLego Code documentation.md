@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.9.5
+Актуальная версия проекта: 1.9.6
 
 ## Проекты
 
@@ -29,20 +29,451 @@
 
 ```txt title="TreeStructure"
 .
-└── LegacyLego.API
-    ├── environments
-    │   ├── dev.yml
-    │   └── local-prod.yml
-    ├── Orders
-    │   ├── create-new-order.yml
-    │   ├── folder.yml
-    │   ├── get-active-order.yml
-    │   ├── get-order-details.yml
-    │   └── get-order-history.yml
-    ├── Payments
-    │   ├── folder.yml
-    │   └── init-payment.yml
-    └── opencollection.yml
+├── docs
+│   ├── architecture
+│   │   ├── 'Order ER-scheme.docx'
+│   │   ├── 'OrderPayment ER-scheme.docx'
+│   │   └── 'state transition matrix.docx'
+│   ├── automation
+│   │   ├── generated
+│   │   │   └── 'LegacyLego Code documentation.md'
+│   │   ├── templates
+│   │   │   └── 'LegacyLego Code documentation template.md'
+│   │   └── automation-guide.md
+│   ├── decisions
+│   │   └── 0001-automation-of-code-listings.md
+│   └── diagrams
+│       ├── out
+│       │   ├── ER
+│       │   │   ├── 'ER Diagram.jpg'
+│       │   │   ├── OrderAggregateErScheme.jpg
+│       │   │   └── OrderPaymentAggregateErScheme.jpg
+│       │   ├── ActivityDiagramOrderLifeCycle_v2.jpg
+│       │   ├── OrderClassDiagram.jpg
+│       │   ├── OrderClassDiagram_v1.jpg
+│       │   ├── SolutionStructureTreeDiagram.jpg
+│       │   └── StoreOrderingSystemDiagram_v2.jpg
+│       └── src
+│           ├── ER
+│           │   ├── 'ER Diagram.drawio'
+│           │   ├── 'Order Aggregate ER-Scheme.drawio'
+│           │   └── 'OrderPayment Aggregate ER-Scheme.drawio'
+│           ├── ActivityDiagramOrderLifeCycle.drawio
+│           ├── OrderClassDiagram.drawio
+│           ├── SolutionStructureTreeDiagram.drawio
+│           └── StoreOrderingSystemDiagram.drawio
+├── infrastructure
+│   └── dashboard
+│       ├── dev
+│       │   ├── logs
+│       │   │   └── homepage.log
+│       │   ├── public
+│       │   │   ├── credentials.html
+│       │   │   ├── credentials.js
+│       │   │   └── credentials.js.example
+│       │   ├── bookmarks.yaml
+│       │   ├── custom.css
+│       │   ├── custom.js
+│       │   ├── docker.yaml
+│       │   ├── kubernetes.yaml
+│       │   ├── proxmox.yaml
+│       │   ├── services.yaml
+│       │   ├── settings.yaml
+│       │   └── widgets.yaml
+│       ├── local-prod
+│       │   ├── logs
+│       │   │   └── homepage.log
+│       │   ├── public
+│       │   │   ├── credentials.html
+│       │   │   ├── credentials.js
+│       │   │   └── credentials.js.example
+│       │   ├── bookmarks.yaml
+│       │   ├── custom.css
+│       │   ├── custom.js
+│       │   ├── docker.yaml
+│       │   ├── kubernetes.yaml
+│       │   ├── proxmox.yaml
+│       │   ├── services.yaml
+│       │   ├── settings.yaml
+│       │   └── widgets.yaml
+│       └── shared
+│           └── images
+│               └── lego.png
+├── nginx
+│   ├── static
+│   │   └── favicon
+│   │       └── favicon.ico
+│   └── nginx.conf
+├── src
+│   ├── LegacyLego.Application
+│   │   ├── Abstractions
+│   │   │   ├── Data
+│   │   │   │   ├── ICustomLogSeverity.cs
+│   │   │   │   └── IUnitOfWork.cs
+│   │   │   ├── ExceptionHandling
+│   │   │   │   ├── AppFailureDescription.cs
+│   │   │   │   ├── ExceptionFailureKind.cs
+│   │   │   │   └── IExceptionMapper.cs
+│   │   │   ├── ExternalServices
+│   │   │   │   ├── ICommandBackgroundJobService.cs
+│   │   │   │   ├── ICursorSerializer.cs
+│   │   │   │   └── IPaymentProvider.cs
+│   │   │   └── Messaging
+│   │   │       ├── Command
+│   │   │       │   ├── IBaseCommand.cs
+│   │   │       │   ├── ICommand.cs
+│   │   │       │   └── ICommandHandler.cs
+│   │   │       ├── Event
+│   │   │       │   ├── Domain
+│   │   │       │   │   └── IDomainEventHandler.cs
+│   │   │       │   └── Integration
+│   │   │       │       ├── IIntegrationEvent.cs
+│   │   │       │       └── IIntegrationEventPublisher.cs
+│   │   │       ├── Query
+│   │   │       │   ├── IQuery.cs
+│   │   │       │   └── IQueryHandler.cs
+│   │   │       ├── ICommandDispatcher.cs
+│   │   │       ├── IDomainEventDispatcher.cs
+│   │   │       ├── IEventPublisher.cs
+│   │   │       └── IQueryDispatcher.cs
+│   │   ├── Common
+│   │   ├── Diagnostics
+│   │   │   └── DomainExceptionMapper.cs
+│   │   ├── Errors
+│   │   │   └── PaymentProviderErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   └── UnitOfWorkExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InfrastructureException.cs
+│   │   │   ├── PersistenceException.cs
+│   │   │   └── UniqueConstraintViolation.cs
+│   │   ├── Options
+│   │   │   └── OrderHistoryOptions.cs
+│   │   ├── Orders
+│   │   │   ├── Commands
+│   │   │   │   ├── Cancel
+│   │   │   │   │   ├── CancelletionOrderDetails.cs
+│   │   │   │   │   ├── CancelOrderCommand.cs
+│   │   │   │   │   └── CancelOrderCommandHandler.cs
+│   │   │   │   ├── Create
+│   │   │   │   │   ├── CreateOrderCommand.cs
+│   │   │   │   │   ├── CreateOrderCommandHandler.cs
+│   │   │   │   │   └── CreateOrderDomainEventHandler.cs
+│   │   │   │   ├── Expire
+│   │   │   │   │   ├── ExpirationOrderDetails.cs
+│   │   │   │   │   ├── ExpireOrderCommand.cs
+│   │   │   │   │   └── ExpireOrderCommandHandler.cs
+│   │   │   │   ├── Pay
+│   │   │   │   │   ├── PayOrderCommand.cs
+│   │   │   │   │   ├── PayOrderCommandHandler.cs
+│   │   │   │   │   └── PayOrderDetails.cs
+│   │   │   │   └── Refund
+│   │   │   │       ├── RefundOrderCommand.cs
+│   │   │   │       ├── RefundOrderCommandHandler.cs
+│   │   │   │       └── RefundOrderDetails.cs
+│   │   │   ├── Common
+│   │   │   │   ├── Mappers
+│   │   │   │   ├── Projections
+│   │   │   │   │   └── OrderProjections.cs
+│   │   │   │   ├── OrderAddressDto.cs
+│   │   │   │   ├── OrderItemDto.cs
+│   │   │   │   └── OrderSummaryDto.cs
+│   │   │   ├── Errors
+│   │   │   │   └── OrderApplicationErrors.cs
+│   │   │   └── Queries
+│   │   │       ├── ActiveOrders
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetActiveOrdersQuery.cs
+│   │   │       │   └── GetActiveOrdersQueryHandler.cs
+│   │   │       ├── OrderDetails
+│   │   │       │   ├── ActiveOrderSpecification.cs
+│   │   │       │   ├── GetOrderDetailsQuery.cs
+│   │   │       │   ├── GetOrderDetailsQueryHandler.cs
+│   │   │       │   └── OrderDetailsDto.cs
+│   │   │       └── OrdersHistory
+│   │   │           ├── GetOrdersHistoryQuery.cs
+│   │   │           ├── GetOrdersHistoryQueryHandler.cs
+│   │   │           ├── OrderHistoryRequest.cs
+│   │   │           ├── OrderHistorySpecification.cs
+│   │   │           └── OrdersHistoryResponse.cs
+│   │   ├── Payments
+│   │   │   ├── Commands
+│   │   │   │   ├── PocessPaymentWebhook
+│   │   │   │   │   ├── OrderPaymentSucceededDomainEventHandler.cs
+│   │   │   │   │   ├── ProcessPaymentDetails.cs
+│   │   │   │   │   ├── ProcessPaymentErrors.cs
+│   │   │   │   │   ├── ProcessPaymentWebhookCommand.cs
+│   │   │   │   │   └── ProcessPaymentWebhookCommandHandler.cs
+│   │   │   │   ├── RefundRequested
+│   │   │   │   │   └── RefundRequestedOrderPaymentDomainEventHandler.cs
+│   │   │   │   └── StartPayment
+│   │   │   │       ├── StartOrderPaymentCommand.cs
+│   │   │   │       ├── StartOrderPaymentCommandHandler.cs
+│   │   │   │       ├── StartOrderPaymentDetails.cs
+│   │   │   │       └── StartOrderPaymentErrors.cs
+│   │   │   ├── Common
+│   │   │   │   ├── PaymentSession.cs
+│   │   │   │   └── PaymentWebhook.cs
+│   │   │   ├── IntegrationEvents
+│   │   │   │   └── OrderPaymentRefundRequestedIntegrationEvent.cs
+│   │   │   └── Services
+│   │   │       └── PaymentLookup.cs
+│   │   ├── DependencyInjection.cs
+│   │   └── LegacyLego.Application.csproj
+│   ├── LegacyLego.Domain
+│   │   ├── Abstractions
+│   │   │   ├── IOrderRepository.cs
+│   │   │   └── IPaymentRepository.cs
+│   │   ├── Aggregates
+│   │   │   ├── Order.cs
+│   │   │   └── OrderPayment.cs
+│   │   ├── DomainEvents
+│   │   │   ├── OrderCanceled.cs
+│   │   │   ├── OrderCreated.cs
+│   │   │   ├── OrderExpired.cs
+│   │   │   ├── OrderPaid.cs
+│   │   │   ├── OrderPaymentCreated.cs
+│   │   │   ├── OrderPaymentFailed.cs
+│   │   │   ├── OrderPaymentRefunded.cs
+│   │   │   ├── OrderPaymentRefundedWithoutSuccess.cs
+│   │   │   ├── OrderPaymentRefundRequested.cs
+│   │   │   ├── OrderPaymentSucceeded.cs
+│   │   │   └── OrderRefunded.cs
+│   │   ├── Enums
+│   │   │   ├── OrderAction.cs
+│   │   │   ├── OrderStatus.cs
+│   │   │   ├── PaymentAction.cs
+│   │   │   └── PaymentStatus.cs
+│   │   ├── Errors
+│   │   │   ├── CurrencyErrors.cs
+│   │   │   ├── ExternalSessionErrors.cs
+│   │   │   ├── OrderErrors.cs
+│   │   │   ├── OrderItemErrors.cs
+│   │   │   ├── OrderPaymentErrors.cs
+│   │   │   └── PriceErrors.cs
+│   │   ├── ExceptionalErrors
+│   │   │   ├── CurrencyExceptionalErrors.cs
+│   │   │   ├── ExternalSessionExceptionalErrors.cs
+│   │   │   ├── OrderExceptionalErrors.cs
+│   │   │   ├── PriceExceptionalErrors.cs
+│   │   │   └── ResultExceptionalErrors.cs
+│   │   ├── Exceptions
+│   │   │   ├── InvalidDomainStateException.cs
+│   │   │   └── InvariantViolationException.cs
+│   │   ├── Shared
+│   │   │   ├── AggregateRoot.cs
+│   │   │   ├── DomainException.cs
+│   │   │   ├── Entity.cs
+│   │   │   ├── Error.cs
+│   │   │   ├── ExceptionalError.cs
+│   │   │   ├── IDomainEvent.cs
+│   │   │   ├── IHasDomainEvents.cs
+│   │   │   ├── Result.cs
+│   │   │   ├── ResultT.cs
+│   │   │   ├── Specification.cs
+│   │   │   └── ValueObject.cs
+│   │   ├── ValueObjects
+│   │   │   ├── Currency.cs
+│   │   │   ├── ExternalSession.cs
+│   │   │   ├── OrderAddress.cs
+│   │   │   ├── OrderId.cs
+│   │   │   ├── OrderItem.cs
+│   │   │   ├── OrderPaymentId.cs
+│   │   │   └── Price.cs
+│   │   └── LegacyLego.Domain.csproj
+│   ├── LegacyLego.Infrastructure
+│   │   ├── BackgroundJobs
+│   │   │   ├── HangfireCommandBackgroundJobService.cs
+│   │   │   └── OutboxBackgroundWorker.cs
+│   │   ├── Caching
+│   │   │   ├── Abstractions
+│   │   │   │   ├── ICacheInvalidator.cs
+│   │   │   │   ├── ICacheService.cs
+│   │   │   │   └── IEntityInvalidator.cs
+│   │   │   ├── Decorators
+│   │   │   │   └── Query
+│   │   │   │       └── Order
+│   │   │   │           ├── GetOrderDetailsQueryCachingDecorator.cs
+│   │   │   │           └── GetOrdersHistoryQueryCachingDecorator.cs
+│   │   │   ├── Invalidators
+│   │   │   │   └── OrderEntityInvalidator.cs
+│   │   │   └── Services
+│   │   │       ├── CacheInvalidator.cs
+│   │   │       └── RedisCacheService.cs
+│   │   ├── Common
+│   │   │   └── SpecificationEvaluator.cs
+│   │   ├── Configuration
+│   │   │   ├── Common
+│   │   │   │   ├── EntityTypeBuilderExtensions.cs
+│   │   │   │   ├── PostgresTypes.cs
+│   │   │   │   └── PropertyBuilderExtensions.cs
+│   │   │   ├── ExternalSessionConfiguration.cs
+│   │   │   ├── OrderConfiguration.cs
+│   │   │   ├── OrderItemConfiguration.cs
+│   │   │   ├── OrderPaymentConfiguration.cs
+│   │   │   └── OutboxMessageConfiguration.cs
+│   │   ├── Context
+│   │   │   └── OrderContext.cs
+│   │   ├── Design
+│   │   │   └── OrderContextFactory.cs
+│   │   ├── Diagnostics
+│   │   │   └── InfrastructureExceptionMapper.cs
+│   │   ├── Logging
+│   │   │   └── Decorators
+│   │   │       └── LoggingCommandHandlerDecorator.cs
+│   │   ├── Messaging
+│   │   │   ├── Abstractions
+│   │   │   │   ├── IIntegrationEventBus.cs
+│   │   │   │   └── IIntegrationEventConsumer.cs
+│   │   │   ├── Bus
+│   │   │   │   └── InMemoryIntegrationEventBus.cs
+│   │   │   ├── Consumers
+│   │   │   │   └── OrderPaymentRefundRequestedIntegrationConsumer.cs
+│   │   │   ├── Dispatchers
+│   │   │   │   ├── CommandDispatcher.cs
+│   │   │   │   ├── DomainEventDispatcher.cs
+│   │   │   │   └── QueryDispatcher.cs
+│   │   │   └── Publishers
+│   │   │       └── LocalIntegrationEventPublisher.cs
+│   │   ├── Migrations
+│   │   │   ├── 20260622101458__Init.cs
+│   │   │   ├── 20260622101458__Init.Designer.cs
+│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.cs
+│   │   │   ├── 20260622144846_FixExternalSessionPkShadowPropertyMapping.Designer.cs
+│   │   │   └── OrderContextModelSnapshot.cs
+│   │   ├── Options
+│   │   │   ├── CacheOptions.cs
+│   │   │   ├── DatabaseOptions.cs
+│   │   │   ├── HangfireOptions.cs
+│   │   │   ├── OutboxBackgroundWorkerOptions.cs
+│   │   │   └── PaymentProviderOptions.cs
+│   │   ├── Outbox
+│   │   │   └── OutboxMessage.cs
+│   │   ├── Repositories
+│   │   │   ├── OrderRepository.cs
+│   │   │   └── PaymentRepository.cs
+│   │   ├── Services
+│   │   │   ├── Base64JsonCursorSerializer.cs
+│   │   │   └── MockPaymentProvider.cs
+│   │   ├── DependencyInjection.cs
+│   │   ├── LegacyLego.Infrastructure.csproj
+│   │   ├── LegacyLego.Infrastructure.csproj.user
+│   │   └── UnitOfWork.cs
+│   └── LegacyLego.Presentation
+│       ├── Middleware
+│       │   └── DynamicGlobalExceptionHandler.cs
+│       ├── OpenApi
+│       │   ├── ApiMetadataTransformer.cs
+│       │   └── OpenApiExtensions.cs
+│       ├── Orders
+│       │   ├── Dto
+│       │   │   └── CreateOrderRequest.cs
+│       │   └── OrderEndpoints.cs
+│       ├── Payments
+│       │   ├── Dto
+│       │   │   ├── PaymentProviderWebhookRequest.cs
+│       │   │   └── StartPaymentResponse.cs
+│       │   ├── PaymentEndpoints.cs
+│       │   └── PaymentWebhookMapper.cs
+│       ├── Properties
+│       │   └── launchSettings.json
+│       ├── Shared
+│       ├── wwwroot
+│       │   └── mock-checkout.html
+│       ├── appsettings.Development.json
+│       ├── appsettings.json
+│       ├── LegacyLego.Presentation.csproj
+│       ├── LegacyLego.Presentation.csproj.user
+│       ├── LegacyLego.Presentation.json
+│       └── Program.cs
+├── tests
+│   ├── bruno
+│   │   └── LegacyLego.API
+│   │       ├── environments
+│   │       │   ├── dev.yml
+│   │       │   └── local-prod.yml
+│   │       ├── Orders
+│   │       │   ├── create-new-order.yml
+│   │       │   ├── folder.yml
+│   │       │   ├── get-active-order.yml
+│   │       │   ├── get-order-details.yml
+│   │       │   └── get-order-history.yml
+│   │       ├── Payments
+│   │       │   ├── folder.yml
+│   │       │   └── init-payment.yml
+│   │       └── opencollection.yml
+│   └── LegacyLego.Domain.Tests
+│       ├── Common
+│       │   ├── Builders
+│       │   │   └── OrderBuilder.cs
+│       │   └── Factories
+│       │       ├── OrderDataFactory.cs
+│       │       └── OrderPaymentDataFactory.cs
+│       ├── CurrencyTests
+│       │   ├── Equality
+│       │   │   └── CurrencyEqualityTests.cs
+│       │   └── FromCode
+│       │       └── CurrencyFromCodeTests.cs
+│       ├── ExternalSessionTests
+│       │   ├── Create
+│       │   │   └── ExternalSessionCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── ExternalSessionEqualityTests.cs
+│       │   └── IsExpired
+│       │       └── ExternalSessionCreateTests.cs
+│       ├── OrderItemTests
+│       │   ├── Create
+│       │   │   └── OrderItemCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── OrderItemEqualityTests.cs
+│       │   └── GetTotalPriceTests
+│       │       └── OrderItemGetTotalPriceTests.cs
+│       ├── OrderPaymentTests
+│       │   ├── AttachSession
+│       │   │   └── OrderPaymentAttachSessionTests.cs
+│       │   ├── Create
+│       │   │   └── OrderPaymentCreateTests.cs
+│       │   └── StateTransitions
+│       │       ├── MarkAsFailed
+│       │       │   └── OrderPaymentMarkAsFailedTests.cs
+│       │       ├── MarkAsRefunded
+│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
+│       │       ├── MarkAsRefundRequested
+│       │       │   └── OrderPaymentMarkAsRefundRequestedTests.cs
+│       │       └── MarkAsSucceeded
+│       │           └── OrderPaymentMarkAsSucceededTests.cs
+│       ├── OrderTests
+│       │   ├── Create
+│       │   │   └── OrderCreateTests.cs
+│       │   ├── StateTransitions
+│       │   │   ├── Cancel
+│       │   │   │   └── OrderCancelTests.cs
+│       │   │   ├── Expire
+│       │   │   │   └── OrderExpireTests.cs
+│       │   │   ├── Pay
+│       │   │   │   └── OrderPayTests.cs
+│       │   │   └── Refund
+│       │   │       └── OrderRefundTests.cs
+│       │   └── TotalPrice
+│       │       └── OrderTotalPriceTests.cs
+│       ├── PriceTests
+│       │   ├── Create
+│       │   │   └── PriceCreateTests.cs
+│       │   ├── Equality
+│       │   │   └── PriceEqualityTests.cs
+│       │   ├── MultiplyByQuantity
+│       │   │   └── PriceMultiplyByQuantityTests.cs
+│       │   └── Plus
+│       │       └── PricePlusTests.cs
+│       ├── GlobalUsings.cs
+│       └── LegacyLego.Domain.Tests.csproj
+├── tools
+│   └── update-project-listing-docs.ps1
+├── docker-compose.prod.yaml
+├── docker-compose.yaml
+├── LegacyLego.slnx
+├── Presentation.Dockerfile
+└── README.md
 ```
 
 ---
@@ -1701,6 +2132,7 @@ public static class ProcessPaymentErrors
     public const string TotalPricesMismatchCode = "ProcessPayment.TotalPricesMismatch";
     public const string UnknownStatusCode = "ProcessPayment.UnknownStatus";
     public const string TransactionConflictCode = "ProcessPayment.TransactionConflict";
+    public const string PaymentNotFoundForWebhookCode = "ProcessPayment.PaymentNotFoundForWebhook";
 
     public static Error GetInvalidAmountCodeError(decimal amount)
     {
@@ -1728,6 +2160,15 @@ public static class ProcessPaymentErrors
         return new(
             Code: TransactionConflictCode,
             Message: $"For successed payment system get more then one different transactions by {TransactionId} and {webhookTransactionId} transactionId's");
+    }
+
+    public static Error GetPaymentNotFoundForWebhookError(string webhookExternalSessionId, string? webhookTransactionId)
+    {
+        return new(
+            Code: TransactionConflictCode,
+            Message: $"Payment was not fount for this webhook with " +
+            $"ExternalSessionId: {webhookExternalSessionId} and" +
+            $"TransactionId: {webhookTransactionId ?? "null"}");
     }
 
 }
@@ -1761,7 +2202,7 @@ using LegacyLego.Domain.ValueObjects;
 namespace LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 
 public sealed class ProcessPaymentWebhookCommandHandler(
-    PaymentLookup paymentLookup,
+    IPaymentRepository paymentRepository,
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork) : ICommandHandler<ProcessPaymentWebhookCommand, ProcessPaymentDetails>
 {
@@ -1775,7 +2216,16 @@ public sealed class ProcessPaymentWebhookCommandHandler(
         if (order is null)
             return Result<ProcessPaymentDetails>.Failure(OrderErrors.GetNotFoundByOrderIdError(orderId));
 
-        var payment = await paymentLookup.GetOrCreateAsync(webhook.TransactionId, orderId, ct);
+        var payment = webhook.TransactionId == null ?
+            null : await paymentRepository.GetByTransactionIdAsync(webhook.TransactionId!, ct);
+
+        payment ??= await paymentRepository.GetByExternalSessionIdAsync(webhook.ExternalSessionId, ct);
+
+        if (payment is null)
+        {
+            return Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetPaymentNotFoundForWebhookError(webhook.ExternalSessionId, webhook.ExternalSessionId));
+        }
 
         var result = webhook.Status switch
         {
@@ -2287,7 +2737,8 @@ using LegacyLego.Domain.Enums;
 namespace LegacyLego.Application.Payments.Common;
 
 public record PaymentWebhook(
-    string TransactionId,
+    string ExternalSessionId,
+    string? TransactionId,
     Guid OrderId,
     decimal Amount,
     string Currency,
@@ -2424,6 +2875,8 @@ public interface IPaymentRepository
     public Task<OrderPayment?> GetByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
     public Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default);
+
+    public Task<OrderPayment?> GetByExternalSessionIdAsync(string externalSessionId, CancellationToken cancellationToken = default);
 
     public Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
@@ -11171,8 +11624,9 @@ internal class PaymentRepository(OrderContext context) : IPaymentRepository
 {
     public void Add(OrderPayment payment) => context.OrderPayments.Add(payment);
 
-    public async Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default) => 
-        await context.OrderPayments.AnyAsync(p => p.OrderId == orderId, cancellationToken);
+    public async Task<bool> ExistsSucceededAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
+    await context.OrderPayments
+        .AnyAsync(p => p.OrderId == orderId && p.Status == PaymentStatus.Succeeded, cancellationToken);
 
     public async Task<OrderPayment?> GetByOrderIdAsync(OrderId orderId,
         CancellationToken cancellationToken = default) => 
@@ -11184,6 +11638,10 @@ internal class PaymentRepository(OrderContext context) : IPaymentRepository
     public async Task<OrderPayment?> GetPendingByOrderIdAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
         await context.OrderPayments.Where(p => p.OrderId == orderId && p.Status == PaymentStatus.Pending)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<OrderPayment?> GetByExternalSessionIdAsync(
+        string externalSessionId, CancellationToken cancellationToken = default) =>
+         await context.OrderPayments.FirstOrDefaultAsync(p => p.ExternalSession != null && p.ExternalSession.ExternalId == externalSessionId, cancellationToken);
 }
 ```
 
@@ -11434,6 +11892,7 @@ try
 
     builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
+    builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 
@@ -11458,6 +11917,8 @@ try
     }
 
     app.UseStaticFiles();
+
+    app.MapHealthChecks("/healthz");
 
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
@@ -11982,6 +12443,7 @@ public static class PaymentWebhookMapper
     public static ProcessPaymentWebhookCommand MapToPaymentWebhookCommand(PaymentProviderWebhookRequest request)
     {
         var webhook = new PaymentWebhook(
+            ExternalSessionId: request.ExternalSessionId,
             TransactionId: request.TransactionId,
             OrderId: request.OrderId,
             Amount: request.Amount,
@@ -12010,7 +12472,8 @@ public static class PaymentWebhookMapper
 namespace LegacyLego.Presentation.Mock.Common.Dto.Request;
 
 public sealed record PaymentProviderWebhookRequest(
-    string TransactionId,
+    string ExternalSessionId,
+    string? TransactionId, // Nullable! Может быть null, если транзакция не создалась
     Guid OrderId,
     decimal Amount,
     string Currency,

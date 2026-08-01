@@ -2,6 +2,7 @@ volumes:
   postgres-legacy-lego-data:
   seq-legacy-lego-data:
   redis-legacy-lego-data:
+  hompage-dashboard-config-data:
 
 networks:
   legacy-lego-network:
@@ -22,7 +23,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 3
@@ -56,7 +57,7 @@ services:
       - redis-legacy-lego-data:/data
     command: redis-server --save 60 1 --loglevel warning
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 3
@@ -70,6 +71,25 @@ services:
       - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD}
     ports:
       - "8082:8081"
+    networks:
+      - legacy-lego-network
+    restart: unless-stopped
+  legacy-lego-dashboard:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: legacy-lego-dashboard
+    ports:
+      - "8090:3000"
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=localhost:8090,localhost,127.0.0.1:8090,127.0.0.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Позволяет контейнеру стучаться на хост-машину
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Для чтения статусов контейнеров
+      - ./infrastructure/dashboard/dev:/app/config
+      - ./infrastructure/dashboard/shared/images:/app/public/icons
+      - ./infrastructure/dashboard/dev/public/credentials.html:/app/public/credentials.html
+      - ./infrastructure/dashboard/dev/public/credentials.js:/app/public/credentials.js
+      - ./infrastructure/dashboard/dev/public/credentials.js.example:/app/public/credentials.js.example
     networks:
       - legacy-lego-network
     restart: unless-stopped
