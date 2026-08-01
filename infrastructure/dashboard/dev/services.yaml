@@ -1,0 +1,30 @@
+- 📊 Monitoring & Administration:
+    - Seq Logs:
+        icon: seq.png
+        href: http://localhost:8081
+        description: Centralized Structured Logging
+        container: legacy-lego-seq # Homepage сам заберет статус у Docker!
+
+    - Redis Commander:
+        icon: redis.png
+        href: http://localhost:8082
+        description: Key-Value Cache Inspection
+        container: legacy-lego-redis-commander
+
+- 🛠️ Infrastructure & Storage:
+    - PostgreSQL Database:
+        icon: postgresql.png
+        description: Primary Relational DB
+        container: legacy-lego-postgres
+
+    - Redis Cache:
+        icon: redis.png
+        description: In-Memory Key-Value Storage
+        container: legacy-lego-redis
+
+- 🚀 Application Core:
+    - LegacyLego API:
+        icon: /icons/lego.png
+        href: http://localhost:5000/docs/scalar/
+        description: LegacyLego ASP.NET Core API (Production Mode)
+        siteMonitor: http://host.docker.internal:5000/healthz

@@ -489,3 +489,19 @@ $RECYCLE.BIN/
 
 # Nginx secrets data
 .htpasswd
+
+# ==========================================
+# Homepage Dashboard: Secrets, Logs & Temp
+# ==========================================
+
+# js-secrets
+infrastructure/dashboard/**/credentials.js
+
+# Homepage logs
+infrastructure/dashboard/**/logs/
+infrastructure/dashboard/**/*.log
+
+# tmp files
+infrastructure/dashboard/**/.DS_Store
+infrastructure/dashboard/**/*.swp
+infrastructure/dashboard/**/*~

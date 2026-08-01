@@ -1,0 +1,23 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/bookmarks
+
+- 🛠️ Project & Repository:
+    - GitHub Repo:
+        - abbr: GH
+          href: https://github.com/snani31/LegacyLego
+          description: LegacyLego Source Code
+    - Dev Credentials:
+        - abbr: 🔐
+          href: http://localhost:8090/credentials.html
+          description: Quick Passwords & Keys
+
+- 📚 Frameworks & Testing:
+    - TUnit Docs:
+        - abbr: TU
+          href: https://tunit.dev/
+          description: Modern C# Testing Framework
+    - Microsoft .NET Docs:
+        - abbr: MS
+          href: https://learn.microsoft.com/en-us/dotnet/
+          description: C# & .NET Reference

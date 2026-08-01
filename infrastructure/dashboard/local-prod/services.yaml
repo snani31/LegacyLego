@@ -1,0 +1,42 @@
+- 🚀 Application & Gateway:
+    - LegacyLego API:
+        icon: /icons/lego.png
+        description: LegacyLego ASP.NET Core API (Production Mode)
+        container: legacy-lego-prod-api
+        siteMonitor: http://legacy-lego-prod-nginx/api/health
+
+    - Nginx Reverse Proxy:
+        icon: nginx.png
+        description: Main Entry Point & Rate Limiter
+        container: legacy-lego-prod-nginx
+        siteMonitor: http://legacy-lego-prod-nginx/health
+
+- 🛠️ Infrastructure & Storage:
+    - PostgreSQL Database:
+        icon: postgresql.png
+        description: Primary Relational DB
+        container: legacy-lego-prod-postgres
+
+    - Redis Cache:
+        icon: redis.png
+        description: In-Memory Key-Value Storage
+        container: legacy-lego-prod-redis
+
+- 📊 Monitoring & Administration:
+    - Seq Logs:
+        icon: seq.png
+        href: http://localhost/seq/
+        description: Centralized Structured Logging (Nginx Auth)
+        container: legacy-lego-prod-seq
+
+    - Redis Commander:
+        icon: redis.png
+        href: http://localhost/redcomm
+        description: Cache Web Management (Nginx Auth)
+        container: legacy-lego-prod-redis-commander
+
+    - GoAccess Web Analytics:
+        icon: goaccess.png # или mdi-chart-bar
+        href: http://localhost/stats/
+        description: Real-time Nginx Traffic Statistics (Nginx Auth)
+        container: legacy-lego-prod-goaccess
