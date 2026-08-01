@@ -37,6 +37,7 @@ try
 
     builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
+    builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 
@@ -61,6 +62,8 @@ try
     }
 
     app.UseStaticFiles();
+
+    app.MapHealthChecks("/healthz");
 
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
