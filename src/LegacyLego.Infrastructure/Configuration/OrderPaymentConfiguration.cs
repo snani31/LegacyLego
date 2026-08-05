@@ -23,6 +23,12 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
     private const string TRANSACTION_ID_COLUMN_NAME = "transaction_id";
     private const string CREATED_AT_UTC_COLUMN_NAME = "created_at_utc";
     private const string ORDER_ID_COLUMN_NAME = "order_id";
+
+    private const string EXPECTED_AMOUNT_COLUMN_NAME = "expected_amount";
+    private const string EXPECTED_CURRENCY_COLUMN_NAME = "expected_currency";
+
+    private const string ACTUAL_AMOUNT_COLUMN_NAME = "actual_amount";
+    private const string ACTUAL_CURRENCY_COLUMN_NAME = "actual_currency";
     #endregion
 
     public void Configure(EntityTypeBuilder<OrderPayment> builder)
@@ -70,6 +76,36 @@ public class OrderPaymentConfiguration : IEntityTypeConfiguration<OrderPayment>
             .HasColumnName(ORDER_ID_COLUMN_NAME)
             .HasColumnType(Uuid)
             .IsRequired();
+
+        #region Price ExpectedAmount (NOT NULL)
+        builder.ComplexProperty(x => x.ExpectedAmount, priceBuilder =>
+        {
+            priceBuilder.Property(p => p.Sum)
+                .HasColumnType(Numeric(15, 2))
+                .HasColumnName(EXPECTED_AMOUNT_COLUMN_NAME)
+                .IsRequired();
+
+            priceBuilder.Property(p => p.Currency)
+                .HasConversion(c => c.Code, code => Currency.FromCode(code).Value)
+                .HasPostgresVarchar(3)
+                .HasColumnName(EXPECTED_CURRENCY_COLUMN_NAME)
+                .IsRequired();
+        });
+        #endregion
+
+        #region Price ActualAmount (NULLABLE)
+        builder.ComplexProperty(x => x.ActualAmount, priceBuilder =>
+        {
+            priceBuilder.Property(p => p.Sum)
+                .HasPrecision(15, 2)
+                .HasColumnName(ACTUAL_AMOUNT_COLUMN_NAME);
+
+            priceBuilder.Property(p => p.Currency)
+                .HasConversion(c => c.Code, code => Currency.FromCode(code).Value)
+                .HasPostgresVarchar(3)
+                .HasColumnName(ACTUAL_CURRENCY_COLUMN_NAME);
+        });
+        #endregion
 
         builder.HasOne<Order>()
             .WithMany()
