@@ -5,9 +5,9 @@ namespace LegacyLego.Domain.Tests.OrderPaymentTests;
 public class OrderPaymentMarkAsFailedTests
 {
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    public async Task MarkAsFailed_FromPending_ShouldSucceedAndChangeStatus()
     {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
         var statusBefore = payment.Status;
 
         var failure = payment.MarkAsFailed();
@@ -19,9 +19,10 @@ public class OrderPaymentMarkAsFailedTests
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_ShouldRaiseOrderPaymentFailedDomainEvent(OrderPayment payment)
+    public async Task MarkAsFailed_ShouldRaiseOrderPaymentFailedDomainEvent()
     {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+
         var failure = payment.MarkAsFailed();
 
         await Assert.That(failure.IsSuccess).IsTrue();
@@ -29,14 +30,12 @@ public class OrderPaymentMarkAsFailedTests
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_WithFailedStatus_ShouldResultFailure(OrderPayment payment)
+    public async Task MarkAsFailed_WithFailedStatus_ShouldResultFailure()
     {
-        var firstFailure = payment.MarkAsFailed();
-        payment.ClearDomainEvents();
+        var payment = OrderPaymentDataFactory.CreateFailedOrderPayment();
+
         var secondFailure = payment.MarkAsFailed();
 
-        await Assert.That(firstFailure.IsSuccess).IsTrue();
         await Assert.That(secondFailure.IsFailure).IsTrue();
         await Assert.That(secondFailure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
         await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
@@ -44,79 +43,71 @@ public class OrderPaymentMarkAsFailedTests
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_WithSuccessedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    public async Task MarkAsFailed_WithSucceededStatus_ShouldResultFailureWithStatusTransitionFailureError()
     {
-        var success = payment.MarkAsSucceeded("transactionId");
+        var payment = OrderPaymentDataFactory.CreateSucceededOrderPayment();
 
         var failure = payment.MarkAsFailed();
 
-        await Assert.That(success.IsSuccess).IsTrue();
         await Assert.That(failure.IsFailure).IsTrue();
-        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Succeeded);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_WithRefundRequestedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    public async Task MarkAsFailed_WithRefundRequestedStatus_ShouldResultFailureWithStatusTransitionFailureError()
     {
-        var refundRequest = payment.MarkAsRefundRequested("transactionId");
+        var payment = OrderPaymentDataFactory.CreateRefundRequestedOrderPayment();
 
         var failure = payment.MarkAsFailed();
 
-        await Assert.That(refundRequest.IsSuccess).IsTrue();
         await Assert.That(failure.IsFailure).IsTrue();
-        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(payment.Status).IsEqualTo(PaymentStatus.RefundRequested);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_WithRefundedStatus_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    public async Task MarkAsFailed_WithRefundedStatus_ShouldResultFailureWithStatusTransitionFailureError()
     {
-        var refundRequest = payment.MarkAsRefundRequested("transactionId");
-        var refund = payment.MarkAsRefunded("transactionId");
+        var payment = OrderPaymentDataFactory.CreateRefundedOrderPayment();
 
         var failure = payment.MarkAsFailed();
 
-        await Assert.That(refund.IsSuccess).IsTrue();
         await Assert.That(failure.IsFailure).IsTrue();
-        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(failure.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentFailed));
         await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_ValuesAreSameAfterFailure(OrderPayment payment)
+    public async Task MarkAsFailed_ValuesAreSameAfterFailure()
     {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
         var id = payment.Id;
-        var orderID = payment.OrderId;
+        var orderId = payment.OrderId;
         var createdAtUtc = payment.CreatedAtUtc;
 
         var failure = payment.MarkAsFailed();
 
         await Assert.That(failure.IsSuccess).IsTrue();
-
         await Assert.That(payment)
             .Member(o => o.Id, m => m.IsEqualTo(id))
-            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderId))
             .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsFailed_ExternalSessionIsSameAfterFailure(OrderPayment payment)
+    public async Task MarkAsFailed_ExternalSessionIsSameAfterFailure()
     {
-        var session = ExternalSession.Create("id","url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+        var session = ExternalSession.Create("id", "url", DateTime.UtcNow.AddMinutes(60)).Value;
         payment.AttachSession(session, DateTime.UtcNow);
 
-        var success = payment.MarkAsFailed();
+        var failure = payment.MarkAsFailed();
 
-        await Assert.That(success.IsSuccess).IsTrue();
+        await Assert.That(failure.IsSuccess).IsTrue();
         await Assert.That(payment.HasSession).IsTrue();
         await Assert.That(payment.ExternalSession).IsEqualTo(session);
     }

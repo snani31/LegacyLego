@@ -4,53 +4,70 @@ namespace LegacyLego.Domain.Tests.OrderPaymentTests;
 
 public class OrderPaymentMarkAsRefundedTests
 {
+    private const string DefaultTxId = "tx-123";
+    private const string DifferentTxId = "tx-different-456";
+
+    #region Happy Paths (Valid Transitions)
+
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_FromPending_ShouldSucceedAndChangeStatus(OrderPayment payment)
+    public async Task MarkAsRefunded_FromPending_ShouldSucceedAndChangeStatus()
     {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
         var statusBefore = payment.Status;
 
-        var refund = payment.MarkAsRefunded("transactionId");
-        var statusAfter = payment.Status;
+        var refund = payment.MarkAsRefunded(DefaultTxId);
 
         await Assert.That(refund.IsSuccess).IsTrue();
         await Assert.That(statusBefore).IsEqualTo(PaymentStatus.Pending);
-        await Assert.That(statusAfter).IsEqualTo(PaymentStatus.Refunded);
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_ShouldRaiseOrderPaymentRefundedDomainEvent(OrderPayment payment)
+    public async Task MarkAsRefunded_ShouldRaiseOrderPaymentRefundedDomainEvent()
     {
-        var refund = payment.MarkAsRefunded("transactionId");
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+
+        var refund = payment.MarkAsRefunded(DefaultTxId);
 
         await Assert.That(refund.IsSuccess).IsTrue();
         await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_AfterSucceededWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
+    public async Task MarkAsRefunded_AfterSucceededWithSameTransactionId_ShouldResultSuccess()
     {
-        var success = payment.MarkAsSucceeded("transactionId");
-        payment.ClearDomainEvents();
-        var refund = payment.MarkAsRefunded("transactionId");
+        var payment = OrderPaymentDataFactory.CreateSucceededOrderPayment(txId: DefaultTxId);
 
-        await Assert.That(success.IsSuccess).IsTrue();
+        var refund = payment.MarkAsRefunded(DefaultTxId);
+
         await Assert.That(refund.IsSuccess).IsTrue();
         await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
         await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_AfterSucceededWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
+    public async Task MarkAsRefunded_AfterRefundRequestedWithSameTransactionId_ShouldResultSuccess()
     {
-        var success = payment.MarkAsSucceeded("transactionId");
-        payment.ClearDomainEvents();
-        var refund = payment.MarkAsRefunded("different");
+        var payment = OrderPaymentDataFactory.CreateRefundRequestedOrderPayment(txId: DefaultTxId);
 
-        await Assert.That(success.IsSuccess).IsTrue();
+        var refund = payment.MarkAsRefunded(DefaultTxId);
+
+        await Assert.That(refund.IsSuccess).IsTrue();
+        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
+    }
+
+    #endregion
+
+    #region Invalid Transitions & TransactionId Mismatch
+
+    [Test]
+    public async Task MarkAsRefunded_AfterSucceededWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError()
+    {
+        var payment = OrderPaymentDataFactory.CreateSucceededOrderPayment(txId: DefaultTxId);
+
+        var refund = payment.MarkAsRefunded(DifferentTxId);
+
         await Assert.That(refund.IsFailure).IsTrue();
         await Assert.That(refund.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
         await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
@@ -58,69 +75,12 @@ public class OrderPaymentMarkAsRefundedTests
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_WithTransactionIdNull_ShouldThrowArgumentNullException(OrderPayment payment)
+    public async Task MarkAsRefunded_AfterRefundRequestedWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError()
     {
-        var action = () => { payment.MarkAsRefunded(null!); };
+        var payment = OrderPaymentDataFactory.CreateRefundRequestedOrderPayment(txId: DefaultTxId);
 
-        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
-    }
+        var refund = payment.MarkAsRefunded(DifferentTxId);
 
-    [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_WithTransactionIdEmpty_ShouldThrowArgumentException(OrderPayment payment)
-    {
-        var action = () => { payment.MarkAsRefunded(String.Empty); };
-
-        await Assert.That(action).ThrowsExactly<ArgumentException>();
-    }
-
-    [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_WithTransactionIdWhiteSpace_ShouldThrowArgumentException(OrderPayment payment)
-    {
-        var action = () => { payment.MarkAsRefunded(" "); };
-
-        await Assert.That(action).ThrowsExactly<ArgumentException>();
-    }
-
-    [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_WhenStatusIsFailure_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
-    {
-        var failure = payment.MarkAsFailed();
-
-        var refund = payment.MarkAsRefunded("transactionId");
-
-        await Assert.That(failure.IsSuccess).IsTrue();
-        await Assert.That(refund.IsFailure).IsTrue(); 
-        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
-        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
-    }
-
-    [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_AfterRefundRequestedWithSameTransactionId_ShouldResultSuccess(OrderPayment payment)
-    {
-        var refundRequest = payment.MarkAsRefundRequested("transactionId");
-        payment.ClearDomainEvents();
-        var refund = payment.MarkAsRefunded("transactionId");
-
-        await Assert.That(refundRequest.IsSuccess).IsTrue();
-        await Assert.That(refund.IsSuccess).IsTrue();
-        await Assert.That(payment.DomainEvents).HasSingleItem(e => e.GetType() == typeof(OrderPaymentRefunded));
-        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
-    }
-
-    [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_AfterRefundRequestedWithDifferentTransactionId_ShouldResultFailureWithWrongTransactionIdExchangeError(OrderPayment payment)
-    {
-        var refundRequest = payment.MarkAsRefundRequested("transactionId");
-        payment.ClearDomainEvents();
-        var refund = payment.MarkAsRefunded("different");
-
-        await Assert.That(refundRequest.IsSuccess).IsTrue();
         await Assert.That(refund.IsFailure).IsTrue();
         await Assert.That(refund.Error.Code).IsEqualTo(OrderPaymentErrors.WrongTransactionIdExchangeCode);
         await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
@@ -128,62 +88,113 @@ public class OrderPaymentMarkAsRefundedTests
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_WhenStatusIsRefunded_ShouldResultFailureWithStatusTransitionFailureError(OrderPayment payment)
+    public async Task MarkAsRefunded_WhenStatusIsFailed_ShouldResultFailureWithStatusTransitionFailureError()
     {
-        var firstRefund = payment.MarkAsRefunded("transactionId");
-        payment.ClearDomainEvents();
-        var secondRefund = payment.MarkAsRefunded("transactionId");
+        // Arrange
+        var payment = OrderPaymentDataFactory.CreateFailedOrderPayment();
 
-        await Assert.That(firstRefund.IsSuccess).IsTrue();
+        // Act
+        var refund = payment.MarkAsRefunded(DefaultTxId);
+
+        // Assert
+        await Assert.That(refund.IsFailure).IsTrue();
+        await Assert.That(refund.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
+        await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
+        await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Failed);
+    }
+
+    [Test]
+    public async Task MarkAsRefunded_WhenStatusIsRefunded_ShouldResultFailureWithStatusTransitionFailureError()
+    {
+        var payment = OrderPaymentDataFactory.CreateRefundedOrderPayment(txId: DefaultTxId);
+
+        var secondRefund = payment.MarkAsRefunded(DefaultTxId);
+
         await Assert.That(secondRefund.IsFailure).IsTrue();
         await Assert.That(secondRefund.Error.Code).IsEqualTo(OrderPaymentErrors.StatusTransitionFailureCode);
         await Assert.That(payment.DomainEvents).DoesNotContain(e => e.GetType() == typeof(OrderPaymentRefunded));
         await Assert.That(payment.Status).IsEqualTo(PaymentStatus.Refunded);
     }
 
+    #endregion
+
+    #region Guard Clauses
+
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_ValuesAreSameAfterRefund(OrderPayment payment)
+    public async Task MarkAsRefunded_WithTransactionIdNull_ShouldThrowArgumentNullException()
     {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+
+        var action = () => { _ = payment.MarkAsRefunded(null!); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task MarkAsRefunded_WithTransactionIdEmpty_ShouldThrowArgumentException()
+    {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+
+        var action = () => { _ = payment.MarkAsRefunded(string.Empty); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task MarkAsRefunded_WithTransactionIdWhiteSpace_ShouldThrowArgumentException()
+    {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+
+        var action = () => { _ = payment.MarkAsRefunded("   "); };
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>();
+    }
+
+    #endregion
+
+    #region State Invariance Checks
+
+    [Test]
+    public async Task MarkAsRefunded_ValuesAreSameAfterRefund()
+    {
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
         var id = payment.Id;
-        var orderID = payment.OrderId;
+        var orderId = payment.OrderId;
         var createdAtUtc = payment.CreatedAtUtc;
 
-        var refund = payment.MarkAsRefunded("transactionId");
+        var refund = payment.MarkAsRefunded(DefaultTxId);
 
         await Assert.That(refund.IsSuccess).IsTrue();
-
         await Assert.That(payment)
             .Member(o => o.Id, m => m.IsEqualTo(id))
-            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderID))
+            .And.Member(o => o.OrderId, m => m.IsEqualTo(orderId))
             .And.Member(o => o.CreatedAtUtc, m => m.IsEqualTo(createdAtUtc));
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_TransactionIdIsSameAfterRefund(OrderPayment payment)
+    public async Task MarkAsRefunded_TransactionIdIsSameAfterRefund()
     {
-        var transactionId = "transactionId";
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
 
-        var refund = payment.MarkAsRefunded(transactionId);
+        var refund = payment.MarkAsRefunded(DefaultTxId);
 
         await Assert.That(refund.IsSuccess).IsTrue();
-
-        await Assert.That(payment.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(payment.TransactionId).IsEqualTo(DefaultTxId);
     }
 
     [Test]
-    [MethodDataSource(typeof(OrderPaymentDataFactory), nameof(CreateDefaultOrderPayment))]
-    public async Task MarkAsRefunded_ExternalSessionIsSameAfterRefund(OrderPayment payment)
+    public async Task MarkAsRefunded_ExternalSessionIsSameAfterRefund()
     {
-        var session = ExternalSession.Create("id", "url",  DateTime.UtcNow.AddMinutes(60)).Value;
+        var payment = OrderPaymentDataFactory.CreateDefaultOrderPayment();
+        var session = ExternalSession.Create("session-id", "url", DateTime.UtcNow.AddMinutes(60)).Value;
         payment.AttachSession(session, DateTime.UtcNow);
 
-        var refund = payment.MarkAsRefunded("transactionId");
+        var refund = payment.MarkAsRefunded(DefaultTxId);
 
         await Assert.That(refund.IsSuccess).IsTrue();
         await Assert.That(payment.HasSession).IsTrue();
         await Assert.That(payment.ExternalSession).IsEqualTo(session);
     }
+
+    #endregion
 }
