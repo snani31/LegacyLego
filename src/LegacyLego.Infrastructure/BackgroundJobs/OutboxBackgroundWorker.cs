@@ -1,6 +1,7 @@
 ﻿using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Converters.JsonConverters;
 using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
@@ -98,7 +99,7 @@ public sealed class OutboxBackgroundWorker : BackgroundService
                 }
 
                 // 2. Десериализуем JSON контент обратно в объект доменного события
-                var domainEvent = JsonSerializer.Deserialize(message.Content, eventType);
+                var domainEvent = JsonSerializer.Deserialize(message.Content, eventType, OutboxSerializerOptions.Options);
                 if (domainEvent is not IDomainEvent validEvent) 
                 {
                     _logger.LogError("Объект сообщения не реализует IDomainEvent");

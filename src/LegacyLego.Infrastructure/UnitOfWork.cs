@@ -2,6 +2,7 @@
 using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -86,7 +87,7 @@ public sealed class UnitOfWork: IUnitOfWork
         return domainEvents.Select(domainEvent => new OutboxMessage(
             id: Guid.NewGuid(),
             type: domainEvent.GetType().AssemblyQualifiedName ?? domainEvent.GetType().FullName!,
-            content: JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
+            content: JsonSerializer.Serialize(domainEvent, domainEvent.GetType(), OutboxSerializerOptions.Options),
             occurredOnUtc: _timeProvider.GetUtcNow().UtcDateTime
         )).ToList();
     }
