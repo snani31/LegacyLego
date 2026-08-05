@@ -11,6 +11,12 @@ public static class ProcessPaymentErrors
     public const string TransactionConflictCode = "ProcessPayment.TransactionConflict";
     public const string PaymentNotFoundForWebhookCode = "ProcessPayment.PaymentNotFoundForWebhook";
 
+    public const string EmptyTransactionIdWithSucceededWebhookCode = "ProcessPayment.EmptyTransactionIdWithSucceededWebhook";
+    public const string UnexpectedPaymentStatusAfterRegistrationCode = "ProcessPayment.UnexpectedPaymentStatusAfterRegistration";
+
+    public const string CanNotCreateCurrencyFromCodeWebhookAnomalyCode = "ProcessPayment.CanNotCreateCurrencyFromCodeWebhookAnomaly";
+    public const string CanNotCreatePriceFromAmountWebhookAnomalyCode = "ProcessPayment.CanNotCreatePriceFromAmountWebhookAnomaly";
+
     public static Error GetInvalidAmountCodeError(decimal amount)
     {
         return new(
@@ -25,11 +31,25 @@ public static class ProcessPaymentErrors
             Message: $"Webhook amount:{webhookAmount} must be equivalent to order's total price: {orderTotal}");
     }
 
-    public static Error GetUnknownStatusError(PaymentStatus unknownStatus)
+    public static Error GetEmptyTransactionIdWithSucceededWebhookError()
+    {
+        return new(
+            Code: EmptyTransactionIdWithSucceededWebhookCode,
+            Message: $"TransactionId can not be null or empty for secceeded status webhook");
+    }
+
+    public static Error GetUnknownStatusCodeError(PaymentStatus unknownStatus)
     {
         return new(
             Code: UnknownStatusCode,
-            Message: $"{unknownStatus} is unknown status");
+            Message: $"Unknown {unknownStatus} status code from Webhook");
+    }
+
+    public static Error GetUnexpectedPaymentStatusAfterRegistrationError(PaymentStatus unexpectedStatus)
+    {
+        return new(
+            Code: UnexpectedPaymentStatusAfterRegistrationCode,
+            Message: $"Unexpected OrderPayment status after succeeded peyment registration. Is was {unexpectedStatus}");
     }
 
     public static Error GetTransactionConflictError(string TransactionId, string webhookTransactionId)
@@ -48,4 +68,17 @@ public static class ProcessPaymentErrors
             $"TransactionId: {webhookTransactionId ?? "null"}");
     }
 
+    public static Error GetCanNotCreateCurrencyFromCodeWebhookAnomalyError(string currencyCode)
+    {
+        return new(
+            Code: CanNotCreateCurrencyFromCodeWebhookAnomalyCode,
+            Message: $"Can not create Currency from {currencyCode} code from webhook");
+    }
+
+    public static Error GetCanNotCreatePriceFromAmountWebhookAnomalyError(decimal amount)
+    {
+        return new(
+            Code: CanNotCreatePriceFromAmountWebhookAnomalyCode,
+            Message: $"Can not create Price from {amount} amount from webhook");
+    }
 }

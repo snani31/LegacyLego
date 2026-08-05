@@ -1,7 +1,6 @@
 ﻿using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Payments.Common;
-using LegacyLego.Application.Payments.Services;
 using LegacyLego.Domain.Abstractions;
 using LegacyLego.Domain.Aggregates;
 using LegacyLego.Domain.Enums;
@@ -45,7 +44,7 @@ public sealed class ProcessPaymentWebhookCommandHandler(
 
             PaymentStatus.Succeeded => HandleSucceeded(payment, webhook, order),
 
-            _ => Result<ProcessPaymentDetails>.Failure(ProcessPaymentErrors.GetUnknownStatusError(webhook.Status))
+            _ => Result<ProcessPaymentDetails>.Failure(ProcessPaymentErrors.GetUnknownStatusCodeError(webhook.Status))
         };
 
         await unitOfWork.SaveChangesAsync(ct);
@@ -91,10 +90,13 @@ public sealed class ProcessPaymentWebhookCommandHandler(
         PaymentWebhook webhook, 
         Order order)
     {
+        if (string.IsNullOrWhiteSpace(webhook.TransactionId))
+            Result<ProcessPaymentDetails>.Failure(ProcessPaymentErrors.GetEmptyTransactionIdWithSucceededWebhookError());
+
         if (payment.Status is PaymentStatus.Succeeded && payment.TransactionId != webhook.TransactionId)
         {
             return Result<ProcessPaymentDetails>.Failure(
-                ProcessPaymentErrors.GetTransactionConflictError(payment.TransactionId!, webhook.TransactionId));
+                ProcessPaymentErrors.GetTransactionConflictError(payment.TransactionId!, webhook.TransactionId!));
         }
         else if (payment.Status is PaymentStatus.Succeeded)
         {
@@ -102,40 +104,40 @@ public sealed class ProcessPaymentWebhookCommandHandler(
                 ProcessPaymentDetails.GetAlreadyProcessedDetails(payment.TransactionId!, payment.Status, payment.OrderId.Value));
         }
 
-        var amountCheck = ValidateAmount(webhook.Currency, webhook.Amount, order);
-        if (amountCheck.IsFailure)
-        {
-            var refundRequestResult = payment.MarkAsRefundRequested(webhook.TransactionId);
-            if (refundRequestResult.IsFailure) return Result<ProcessPaymentDetails>.Failure(refundRequestResult.Error);
+        if (webhook.Amount <= 0)
+            return Result<ProcessPaymentDetails>.Failure(ProcessPaymentErrors.GetInvalidAmountCodeError(webhook.Amount));
 
-            return Result<ProcessPaymentDetails>.Failure(amountCheck.Error);
-        }
-
-        var paymentResult = payment.MarkAsSucceeded(webhook.TransactionId);
-        if (paymentResult.IsFailure)
-            return Result<ProcessPaymentDetails>.Failure(paymentResult.Error);
-
-        return Result<ProcessPaymentDetails>.Success(ProcessPaymentDetails.GetSetSuccessedDetails(payment.TransactionId!, payment.OrderId.Value));
-    }
-
-    private static Result ValidateAmount(string code, decimal amount, Order order)
-    {
-        if (amount <= 0)
-            return Result.Failure(ProcessPaymentErrors.GetInvalidAmountCodeError(amount));
-
-        var currency = Currency.FromCode(code);
-
+        var currency = Currency.FromCode(webhook.Currency);
         if (currency.IsFailure)
-            return currency;
+            return Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetCanNotCreateCurrencyFromCodeWebhookAnomalyError(webhook.Currency));
 
-        var webhookAmountPrice = Price.Create(amount, currency.Value);
-
+        var webhookAmountPrice = Price.Create(webhook.Amount, currency.Value);
         if (webhookAmountPrice.IsFailure)
-            return webhookAmountPrice;
+            return Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetCanNotCreatePriceFromAmountWebhookAnomalyError(webhook.Amount));
 
-        if (order.TotalPrice != webhookAmountPrice.Value)
-            return Result.Failure(ProcessPaymentErrors.GetTotalPricesMismatchError(amount, order.TotalPrice.Sum));
+        var paymentRegistration = payment.RegisterPaymentReceipt(webhook.TransactionId!, webhookAmountPrice.Value);
+        if (paymentRegistration.IsFailure)
+            return Result<ProcessPaymentDetails>.Failure(paymentRegistration.Error);
 
-        return Result.Success();
+        var result = payment.Status switch
+        {
+            PaymentStatus.Succeeded => Result<ProcessPaymentDetails>.Success(
+                ProcessPaymentDetails.GetSetSuccessedDetails(payment.TransactionId!, payment.OrderId.Value)),
+
+            PaymentStatus.RefundRequested => Result<ProcessPaymentDetails>.Success(
+            ProcessPaymentDetails.GetSetRefundRequestedDetails(
+                payment.TransactionId!,
+                payment.OrderId.Value,
+                payment.ActualAmount!.Sum,
+                payment.ActualAmount!.Currency.Code)),
+
+            _ => Result<ProcessPaymentDetails>.Failure(
+                ProcessPaymentErrors.GetUnexpectedPaymentStatusAfterRegistrationError(payment.Status))
+        };
+
+        return result;
     }
+
 }

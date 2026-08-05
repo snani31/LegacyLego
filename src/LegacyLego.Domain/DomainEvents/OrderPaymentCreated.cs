@@ -6,4 +6,5 @@ namespace LegacyLego.Domain.DomainEvents;
 public sealed record OrderPaymentCreated(
     OrderPaymentId Paymentid,
     OrderId OrderId,
+    Price ExpectedAmount,
     DateTime CreatedAt) : IDomainEvent;

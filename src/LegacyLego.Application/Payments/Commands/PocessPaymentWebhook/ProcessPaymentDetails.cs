@@ -9,6 +9,7 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
     public const string AlreadyProcessedWithTransactionIdCode = "OrderPayment.AlreadyProcessedWithTransactionId";
     public const string AlreadyProcessedCode = "OrderPayment.AlreadyProcessed";
 
+    public const string SetRefundRequestedCode = "OrderPayment.RefundRequested";
     public const string SetSuccessedCode = "OrderPayment.SuccessfullySuccessed";
     public const string SetFailedCode = "OrderPayment.SuccessfullyFailed";
     public const string SetRefundedCode = "OrderPayment.SuccessfullyRefunded";
@@ -26,6 +27,7 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
         SetSuccessedCode => false,
         SetFailedCode => true,
         SetRefundedCode => false,
+        SetRefundRequestedCode => true,
         _ => false
     };
 
@@ -49,7 +51,7 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
             OrderId: orderId,
             Message: $"Payment with transactionId: {transactionId} is already processed",
             CurrentStatus: PaymentStatus.Succeeded.ToString(),
-            false);
+            StateChanged: false);
     }
 
     internal static ProcessPaymentDetails GetAlreadyProcessedDetails(string transactionId, PaymentStatus status, Guid orderId)
@@ -59,7 +61,21 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
             OrderId: orderId,
             Message: $"Payment with transactionId: {transactionId} is already processed with {status.ToString()} state earlier",
             CurrentStatus: status.ToString(),
-            false);
+            StateChanged: false);
+    }
+
+    internal static ProcessPaymentDetails GetSetRefundRequestedDetails(
+        string transactionId,
+        Guid orderId, 
+        decimal amount,
+        string currencyCode)
+    {
+        return new ProcessPaymentDetails(
+            Code: SetRefundRequestedCode,
+            OrderId: orderId,
+            Message: $"For Payment with transactionId:{transactionId} was RefundRequested with {amount} {currencyCode}",
+            CurrentStatus: PaymentStatus.RefundRequested.ToString(),
+            StateChanged: true);
     }
 
     internal static ProcessPaymentDetails GetSetSuccessedDetails(string transactionId, Guid orderId)
@@ -69,7 +85,7 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
             OrderId: orderId,
             Message: $"Payment with transactionId:{transactionId} was set Successed",
             CurrentStatus: PaymentStatus.Succeeded.ToString(),
-            true);
+            StateChanged: true);
     }
 
     internal static ProcessPaymentDetails GetSetFailedDetails(string transactionId, Guid orderId)
@@ -79,7 +95,7 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
             OrderId: orderId,
             Message: $"Payment with transactionId:{transactionId} was set Failed",
             CurrentStatus: PaymentStatus.Failed.ToString(),
-            true);
+            StateChanged: true);
     }
 
     internal static ProcessPaymentDetails GetSetRefundedDetails(string transactionId, Guid orderId)
@@ -89,6 +105,6 @@ public sealed record ProcessPaymentDetails : ICustomLogSeverity
             OrderId: orderId,
             Message: $"Payment with transactionId:{transactionId} was set Refunded",
             CurrentStatus: PaymentStatus.Refunded.ToString(),
-            true);
+            StateChanged: true);
     }
 }

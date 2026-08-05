@@ -60,7 +60,7 @@ public sealed class StartOrderPaymentCommandHandler(
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var paymentResult = OrderPayment.Create(orderId, now);
+        var paymentResult = OrderPayment.Create(orderId, order.TotalPrice, now);
 
         if(paymentResult.IsFailure)
             return Result<StartOrderPaymentDetails>.Failure(paymentResult.Error);

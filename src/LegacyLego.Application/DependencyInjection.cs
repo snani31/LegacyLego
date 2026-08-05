@@ -4,7 +4,6 @@ using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
 using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Diagnostics;
 using LegacyLego.Application.Options;
-using LegacyLego.Application.Payments.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LegacyLego.Application;
@@ -37,8 +36,6 @@ public static class DependencyInjection
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
         )
-            
-            .AddScoped<PaymentLookup>()
             
             .AddSingleton<IExceptionMapper, DomainExceptionMapper>();
 
