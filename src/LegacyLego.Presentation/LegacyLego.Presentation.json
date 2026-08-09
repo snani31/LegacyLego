@@ -44,7 +44,10 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/orders/active": {
@@ -57,7 +60,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/orders/history": {
@@ -79,7 +85,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/orders/{orderId}": {
@@ -103,7 +112,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/mock/api/webhooks/payment": {
@@ -153,7 +165,10 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/mock/{orderId}/pay": {
@@ -214,7 +229,26 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/jwt/secret-data": {
+      "get": {
+        "tags": [
+          "Jwt"
+        ],
+        "description": "Тестирование функций Jwt и Keycloak",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
       }
     }
   },
@@ -426,6 +460,23 @@
           }
         }
       }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "description": "Keycloak OpenID Connect / OAuth 2.0",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "http://localhost:8084/realms/legacylego/protocol/openid-connect/auth",
+            "tokenUrl": "http://localhost:8084/realms/legacylego/protocol/openid-connect/token",
+            "scopes": {
+              "openid": "OpenID Connect",
+              "profile": "Профиль пользователя",
+              "email": "Email пользователя"
+            }
+          }
+        }
+      }
     }
   },
   "tags": [
@@ -434,6 +485,9 @@
     },
     {
       "name": "Payments"
+    },
+    {
+      "name": "Jwt"
     }
   ]
 }

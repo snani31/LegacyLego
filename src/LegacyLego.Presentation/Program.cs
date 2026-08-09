@@ -1,5 +1,7 @@
 using LegacyLego.Application;
 using LegacyLego.Infrastructure;
+using LegacyLego.Presentation.Extensions;
+using LegacyLego.Presentation.JWT;
 using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
@@ -33,7 +35,8 @@ try
 
     builder.Services.AddApplication()
         .AddInfrastructure(configuration)
-        .AddPresentationOpenApi();
+        .AddPresentationOpenApi(configuration)
+        .AddWebAuthentication();
 
     builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
@@ -49,24 +52,20 @@ try
     });
 
     if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-
-        app.MapScalarApiReference("/docs/scalar", options =>
-        {
-            options.WithTitle("LegacyLego Documentation")
-                .WithTheme(ScalarTheme.DeepSpace)
-                .WithClassicLayout()
-                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-        });
-    }
+        app.MapPresentationDocumentation();
 
     app.UseStaticFiles();
+
+    app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
+    app.UseAuthorization();  // Что тебе можно? (Проверяем права)
 
     app.MapHealthChecks("/healthz");
 
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
+
+    if(app.Environment.IsDevelopment())
+        app.MapTestJwtEndpoints();
 
     app.Run();
 }
