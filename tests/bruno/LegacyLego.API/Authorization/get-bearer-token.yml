@@ -1,0 +1,30 @@
+info:
+  name: Get Bearer Token
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/token"
+  body:
+    type: form-urlencoded
+    data:
+      - name: grant_type
+        value: password
+        description: Сообщаем Keycloak, что хотим войти по логину и паролю
+      - name: client_id
+        value: legacylego-api
+        description: Указать realm приложения
+      - name: username
+        value: testcustomer
+        description: Логин пользователя
+      - name: password
+        value: Password123!
+        description: Пароль пользователя
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

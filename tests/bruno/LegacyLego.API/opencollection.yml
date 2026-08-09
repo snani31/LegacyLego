@@ -2,6 +2,36 @@ opencollection: 1.0.0
 
 info:
   name: LegacyLego.API
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: oauth2
+    flow: authorization_code
+    authorizationUrl: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/auth"
+    accessTokenUrl: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/token"
+    credentials:
+      clientId: "{{client_id}}"
+      placement: basic_auth_header
+    pkce: {}
+    tokenConfig:
+      id: credentials
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true
 bundled: false
 extensions:
   bruno:

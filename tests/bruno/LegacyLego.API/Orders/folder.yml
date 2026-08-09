@@ -4,4 +4,20 @@ info:
   seq: 1
 
 request:
-  auth: inherit
+  auth:
+    type: oauth2
+    flow: authorization_code
+    authorizationUrl: http://localhost:8084/realms/legacylego/protocol/openid-connect/auth
+    accessTokenUrl: http://localhost:8084/realms/legacylego/protocol/openid-connect/token
+    credentials:
+      clientId: legacylego-api
+      placement: basic_auth_header
+    pkce: {}
+    tokenConfig:
+      id: credentials
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true

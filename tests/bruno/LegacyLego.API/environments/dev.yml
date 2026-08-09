@@ -2,3 +2,16 @@ name: dev
 variables:
   - name: host
     value: http://localhost:5000
+    description: Хост legacylego Api
+  - name: auth_host
+    value: http://localhost:8084
+    description: Хост Keycloak
+  - name: realm
+    value: legacylego
+    description: Имя реалма в Keycloak
+  - name: client_id
+    value: legacylego-api
+    description: Идентификатор приложения в Keycloak
+  - name: auth_healt_host
+    value: http://localhost:9000
+    description: ""
