@@ -1,0 +1,51 @@
+{
+	"realm": "legacylego",
+	"enabled": true,
+	"roles": {
+		"realm": [
+			{
+				"name": "customer",
+				"description": "Customer role for regular shoppers"
+			},
+			{
+				"name": "admin",
+				"description": "Administrator role"
+			}
+		]
+	},
+	"clients": [
+		{
+			"clientId": "legacylego-api",
+			"enabled": true,
+			"publicClient": true,
+			"directAccessGrantsEnabled": true,
+			"standardFlowEnabled": true,
+			"redirectUris": [
+				"*"
+			],
+			"webOrigins": [
+				"*"
+			]
+		}
+	],
+	"users": [
+		{
+			"username": "testcustomer",
+			"enabled": true,
+			"email": "testcustomer@legolego.com",
+			"emailVerified": true,
+			"firstName": "John",
+			"lastName": "Doe",
+			"credentials": [
+				{
+					"type": "password",
+					"value": "Password123!",
+					"temporary": false
+				}
+			],
+			"realmRoles": [
+				"customer"
+			]
+		}
+	]
+}
