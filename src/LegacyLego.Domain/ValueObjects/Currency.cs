@@ -41,7 +41,6 @@ public class Currency : ValueObject
         Code = code.ToUpperInvariant();
         Symbol = symbol;
         Scale = scale;
-
     }
 
     public static Result<Currency> FromCode(string code)
