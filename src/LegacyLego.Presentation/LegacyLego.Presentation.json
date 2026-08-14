@@ -234,22 +234,6 @@
           { }
         ]
       }
-    },
-    "/jwt/secret-data": {
-      "get": {
-        "tags": [
-          "Jwt"
-        ],
-        "description": "Тестирование функций Jwt и Keycloak",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
     }
   },
   "components": {
@@ -485,9 +469,6 @@
     },
     {
       "name": "Payments"
-    },
-    {
-      "name": "Jwt"
     }
   ]
 }

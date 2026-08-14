@@ -17,6 +17,7 @@ using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
 using LegacyLego.Infrastructure.Caching.Invalidators;
 using LegacyLego.Infrastructure.Caching.Services;
+using LegacyLego.Infrastructure.Clients.Keycloak;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
 using LegacyLego.Infrastructure.Logging.Decoretors;
@@ -31,6 +32,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
 using StackExchange.Redis;
 using Order = LegacyLego.Domain.Aggregates.Order;
 
@@ -67,6 +69,16 @@ public static class DependencyInjection
 
         services.AddOptions<JwtOptions>()
             .BindConfiguration(JwtOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<RabbitMqOptions>()
+            .BindConfiguration(RabbitMqOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<KeycloakAdminOptions>()
+            .BindConfiguration(KeycloakAdminOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -183,7 +195,37 @@ public static class DependencyInjection
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             return ConnectionMultiplexer.Connect(redisConnectionString);
-        }); 
+        });
+        #endregion
+
+        #region RabbitMq
+        var rabbitMqOptions= configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
+                              ?? new RabbitMqOptions();
+
+        services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+        {
+
+            return new ConnectionFactory
+            {
+                HostName = rabbitMqOptions.Host,
+                Port = rabbitMqOptions.Port,
+                UserName = rabbitMqOptions.Username,
+                Password = rabbitMqOptions.Password,
+                VirtualHost = rabbitMqOptions.VirtualHost
+            };
+        });
+
+        services.AddHostedService<KeycloakEventsConsumer>();
+        #endregion
+
+        #region Keycloak Admin Client
+
+        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl);
+        });
+
         #endregion
 
         return services;
