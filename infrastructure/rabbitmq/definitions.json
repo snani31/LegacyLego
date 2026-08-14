@@ -1,0 +1,46 @@
+{
+	"rabbit_version": "3.13.0",
+	"users": [
+		{
+			"name": "Rabbit",
+			"password": "RabbitPwd",
+			"tags": [
+				"administrator"
+			]
+		}
+	],
+	"vhosts": [
+		{
+			"name": "/"
+		}
+	],
+	"permissions": [
+		{
+			"user": "Rabbit",
+			"vhost": "/",
+			"configure": ".*",
+			"write": ".*",
+			"read": ".*"
+		}
+	],
+	"queues": [
+		{
+			"name": "keycloak-events-queue",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		}
+	],
+	"exchanges": [],
+	"bindings": [
+		{
+			"source": "amq.topic",
+			"vhost": "/",
+			"destination": "keycloak-events-queue",
+			"destination_type": "queue",
+			"routing_key": "KK.EVENT.*.*.*.*.REGISTER",
+			"arguments": {}
+		}
+	]
+}

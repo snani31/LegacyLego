@@ -94,19 +94,47 @@ services:
       - legacy-lego-network
     restart: unless-stopped
 
-  keycloak:
+  legacy-lego-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: legacy-lego-rabbitmq
+    ports:
+      - "5672:5672" # AMQP порт (для подключения .NET и Keycloak)
+      - "15672:15672" # Web UI Management Dashboard
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/definitions.json"
+    volumes:
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  legacy-lego-keycloak:
     image: keycloak/keycloak:26.7
     container_name: legacy-lego-keycloak
     env_file:
       - .env
     environment:
-      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
-      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-      - KC_HEALTH_ENABLED=true
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      # Конфигурация подключения плагина к RabbitMQ
+      - KK_TO_RMQ_URL=legacy-lego-rabbitmq
+      - KK_TO_RMQ_PORT=5672
+      - KK_TO_RMQ_USERNAME=${RABBITMQ_DEFAULT_USER}
+      - KK_TO_RMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS}
+      - KK_TO_RMQ_VHOST=/
+      - KK_TO_RMQ_EXCHANGE=amq.topic
     volumes:
       - ./infrastructure/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
+      - ./infrastructure/keycloak/plugins/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbitmq.jar
     ports:
       - 8084:8080
       - 9000:9000 # exposed healthcheck
     command: [ "start-dev", "--import-realm" ]
     restart: unless-stopped
+    depends_on:
+      legacy-lego-rabbitmq:
+        condition: service_healthy
