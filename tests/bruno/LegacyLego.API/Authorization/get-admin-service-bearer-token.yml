@@ -1,0 +1,28 @@
+info:
+  name: Get Admin Service Bearer Token
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/token"
+  headers:
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: grant_type
+        value: client_credentials
+        description: Вход по данным юзера и секрета
+      - name: client_id
+        value: "{{backend_client_id}}"
+        description: Указать realm приложения
+      - name: client_secret
+        value: "{{client_secret}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

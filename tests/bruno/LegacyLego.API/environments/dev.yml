@@ -9,9 +9,14 @@ variables:
   - name: realm
     value: legacylego
     description: Имя реалма в Keycloak
-  - name: client_id
-    value: legacylego-api
+  - name: public_client_id
+    value: legacylego-public-client
     description: Идентификатор приложения в Keycloak
   - name: auth_healt_host
     value: http://localhost:9000
     description: ""
+  - name: backend_client_id
+    value: legacylego-backend-service
+    description: ""
+  - secret: true
+    name: client_secret

@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.10.0
+Актуальная версия проекта: 1.10.2
 
 ## Проекты
 
@@ -3445,6 +3445,27 @@ public interface ICursorSerializer
 
 ---
 
+```cs title="IIdentityProviderService.cs"
+namespace LegacyLego.Application.Abstractions.ExternalServices;
+
+public record ExternalUserProfile(
+    Guid UserId,
+    string Username,
+    string Email,
+    string? FirstName,
+    string? LastName,
+    string? PhoneNumber,
+    DateTime CreatedAtUtc
+);
+
+public interface IIdentityProviderService
+{
+    public Task<ExternalUserProfile?> GetUserProfileByIdAsync(Guid userId, CancellationToken ct = default);
+}
+```
+
+---
+
 ```cs title="IPaymentProvider.cs"
 using LegacyLego.Application.Payments.Common;
 using LegacyLego.Domain.Shared;
@@ -5644,6 +5665,96 @@ public interface IPaymentRepository
 
 ### Aggregates
 
+```cs title="Client.cs"
+using LegacyLego.Domain.DomainEvents;
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.Aggregates;
+
+public class Client : AggregateRoot<ClientId>
+{
+    public string Username { get; }
+
+    public string? FirstName { get; }
+
+    public string? LastName { get; }
+
+    public Email Email { get; }
+
+    public PhoneNumber? PhoneNumber { get; }
+
+    public ClientPreferences Preferences { get; }
+
+    public DateTime CreatedAtUtc { get; }
+
+    public Client(
+        ClientId id,
+        string username,
+        ClientPreferences preferences,
+        DateTime createdAtUtc,
+        Email email,
+        string? firstName = null,
+        string? lastName = null,
+        PhoneNumber? phoneNumber = null) : base(id)
+    {
+        Username = username;
+        FirstName = firstName;
+        LastName = lastName;
+        Email = email;
+        PhoneNumber = phoneNumber;
+        Preferences = preferences;
+        CreatedAtUtc = createdAtUtc;
+    }
+
+    public static Result<Client> Create(
+        ClientId id,
+        string username,
+        DateTime createdAt,
+        Email email,
+        ClientPreferences? preferences = null,
+        string? firstName = null,
+        string? lastName = null,
+        PhoneNumber? phoneNumber = null)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(username, nameof(username));
+        ArgumentNullException.ThrowIfNull(email, nameof(email));
+        ArgumentNullException.ThrowIfNull(id, nameof(id));
+
+        if (!String.IsNullOrWhiteSpace(firstName) && firstName.Length is < 1 or > 100)
+            return Result<Client>.Failure(
+                ClientErrors.GetCreateFirstNameInvalieLengthError(firstName));
+
+        if (!String.IsNullOrWhiteSpace(lastName) && lastName.Length is < 1 or > 100)
+            return Result<Client>.Failure(
+                ClientErrors.GetCreateLastNameInvalieLengthError(lastName));
+
+        if (createdAt == default) throw new ArgumentException("Date must be provided.", nameof(createdAt));
+        if (createdAt.Kind is not DateTimeKind.Utc)
+            return Result<Client>.Failure(
+                ClientErrors.GetCreationTimeWasNotUtcError(createdAt));
+
+        var client = new Client(
+            id: id,
+            username: username,
+            createdAtUtc: createdAt,
+            email: email,
+            preferences: preferences ?? ClientPreferences.Default,
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber);
+
+        client.Raise(new ClientCreatedDomainEvent(client.Id, client.Email.Value, createdAt));
+
+        return Result<Client>.Success(client);
+    }
+}
+```
+
+---
+
 ```cs title="Order.cs"
 using LegacyLego.Domain.DomainEvents;
 using LegacyLego.Domain.Enums;
@@ -6084,6 +6195,20 @@ public class OrderPayment : AggregateRoot<OrderPaymentId>
 
 ### DomainEvents
 
+```cs title="ClientCreatedDomainEvent.cs"
+using LegacyLego.Domain.Shared;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.Domain.DomainEvents;
+
+public sealed record ClientCreatedDomainEvent(
+    ClientId ClientId,
+    string Email,
+    DateTime OccurredOnUtc) : IDomainEvent;
+```
+
+---
+
 ```cs title="OrderCanceled.cs"
 using LegacyLego.Domain.Aggregates;
 using LegacyLego.Domain.Shared;
@@ -6289,6 +6414,44 @@ public enum PaymentStatus : byte
 
 ### Errors
 
+```cs title="ClientErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class ClientErrors
+{
+    public const string CreationTimeWasNotUtcCode = "Client.CreationTimeWasNotUtc";
+
+    public const string CreateLastNameInvalieLengthCode = "Client.CreateLastNameInvalieLength";
+    public const string CreateFirstNameInvalieLengthCode = "Client.CreateFirstNameInvalieLength";
+
+    public static Error GetCreationTimeWasNotUtcError(DateTime createdAt)
+    {
+        return new(
+            Code: CreationTimeWasNotUtcCode,
+            Message: $"Client.Create inserted createdAt value: {createdAt} DateTimeType is not expected Utc. It was: {createdAt.Kind}");
+    }
+
+    public static Error GetCreateLastNameInvalieLengthError(string value)
+    {
+        return new(
+            Code: CreateLastNameInvalieLengthCode,
+            Message: $"Client.Create inserted lastName value: {value} has unexpected Length. It was: {value.Length}");
+    }
+
+    public static Error GetCreateFirstNameInvalieLengthError(string value)
+    {
+        return new(
+            Code: CreateFirstNameInvalieLengthCode,
+            Message: $"Client.Create inserted firstName value: {value} has unexpected Length. It was: {value.Length}");
+    }
+
+}
+```
+
+---
+
 ```cs title="CurrencyErrors.cs"
 using LegacyLego.Domain.Shared;
 using LegacyLego.Domain.ValueObjects;
@@ -6320,6 +6483,35 @@ public static class CurrencyErrors
 
 ---
 
+```cs title="EmailErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class EmailErrors
+{
+    public const string CreateValueRegexFailureCode = "Email.CreateValueRegexInvalidFormat";
+
+    public const string CreateValueTooLongCode = "Email.CreateValueTooLong";
+
+
+    public static Error GetCreateValueRegexInvalidFormatError(string value)
+    {
+        return new(
+            Code: CreateValueRegexFailureCode,
+            Message: $"Regex Error of value: {value}");
+    }
+    public static Error GetCreateValueTooLongError(int actualLength)
+    {
+        return new(
+            Code: CreateValueTooLongCode,
+            Message: $"Max Email Value can't be longer then 256, but it was: {actualLength}");
+    }
+}
+```
+
+---
+
 ```cs title="ExternalSessionErrors.cs"
 using LegacyLego.Domain.Shared;
 
@@ -6334,6 +6526,26 @@ public static class ExternalSessionErrors
         return new(
             Code: ExpirationTimeWasNotUtcCode,
             Message: $"Тип передаваемого времени должен быть представлен Utc, но был {timeKind}");
+    }
+}
+```
+
+---
+
+```cs title="LanguageErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class LanguageErrors
+{
+    public const string NotSupportedCode = "Language.NotSupported";
+
+    public static Error GetNotSupportedError(string codeString)
+    {
+        return new(
+            Code: NotSupportedCode,
+            Message: $"Selected language code: {codeString} not identified");
     }
 }
 ```
@@ -6518,6 +6730,26 @@ public static class OrderPaymentErrors
             $", так как для  данной оплаты уже установлена сессия: {oldSessionId}, которая ещё не просрочена");
     }
 
+}
+```
+
+---
+
+```cs title="PhoneNumberErrors.cs"
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.Errors;
+
+public static class PhoneNumberErrors
+{
+    public const string CreateValueRegexFailureCode = "PhoneNumber.CreateValueRegexInvalidFormat";
+
+    public static Error GetCreateValueRegexInvalidFormatError(string value)
+    {
+        return new(
+            Code: CreateValueRegexFailureCode,
+            Message: $"Regex Error of value: {value}");
+    }
 }
 ```
 
@@ -7093,6 +7325,107 @@ public abstract class ValueObject : IEquatable<ValueObject>
 
 ### ValueObjects
 
+```cs title="ClientId.cs"
+using LegacyLego.Domain.Exceptions;
+using LegacyLego.Domain.Shared;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed class ClientId : ValueObject, IComparable<ClientId>
+{
+    public Guid Value { get; }
+
+    public ClientId(Guid value)
+    {
+        if (value == Guid.Empty)
+        {
+            throw new InvalidDomainStateException(new ExceptionalError(
+                Code: "ClientId.EmptyCtorGuidValue",
+                Message: "guid value for ClientId can't be Guid.Empty"));
+        }
+
+        Value = value;
+    }
+
+    public static ClientId New() => new(Guid.NewGuid());
+
+    public static Result<ClientId> From(Guid value)
+    {
+        if(value == Guid.Empty)
+            return Result<ClientId>.Failure(new Error(
+                Code: "ClientId.EmptyFromGuidValue",
+                Message: "guid value for ClientId can't be Guid.Empty"));
+
+        return Result<ClientId>.Success(new(value));
+    }
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return Value;
+    }
+
+    public int CompareTo(ClientId? other) => other is null ? 1 : Value.CompareTo(other.Value);
+
+    public static bool operator <(ClientId? left, ClientId? right) => Compare(left, right) < 0;
+    public static bool operator >(ClientId? left, ClientId? right) => Compare(left, right) > 0;
+    public static bool operator <=(ClientId? left, ClientId? right) => Compare(left, right) <= 0;
+    public static bool operator >=(ClientId? left, ClientId? right) => Compare(left, right) >= 0;
+
+    private static int Compare(ClientId? left, ClientId? right)
+    {
+        if (ReferenceEquals(left, right)) return 0;
+        if (left is null) return -1;
+
+        return left.CompareTo(right);
+    }
+
+    public static implicit operator Guid(ClientId value) => value.Value;
+
+    public override string ToString() => Value.ToString();
+}
+```
+
+---
+
+```cs title="ClientPreferences.cs"
+using LegacyLego.Domain.Shared;
+using System.Text.Json.Serialization;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed class ClientPreferences : ValueObject
+{
+    public string LanguageCode { get; init; }
+    public string CurrencyCode { get; init; } 
+
+    [JsonConstructor]
+    private ClientPreferences(string languageCode, string currencyCode)
+    {
+        LanguageCode = languageCode;
+        CurrencyCode = currencyCode;
+    }
+
+    public static Result<ClientPreferences> Create(Language language, Currency currency)
+    {
+        ArgumentNullException.ThrowIfNull(language, nameof(language));
+        ArgumentNullException.ThrowIfNull(currency, nameof(currency));
+
+        return Result<ClientPreferences>.Success(
+            new ClientPreferences(language.Code, currency.Code));
+    }
+
+    public static ClientPreferences Default => new(Language.Russian.Code, Currency.Rub.Code);
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return LanguageCode;
+        yield return CurrencyCode;
+    }
+}
+```
+
+---
+
 ```cs title="Currency.cs"
 using LegacyLego.Domain.Errors;
 using LegacyLego.Domain.Exceptions;
@@ -7137,7 +7470,6 @@ public class Currency : ValueObject
         Code = code.ToUpperInvariant();
         Symbol = symbol;
         Scale = scale;
-
     }
 
     public static Result<Currency> FromCode(string code)
@@ -7165,6 +7497,59 @@ public class Currency : ValueObject
     {
         yield return Code;
     }
+}
+```
+
+---
+
+```cs title="Email.cs"
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using System.Text.RegularExpressions;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed partial class Email : ValueObject
+{
+    [GeneratedRegex(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex EmailRegex();
+
+    public string Value { get; }
+
+    public string LocalPart => Value.Split('@')[0];
+
+    public string Domain => Value.Split('@')[1];
+
+    private Email(string value)
+    {
+        Value = value;
+    }
+
+    public static Result<Email> Create(string value)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(value, nameof(value));
+
+        var normalizedEmail = value.Trim().ToLowerInvariant();
+
+        if (normalizedEmail.Length > 256)
+            return Result<Email>.Failure(EmailErrors.GetCreateValueTooLongError(normalizedEmail.Length));
+
+        if (!EmailRegex().IsMatch(normalizedEmail))
+            return Result<Email>.Failure(EmailErrors.GetCreateValueRegexInvalidFormatError(normalizedEmail));
+
+        return Result<Email>.Success(new Email(normalizedEmail));
+    }
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return Value;
+    }
+
+    public static implicit operator string(Email email) => email.Value;
+
+    public override string ToString() => Value.ToString();
 }
 ```
 
@@ -7217,6 +7602,57 @@ public sealed class ExternalSession : ValueObject
         yield return ExternalId;
         yield return CheckoutUrl;
         yield return ExpiresAtUtc;
+    }
+}
+```
+
+---
+
+```cs title="Language.cs"
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+namespace LegacyLego.Domain.ValueObjects;
+
+public class Language : ValueObject
+{
+    private static readonly Dictionary<string, Language> Codes;
+
+    public static readonly Language Russian = new("RU-RU");
+
+    public static readonly Language English = new("EN-US");
+
+    public string Code { get; }
+
+    static Language()
+    {
+        Codes = new Dictionary<string, Language>()
+        {
+            { English.Code, English},
+            { Russian.Code, Russian}
+        };
+    }
+
+    private Language(string code)
+    {
+        Code = code.ToUpperInvariant();
+    }
+
+    public static Result<Language> FromCode(string code)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(code, nameof(code));
+
+        var codeNormalized = code.Trim().ToUpperInvariant();
+
+        if (!Codes.TryGetValue(codeNormalized, out var language))
+            return Result<Language>.Failure(
+                LanguageErrors.GetNotSupportedError(codeNormalized));
+
+        return Result<Language>.Success(language);
+    }
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return Code;
     }
 }
 ```
@@ -7418,6 +7854,58 @@ public sealed class OrderPaymentId : ValueObject
     {
         yield return Value;
     }
+}
+```
+
+---
+
+```cs title="PhoneNumber.cs"
+using LegacyLego.Domain.Errors;
+using LegacyLego.Domain.Shared;
+using System.Text.RegularExpressions;
+
+namespace LegacyLego.Domain.ValueObjects;
+
+public sealed partial class PhoneNumber : ValueObject
+{
+    [GeneratedRegex(@"^\+[1-9]\d{6,14}$")]
+    private static partial Regex PhoneRegex();
+
+    public string Value { get; }
+
+    private PhoneNumber(string value)
+    {
+        Value = value;
+    }
+
+    public static Result<PhoneNumber> Create(string value)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(value, nameof(value));
+
+        var normalizedNumber = NormalizeNumber(value);
+
+        if (!PhoneRegex().IsMatch(normalizedNumber))
+            return Result<PhoneNumber>.Failure(
+                PhoneNumberErrors.GetCreateValueRegexInvalidFormatError(normalizedNumber));
+
+        return Result<PhoneNumber>.Success(new PhoneNumber(normalizedNumber));
+    }
+
+    /// <summary>
+    /// Нормализует строку: удаляет форматирование (пробелы, скобки, тире) 
+    /// и обеспечивает наличие ведущего знака '+' для соответствия E.164.
+    /// </summary>
+    private static string NormalizeNumber(string phone) 
+        => Regex.Replace(phone, @"[^\d+]", "");
+
+    public override IEnumerable<object> GetAtomicValues()
+    {
+        yield return Value;
+    }
+
+    public static implicit operator string(PhoneNumber phoneNumber) => phoneNumber.Value;
+
+    public override string ToString() => Value.ToString();
 }
 ```
 
@@ -10998,6 +11486,7 @@ public class PricePlusTests
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
   </ItemGroup>
@@ -11008,6 +11497,7 @@ public class PricePlusTests
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Common\Dto\" />
 	  <Folder Include="Migrations\" />
 	</ItemGroup>
 
@@ -11036,6 +11526,7 @@ using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Caching.Decorators.Query.Order;
 using LegacyLego.Infrastructure.Caching.Invalidators;
 using LegacyLego.Infrastructure.Caching.Services;
+using LegacyLego.Infrastructure.Clients.Keycloak;
 using LegacyLego.Infrastructure.Context;
 using LegacyLego.Infrastructure.Diagnostics;
 using LegacyLego.Infrastructure.Logging.Decoretors;
@@ -11050,6 +11541,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
 using StackExchange.Redis;
 using Order = LegacyLego.Domain.Aggregates.Order;
 
@@ -11081,6 +11573,21 @@ public static class DependencyInjection
 
         services.AddOptions<CacheOptions>()
             .BindConfiguration(CacheOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<JwtOptions>()
+            .BindConfiguration(JwtOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<RabbitMqOptions>()
+            .BindConfiguration(RabbitMqOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<KeycloakAdminOptions>()
+            .BindConfiguration(KeycloakAdminOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -11197,7 +11704,37 @@ public static class DependencyInjection
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             return ConnectionMultiplexer.Connect(redisConnectionString);
-        }); 
+        });
+        #endregion
+
+        #region RabbitMq
+        var rabbitMqOptions= configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
+                              ?? new RabbitMqOptions();
+
+        services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+        {
+
+            return new ConnectionFactory
+            {
+                HostName = rabbitMqOptions.Host,
+                Port = rabbitMqOptions.Port,
+                UserName = rabbitMqOptions.Username,
+                Password = rabbitMqOptions.Password,
+                VirtualHost = rabbitMqOptions.VirtualHost
+            };
+        });
+
+        services.AddHostedService<KeycloakEventsConsumer>();
+        #endregion
+
+        #region Keycloak Admin Client
+
+        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl);
+        });
+
         #endregion
 
         return services;
@@ -11347,6 +11884,143 @@ public sealed class HangfireCommandBackgroundJobService : ICommandBackgroundJobS
         _jobClient.Create(methodCall, state);
     }
 }
+```
+
+---
+
+```cs title="KeycloakRegistrationEventsConsumer.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace LegacyLego.Infrastructure.BackgroundJobs;
+
+public class KeycloakEventsConsumer : BackgroundService
+{
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private readonly ILogger<KeycloakEventsConsumer> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IConnectionFactory _connectionFactory;
+    private readonly RabbitMqOptions _options;
+
+    public KeycloakEventsConsumer(
+        ILogger<KeycloakEventsConsumer> logger,
+        IServiceScopeFactory scopeFactory,
+        IConnectionFactory connectionFactory,
+        IOptions<RabbitMqOptions> options)
+    {
+        _logger = logger;
+        _scopeFactory = scopeFactory;
+        _connectionFactory = connectionFactory;
+        _options = options.Value;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        using var connection = await _connectionFactory.CreateConnectionAsync(ct);
+        using var channel = await connection.CreateChannelAsync(cancellationToken: ct);
+
+        await channel.BasicQosAsync(
+            prefetchSize: 0,
+            prefetchCount: 1,
+            global: false,
+            cancellationToken: ct);
+
+        var consumer = new AsyncEventingBasicConsumer(channel);
+
+        consumer.ReceivedAsync += (sender, ea) => OnMessageReceivedAsync(channel, ea, ct);
+
+        await channel.BasicConsumeAsync(
+            queue: _options.KeycloakEventQueue,
+            autoAck: false,
+            consumer: consumer,
+            cancellationToken: ct);
+
+        await Task.Delay(Timeout.Infinite, ct);
+    }
+
+    private async Task OnMessageReceivedAsync(IChannel channel, BasicDeliverEventArgs ea, CancellationToken ct)
+    {
+        var body = ea.Body.ToArray();
+        var messageJson = Encoding.UTF8.GetString(body);
+
+        _logger.LogDebug("Получено сырое сообщение из RabbitMQ: {Json}", messageJson);
+
+        try
+        {
+            var @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
+
+            if (@event != null && @event.Type == "REGISTER")
+            {
+                _logger.LogDebug("Успешно распаршено событие регистрации для UserId: {UserId}", @event.UserId);
+
+                using var scope = _scopeFactory.CreateScope();
+                var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
+
+                // запрос к Keycloak Admin API за полным профилем
+                var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
+
+                if (userProfile != null)
+                {
+                    _logger.LogDebug(
+                        "Профиль пользователя извлечен! Username: {Username}, Email: {Email}, Phone: {Phone}",
+                        userProfile.Username,
+                        userProfile.Email,
+                        userProfile.PhoneNumber ?? "Не указан");
+
+                    _logger.LogDebug(
+                        "Данные готовы для создания агрегата Client: Id={Id}, Nickname={Nickname}, CreatedAt={CreatedAt}",
+                        userProfile.UserId,
+                        userProfile.Username,
+                        userProfile.CreatedAtUtc);
+
+                    // TODO: реализация работы команды регистрации пользователя с диспетчером команд;
+                }
+                else
+                {
+                    _logger.LogWarning("Не удалось найти профиль пользователя с ID {UserId} в Keycloak", @event.UserId);
+                }
+            }
+
+            // Подтверждение успешной обработки сообщения в RabbitMQ
+            await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обработке сообщения из RabbitMQ или запросе к Keycloak Admin API");
+
+            // Возвращаем сообщение обратно в очередь
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
+        }
+    }
+}
+public record KeycloakUserRegisteredIntegrationEvent(
+    [property: JsonPropertyName("userId")] Guid UserId,
+    [property: JsonPropertyName("time")] long Timestamp,
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("realmId")] string RealmId,
+    [property: JsonPropertyName("clientId")] string ClientId,
+    [property: JsonPropertyName("details")] KeycloakEventDetailsDto? Details
+);
+
+public record KeycloakEventDetailsDto(
+    [property: JsonPropertyName("username")] string? Username,
+    [property: JsonPropertyName("email")] string? Email,
+    [property: JsonPropertyName("first_name")] string? FirstName,
+    [property: JsonPropertyName("last_name")] string? LastName
+);
 ```
 
 ---
@@ -11813,6 +12487,117 @@ public sealed class RedisCacheService : ICacheService
         }
 
         return result;
+    }
+}
+```
+
+---
+
+### Clients
+
+#### Keycloak
+
+```cs title="KeycloakAdminApiClient.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Infrastructure.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json.Serialization;
+
+namespace LegacyLego.Infrastructure.Clients.Keycloak;
+
+public class KeycloakAdminApiClient : IIdentityProviderService
+{
+    private readonly HttpClient _httpClient;
+    private readonly KeycloakAdminOptions _options;
+    private readonly ILogger<KeycloakAdminApiClient> _logger;
+
+    public KeycloakAdminApiClient(
+        HttpClient httpClient,
+        IOptions<KeycloakAdminOptions> options,
+        ILogger<KeycloakAdminApiClient> logger)
+    {
+        _httpClient = httpClient;
+        _options = options.Value;
+        _logger = logger;
+    }
+
+    public async Task<ExternalUserProfile?> GetUserProfileByIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        // Получить Bearer token по схеме Client Credentials
+        var token = await GetAccessTokenAsync(ct);
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/admin/realms/{_options.Realm}/users/{userId}");
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        //  Запрос к Keycloak Admin API
+        var response = await _httpClient.SendAsync(request, ct);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("Пользователь с ID {UserId} не найден в Keycloak", userId);
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var userDto = await response.Content.ReadFromJsonAsync<KeycloakUserResponseDto>(cancellationToken: ct);
+
+        if (userDto is null)
+            return null;
+
+        return new ExternalUserProfile(
+            UserId: userDto.Id,
+            Username: userDto.Username,
+            Email: userDto.Email,
+            FirstName: userDto.FirstName,
+            LastName: userDto.LastName,
+            PhoneNumber: userDto.PhoneNumber,
+            CreatedAtUtc: DateTimeOffset.FromUnixTimeMilliseconds(userDto.CreatedTimestamp).UtcDateTime
+        );
+    }
+
+    /// <summary>
+    /// Запрос служебного токена (Client Credentials Flow) для доступа к Admin API
+    /// </summary>
+    private async Task<string> GetAccessTokenAsync(CancellationToken ct)
+    {
+        var tokenEndpoint = $"/realms/{_options.Realm}/protocol/openid-connect/token";
+
+        var content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+            new KeyValuePair<string, string>("client_id", _options.ClientId),
+            new KeyValuePair<string, string>("client_secret", _options.ClientSecret)
+        });
+
+        var response = await _httpClient.PostAsync(tokenEndpoint, content, ct);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<KeycloakTokenResponse>(cancellationToken: ct);
+        return result?.AccessToken ?? throw new InvalidOperationException("Не удалось получить токен доступа Keycloak.");
+    }
+
+    private record KeycloakTokenResponse([property: JsonPropertyName("access_token")] string AccessToken);
+
+    private record KeycloakUserResponseDto(
+        [property: JsonPropertyName("id")] Guid Id,
+        [property: JsonPropertyName("username")] string Username,
+        [property: JsonPropertyName("email")] string Email,
+        [property: JsonPropertyName("firstName")] string? FirstName,
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("createdTimestamp")] long CreatedTimestamp,
+        [property: JsonPropertyName("attributes")] Dictionary<string, string[]>? Attributes)
+    {
+        public string? PhoneNumber =>
+            Attributes != null && Attributes.TryGetValue("phoneNumber", out var values)
+                ? values.FirstOrDefault()
+                : null;
     }
 }
 ```
@@ -14747,6 +15532,54 @@ public sealed class HangfireOptions
 
 ---
 
+```cs title="JwtOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class JwtOptions
+{
+    public const string SectionName = "Authentication";
+
+    [Required(ErrorMessage = "Authority не может быть пустым.")]
+    [Url(ErrorMessage = "Authority должен быть валидным URL.")]
+    public string Authority { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "ValidIssuer не может быть пустым.")]
+    public string ValidIssuer { get; set; } = string.Empty;
+
+    public bool RequireHttpsMetadata { get; set; } = true;
+}
+```
+
+---
+
+```cs title="KeycloakAdminOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class KeycloakAdminOptions
+{
+    public const string SectionName = "KeycloakAdmin";
+
+    [Required(ErrorMessage = "BaseUrl не может быть пустым.")]
+    [Url(ErrorMessage = "BaseUrl должен быть валидным URL.")]
+    public string BaseUrl { get; set; } = String.Empty;
+
+    [Required(ErrorMessage = "Realm не может быть пустым.")]
+    public string Realm { get; set; } = "master";
+
+    [Required(ErrorMessage = "ClientId не может быть пустым.")]
+    public string ClientId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "ClientId не может быть пустым.")]
+    public string ClientSecret { get; set; } = string.Empty;
+}
+```
+
+---
+
 ```cs title="OutboxBackgroundWorkerOptions.cs"
 using System.ComponentModel.DataAnnotations;
 
@@ -14809,6 +15642,34 @@ public sealed class PaymentProviderOptions
 
     [Range(1, 60, ErrorMessage = "ExpiresAtMinutes должен быть от 1 до 60 минут.")]
     public int ExpiresAtMinutes { get; set; } = 10;
+}
+```
+
+---
+
+```cs title="RabbitMqOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Infrastructure.Options;
+
+public sealed class RabbitMqOptions
+{
+    public const string SectionName = "RabbitMq";
+
+    public string Host { get; set; } = "localhost";
+
+    public int Port { get; set; } = 5672;
+
+    [Required(ErrorMessage = "Username не может быть пустым.")]
+    public string Username { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Password не может быть пустым.")]
+    public string Password { get; set; } = string.Empty;
+
+    public string VirtualHost { get; set; } = "/";
+
+    [Required(ErrorMessage = "KeycloakEventQueue не может быть пустым.")]
+    public string KeycloakEventQueue { get; set; } = string.Empty;
 }
 ```
 
@@ -15111,6 +15972,7 @@ file sealed record ExternalStripeWebhookSimulation(
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
@@ -15120,6 +15982,7 @@ file sealed record ExternalStripeWebhookSimulation(
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.10" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -15151,6 +16014,8 @@ file sealed record ExternalStripeWebhookSimulation(
 ```cs title="Program.cs"
 using LegacyLego.Application;
 using LegacyLego.Infrastructure;
+using LegacyLego.Presentation.Extensions;
+using LegacyLego.Presentation.JWT;
 using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
@@ -15184,7 +16049,8 @@ try
 
     builder.Services.AddApplication()
         .AddInfrastructure(configuration)
-        .AddPresentationOpenApi();
+        .AddPresentationOpenApi(configuration)
+        .AddWebAuthentication();
 
     builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
@@ -15200,24 +16066,20 @@ try
     });
 
     if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-
-        app.MapScalarApiReference("/docs/scalar", options =>
-        {
-            options.WithTitle("LegacyLego Documentation")
-                .WithTheme(ScalarTheme.DeepSpace)
-                .WithClassicLayout()
-                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-        });
-    }
+        app.MapPresentationDocumentation();
 
     app.UseStaticFiles();
+
+    app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
+    app.UseAuthorization();  // Что тебе можно? (Проверяем права)
 
     app.MapHealthChecks("/healthz");
 
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
+
+    if(app.Environment.IsDevelopment())
+        app.MapTestJwtEndpoints();
 
     app.Run();
 }
@@ -15228,6 +16090,108 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
+}
+```
+
+---
+
+### Extensions
+
+```cs title="AuthenticationExtensions.cs"
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
+namespace LegacyLego.Presentation.Extensions;
+
+public static class AuthenticationExtensions
+{
+    public static IServiceCollection AddWebAuthentication(this IServiceCollection services)
+    {
+        services.ConfigureOptions<ConfigureJwtBearerOptions>();
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+
+        services.AddAuthorization();
+
+        return services;
+    }
+}
+```
+
+---
+
+```cs title="ConfigureJwtBearerOptions.cs"
+using LegacyLego.Infrastructure.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+
+namespace LegacyLego.Presentation.Extensions;
+
+internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
+{
+    private readonly JwtOptions _jwtOptions;
+
+    public ConfigureJwtBearerOptions(IOptions<JwtOptions> jwtOptions)
+    {
+        _jwtOptions = jwtOptions.Value;
+    }
+
+    public void Configure(string? name, JwtBearerOptions options)
+    {
+        if (name == JwtBearerDefaults.AuthenticationScheme)
+        {
+            Configure(options);
+        }
+    }
+
+    public void Configure(JwtBearerOptions options)
+    {
+        options.Authority = _jwtOptions.Authority;
+        options.RequireHttpsMetadata = _jwtOptions.RequireHttpsMetadata;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = _jwtOptions.ValidIssuer,
+            ValidateAudience = false
+        };
+    }
+}
+```
+
+---
+
+### Jwt
+
+```cs title="TestJwtEndpoints.cs"
+using System.Security.Claims;
+
+namespace LegacyLego.Presentation.JWT;
+
+public static class TestJwtEndpoints
+{
+    public static IEndpointRouteBuilder MapTestJwtEndpoints(this IEndpointRouteBuilder app)
+    {
+        var ordersGroup = app.MapGroup("/jwt")
+            .WithDisplayName("Test Jwt")
+            .WithDescription("Тестирование функций Jwt и Keycloak")
+            .WithTags("Jwt");
+
+        ordersGroup.MapGet("/secret-data", GetSecretData)
+            .RequireAuthorization();
+
+        return app;
+    }
+
+    private static async Task<IResult> GetSecretData(
+        ClaimsPrincipal user,
+        CancellationToken ct)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = user.FindFirstValue(ClaimTypes.Email);
+
+        return Results.Ok(new { Message = "Доступ разрешен!", UserId = userId, Email = email });
+    }
 }
 ```
 
@@ -15356,11 +16320,92 @@ public sealed class DynamicGlobalExceptionHandler : IExceptionHandler
 
 ### OpenApi
 
+```cs title="OpenApiExtensions.cs"
+using LegacyLego.Presentation.OpenApi.Options;
+using LegacyLego.Presentation.OpenApi.Transformers;
+using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
+
+namespace LegacyLego.Presentation.OpenApi;
+
+public static class OpenApiExtensions
+{
+    public const string ApiVersion = "v1";
+
+    public static IServiceCollection AddPresentationOpenApi(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<OpenApiUiOptions>()
+            .Bind(configuration.GetSection(OpenApiUiOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services.AddOpenApi(ApiVersion, options =>
+        {
+            options.AddDocumentTransformer<ApiMetadataTransformer>();
+            options.AddDocumentTransformer<KeycloakOAuth2Transformer>();
+        });
+    }
+
+    public static IEndpointRouteBuilder MapPresentationDocumentation(this IEndpointRouteBuilder app)
+    {
+        var uiOptions = app.ServiceProvider
+            .GetRequiredService<IOptions<OpenApiUiOptions>>()
+            .Value;
+
+        app.MapOpenApi();
+
+        app.MapScalarApiReference(uiOptions.RoutePrefix, options =>
+        {
+            options.WithTitle(uiOptions.Title)
+                .WithTheme(ScalarTheme.DeepSpace)
+                .WithClassicLayout()
+                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+                .AddAuthorizationCodeFlow("OAuth2", flow =>
+                {
+                    flow.ClientId = uiOptions.ClientId;
+                });
+        });
+
+        return app;
+    }
+
+}
+```
+
+---
+
+#### Options
+
+```cs title="OpenApiUiOptions.cs"
+using System.ComponentModel.DataAnnotations;
+
+namespace LegacyLego.Presentation.OpenApi.Options;
+
+public sealed class OpenApiUiOptions
+{
+    public const string SectionName = "OpenApiUiOptions";
+
+    [Required(ErrorMessage = "Title документации не может быть пустым.")]
+    public string Title { get; set; } = "LegacyLego Documentation";
+
+    [Required(ErrorMessage = "RoutePrefix не может быть пустым.")]
+    public string RoutePrefix { get; set; } = "/docs/scalar";
+
+    [Required(ErrorMessage = "ClientId не может быть пустым.")]
+    public string ClientId { get; set; } = "legacylego-api";
+}
+```
+
+---
+
+#### Transformers
+
 ```cs title="ApiMetadataTransformer.cs"
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace LegacyLego.Presentation.OpenApi;
+namespace LegacyLego.Presentation.OpenApi.Transformers;
 
 internal sealed class ApiMetadataTransformer : IOpenApiDocumentTransformer
 {
@@ -15373,8 +16418,6 @@ internal sealed class ApiMetadataTransformer : IOpenApiDocumentTransformer
         document.Info.Description = "Внутреннее API интернет-магазина конструкторов Lego. " +
                                      "Обеспечивает работу с заказами, корзиной и платежными шлюзами.";
 
-        // ПРАВИЛЬНЫЙ ВАРИАНТ: Берем имя документа из контекста .NET OpenAPI!
-        // Если зарегистрирован документ "v1", то версия будет "v1"
         document.Info.Version = $"openapi.{context.DocumentName}";
 
         return Task.CompletedTask;
@@ -15384,19 +16427,77 @@ internal sealed class ApiMetadataTransformer : IOpenApiDocumentTransformer
 
 ---
 
-```cs title="OpenApiExtensions.cs"
-namespace LegacyLego.Presentation.OpenApi;
+```cs title="KeycloakOAuth2Transformer.cs"
+using LegacyLego.Infrastructure.Options;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
 
-public static class OpenApiExtensions
+namespace LegacyLego.Presentation.OpenApi.Transformers;
+
+internal sealed class KeycloakOAuth2Transformer : IOpenApiDocumentTransformer
 {
-    public const string ApiVersion = "v1";
+    private readonly JwtOptions _jwtOptions;
 
-    public static IServiceCollection AddPresentationOpenApi(this IServiceCollection services)
+    public KeycloakOAuth2Transformer(IOptions<JwtOptions> jwtOptions)
     {
-        return services.AddOpenApi(ApiVersion, options =>
+        _jwtOptions = jwtOptions.Value;
+    }
+
+    public Task TransformAsync(
+        OpenApiDocument document,
+        OpenApiDocumentTransformerContext context,
+        CancellationToken cancellationToken)
+    {
+        var authority = _jwtOptions.Authority;
+
+        var securityScheme = new OpenApiSecurityScheme
         {
-            options.AddDocumentTransformer<ApiMetadataTransformer>();
-        });
+            Type = SecuritySchemeType.OAuth2,
+            Description = "Keycloak OpenID Connect / OAuth 2.0",
+            Flows = new OpenApiOAuthFlows
+            {
+                AuthorizationCode = new OpenApiOAuthFlow
+                {
+                    AuthorizationUrl = new Uri($"{authority}/protocol/openid-connect/auth"),
+                    TokenUrl = new Uri($"{authority}/protocol/openid-connect/token"),
+                    Scopes = new Dictionary<string, string>
+                    {
+                        { "openid", "OpenID Connect" },
+                        { "profile", "Профиль пользователя" },
+                        { "email", "Email пользователя" }
+                    }
+                }
+            }
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["OAuth2"] = securityScheme;
+
+        var schemeReference = new OpenApiSecuritySchemeReference("OAuth2");
+        var requirement = new OpenApiSecurityRequirement
+        {
+            [schemeReference] = []
+        };
+
+        if (document.Paths != null)
+        {
+            foreach (var path in document.Paths.Values)
+            {
+                if (path?.Operations == null) continue;
+
+                foreach (var operation in path.Operations.Values)
+                {
+                    if (operation == null) continue;
+
+                    operation.Security ??= new List<OpenApiSecurityRequirement>();
+                    operation.Security.Add(requirement);
+                }
+            }
+        }
+
+        return Task.CompletedTask;
     }
 }
 ```

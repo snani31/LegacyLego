@@ -13,7 +13,7 @@ http:
         value: password
         description: Сообщаем Keycloak, что хотим войти по логину и паролю
       - name: client_id
-        value: legacylego-api
+        value: legacylego-public-client
         description: Указать realm приложения
       - name: username
         value: testcustomer
@@ -21,7 +21,6 @@ http:
       - name: password
         value: Password123!
         description: Пароль пользователя
-  auth: inherit
 
 settings:
   encodeUrl: true

@@ -20,8 +20,9 @@ request:
     flow: authorization_code
     authorizationUrl: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/auth"
     accessTokenUrl: "{{auth_host}}/realms/{{realm}}/protocol/openid-connect/token"
+    callbackUrl: localhost://bruno/callback
     credentials:
-      clientId: "{{client_id}}"
+      clientId: "{{public_client_id}}"
       placement: basic_auth_header
     pkce: {}
     tokenConfig:
