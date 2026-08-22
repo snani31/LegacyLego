@@ -1,9 +1,11 @@
 ﻿using LegacyLego.Application.Abstractions.ExceptionHandling;
+using LegacyLego.Application.Abstractions.ExternalServices.IClientProvisioningService;
 using LegacyLego.Application.Abstractions.Messaging.Command;
 using LegacyLego.Application.Abstractions.Messaging.Event.Domain;
 using LegacyLego.Application.Abstractions.Messaging.Query;
 using LegacyLego.Application.Diagnostics;
 using LegacyLego.Application.Options;
+using LegacyLego.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LegacyLego.Application;
@@ -36,7 +38,9 @@ public static class DependencyInjection
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
         )
-            
+
+            .AddScoped<IClientProvisioningService, ClientProvisioningService>()
+
             .AddSingleton<IExceptionMapper, DomainExceptionMapper>();
 
         return services;

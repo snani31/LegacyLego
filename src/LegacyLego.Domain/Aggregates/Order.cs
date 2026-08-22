@@ -10,7 +10,7 @@ namespace LegacyLego.Domain.Aggregates;
 
 public class Order : AggregateRoot<OrderId>
 {
-    public Guid ClientId { get; }
+    public ClientId ClientId { get; }
 
     public Currency Currency { get; }
 
@@ -57,7 +57,7 @@ public class Order : AggregateRoot<OrderId>
     /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
-        Guid clientId,
+        ClientId clientId,
         Currency currency,
         OrderStatus status,
         List<OrderItem> items,
@@ -84,7 +84,7 @@ public class Order : AggregateRoot<OrderId>
     /// <param name="creationDateUtc">время создания заказа в формате Utc</param>
     private Order(
         OrderId id,
-        Guid clientId,
+        ClientId clientId,
         OrderStatus status,
         Currency currency,
         decimal? frozenTotalSum,
@@ -119,7 +119,7 @@ public class Order : AggregateRoot<OrderId>
     /// <paramref name="items"/> содержит в коллекции хоть 1 тгдд элемент.</exception>
     public static Result<Order> Create(
         OrderAddress address,
-        Guid clientId,
+        ClientId clientId,
         List<OrderItem> items)
     {
         ArgumentNullException.ThrowIfNull(items,nameof(items));

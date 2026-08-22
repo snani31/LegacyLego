@@ -18,11 +18,18 @@ public class Client : AggregateRoot<ClientId>
 
     public PhoneNumber? PhoneNumber { get; }
 
-    public ClientPreferences Preferences { get; }
+    public ClientPreferences Preferences { get; private set; }
 
     public DateTime CreatedAtUtc { get; }
 
-    public Client(
+    /// <summary>
+    /// Приватный конструктор, используемый для материализации объекта Client
+    /// EF ORM системой в соответствии с конфигурациями (Не используется бизнесом!)
+    /// </summary>
+    /// <param name="id"> идентификатор клиента</param>
+    private Client(ClientId id) : base(id) { }
+
+    private Client(
         ClientId id,
         string username,
         ClientPreferences preferences,

@@ -8,7 +8,6 @@ public sealed class ClientPreferences : ValueObject
     public string LanguageCode { get; init; }
     public string CurrencyCode { get; init; } 
 
-    [JsonConstructor]
     private ClientPreferences(string languageCode, string currencyCode)
     {
         LanguageCode = languageCode;
