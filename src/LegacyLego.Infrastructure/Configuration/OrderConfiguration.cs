@@ -15,6 +15,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
     private const string CHECK_ORDER_STATUS_CONSTRAINT_NAME = "check_order_status";
     private const string CHECK_FROZEN_TOTAL_SUM_CONSTRAINT_NAME = "check_order_frozen_total_sun";
     private const string FK_ORDER_ORDER_ITEMS_CONSTRAINT_NAME = "fk_order_order_items";
+    private const string FK_ORDER_CLIENT_CONSTRAINT_NAME = "fk_order_client";
     #endregion
 
     #region ColumnNames
@@ -112,12 +113,18 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired(false);
         #endregion
 
-        //TODO FK when Client implemented !!!
-        #region client_id 
+        #region client_id FK
         builder.Property(o => o.ClientId)
             .HasColumnName(CLIENT_ID_COLUMN_NAME)
             .HasColumnType(Uuid)
-            .IsRequired();
+            .IsRequired()
+            .HasConversion(id => id.Value, value => ClientId.From(value).Value);
+
+        builder.HasOne<Client>()
+            .WithMany()
+            .HasForeignKey(o => o.ClientId)
+            .HasConstraintName(FK_ORDER_CLIENT_CONSTRAINT_NAME)
+            .OnDelete(DeleteBehavior.Restrict);
         #endregion
     }
 }

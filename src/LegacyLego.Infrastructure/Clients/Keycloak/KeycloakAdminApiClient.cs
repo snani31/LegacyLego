@@ -1,4 +1,5 @@
 ﻿using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Dto;
 using LegacyLego.Infrastructure.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,12 +12,12 @@ namespace LegacyLego.Infrastructure.Clients.Keycloak;
 public class KeycloakAdminApiClient : IIdentityProviderService
 {
     private readonly HttpClient _httpClient;
-    private readonly KeycloakAdminOptions _options;
+    private readonly KeycloakOptions _options;
     private readonly ILogger<KeycloakAdminApiClient> _logger;
 
     public KeycloakAdminApiClient(
         HttpClient httpClient,
-        IOptions<KeycloakAdminOptions> options,
+        IOptions<KeycloakOptions> options,
         ILogger<KeycloakAdminApiClient> logger)
     {
         _httpClient = httpClient;
@@ -72,8 +73,8 @@ public class KeycloakAdminApiClient : IIdentityProviderService
         var content = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("grant_type", "client_credentials"),
-            new KeyValuePair<string, string>("client_id", _options.ClientId),
-            new KeyValuePair<string, string>("client_secret", _options.ClientSecret)
+            new KeyValuePair<string, string>("client_id", _options.PrivateApiClientId),
+            new KeyValuePair<string, string>("client_secret", _options.PrivateApiClientSecret)
         });
 
         var response = await _httpClient.PostAsync(tokenEndpoint, content, ct);

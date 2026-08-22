@@ -77,8 +77,8 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddOptions<KeycloakAdminOptions>()
-            .BindConfiguration(KeycloakAdminOptions.SectionName)
+        services.AddOptions<KeycloakOptions>()
+            .BindConfiguration(KeycloakOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -141,6 +141,7 @@ public static class DependencyInjection
 
             .AddScoped<IOrderRepository, OrderRepository>()
             .AddScoped<IPaymentRepository, PaymentRepository>()
+            .AddScoped<IClientRepository, ClientRepository>()
 
             .AddSingleton<IIntegrationEventBus, InMemoryIntegrationEventBus>()
             .AddScoped<IIntegrationEventPublisher, LocalIntegrationEventPublisher>()
@@ -222,7 +223,7 @@ public static class DependencyInjection
 
         services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>((sp, client) =>
         {
-            var options = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
+            var options = sp.GetRequiredService<IOptions<KeycloakOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
         });
 

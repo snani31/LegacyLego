@@ -1,4 +1,6 @@
 ﻿using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Orders.Commands.Create;
 using LegacyLego.Infrastructure.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -77,30 +79,19 @@ public class KeycloakEventsConsumer : BackgroundService
 
                 using var scope = _scopeFactory.CreateScope();
                 var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
+                var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
 
                 // запрос к Keycloak Admin API за полным профилем
                 var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
 
-                if (userProfile != null)
-                {
-                    _logger.LogDebug(
-                        "Профиль пользователя извлечен! Username: {Username}, Email: {Email}, Phone: {Phone}",
-                        userProfile.Username,
-                        userProfile.Email,
-                        userProfile.PhoneNumber ?? "Не указан");
-
-                    _logger.LogDebug(
-                        "Данные готовы для создания агрегата Client: Id={Id}, Nickname={Nickname}, CreatedAt={CreatedAt}",
-                        userProfile.UserId,
-                        userProfile.Username,
-                        userProfile.CreatedAtUtc);
-
-                    // TODO: реализация работы команды регистрации пользователя с диспетчером команд;
-                }
-                else
-                {
+                if (userProfile is null)
                     _logger.LogWarning("Не удалось найти профиль пользователя с ID {UserId} в Keycloak", @event.UserId);
-                }
+
+                var registrationClientCommand = new RegisterClientCommand(userProfile!);
+                var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
+
+                if (result.IsSuccess)
+                    _logger.LogInformation("Круто,  сработало");
             }
 
             // Подтверждение успешной обработки сообщения в RabbitMQ

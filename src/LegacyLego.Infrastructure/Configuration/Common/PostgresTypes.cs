@@ -11,6 +11,8 @@ internal static class PostgresTypes
     internal const string SmallInt = "smallint";
     internal const string Text = "text";
 
+    internal const string Jsonb = "jsonb";
+
     /// <summary>
     /// Генерирует строку точного численного типа данных <c>numeric(precision, scale)</c>.
     /// </summary>
