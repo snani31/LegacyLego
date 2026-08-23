@@ -3,7 +3,7 @@
 public class OrderBuilder
 {
     private OrderAddress? _address = null!;
-    private Guid? _clientId = null!;
+    private ClientId? _clientId = null!;
     private List<OrderItem>? _items = null!;
 
     public OrderBuilder WithAddress(OrderAddress address)
@@ -20,13 +20,7 @@ public class OrderBuilder
 
     public OrderBuilder WithClientId(Guid clientId)
     {
-        _clientId = clientId;
-        return this;
-    }
-
-    public OrderBuilder WithEmptyClientId()
-    {
-        _clientId = Guid.Empty;
+        _clientId = ClientId.From(clientId).Value;
         return this;
     }
 
@@ -62,11 +56,11 @@ public class OrderBuilder
 
     public Result<Order> BuildResult()
     {
-        return Order.Create(_address!, _clientId ?? Guid.Empty, _items!);
+        return Order.Create(_address!, _clientId, _items!);
     }
 
     public Order BuildValue()
     {
-        return Order.Create(_address!, _clientId ?? Guid.Empty, _items!).Value;
+        return Order.Create(_address!, _clientId, _items!).Value;
     }
 }
