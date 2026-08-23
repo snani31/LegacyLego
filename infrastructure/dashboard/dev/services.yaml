@@ -26,5 +26,24 @@
     - LegacyLego API:
         icon: /icons/lego.png
         href: http://localhost:5000/docs/scalar/
-        description: LegacyLego ASP.NET Core API (Production Mode)
+        description: LegacyLego ASP.NET Core API
         siteMonitor: http://host.docker.internal:5000/healthz
+
+- 🔐 Authorization:
+    - Keycloak Console:
+        icon: keycloak.png
+        href: http://localhost:8084
+        description: Admin Console
+        container: legacy-lego-keycloak
+    - Client Account:
+        icon: keycloak.png
+        href: http://localhost:8084/realms/legacylego/account
+        description: User Account Management
+        container: legacy-lego-keycloak
+
+- 📫 Messaging:
+    - RabbitMq:
+        icon: rabbitmq.png
+        href: http://localhost:15672
+        description: Message brocker RabbitMq
+        container: legacy-lego-rabbitmq

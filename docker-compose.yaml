@@ -127,6 +127,7 @@ services:
       - KK_TO_RMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS}
       - KK_TO_RMQ_VHOST=/
       - KK_TO_RMQ_EXCHANGE=amq.topic
+      - KC_HEALTH_ENABLED=true
     volumes:
       - ./infrastructure/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
       - ./infrastructure/keycloak/plugins/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbitmq.jar
@@ -134,6 +135,12 @@ services:
       - 8084:8080
       - 9000:9000 # exposed healthcheck
     command: [ "start-dev", "--import-realm" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q \"UP\"' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
     depends_on:
       legacy-lego-rabbitmq:

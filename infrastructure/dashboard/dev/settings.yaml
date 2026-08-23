@@ -3,3 +3,20 @@ title: LegacyLego dashboard
 theme: dark
 
 language: ru
+
+layout:
+  🚀 Application Core:
+    style: column
+    columns: 3
+  🛠️ Infrastructure & Storage:
+    style: row
+    columns: 3
+  📊 Monitoring & Administration:
+    style: row
+    columns: 3
+  🔐 Authorization:
+    style: row
+    columns: 3
+  📫 Messaging:
+    style: row
+    columns: 3

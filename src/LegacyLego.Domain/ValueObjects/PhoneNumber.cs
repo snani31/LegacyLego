@@ -6,7 +6,7 @@ namespace LegacyLego.Domain.ValueObjects;
 
 public sealed partial class PhoneNumber : ValueObject
 {
-    [GeneratedRegex(@"^\+[1-9]\d{6,14}$")]
+    [GeneratedRegex(@"^\+[1-9]\d{9,14}$")]
     private static partial Regex PhoneRegex();
 
     public string Value { get; }
