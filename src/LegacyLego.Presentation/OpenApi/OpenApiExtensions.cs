@@ -1,4 +1,5 @@
-﻿using LegacyLego.Presentation.OpenApi.Options;
+﻿using LegacyLego.Infrastructure.Options;
+using LegacyLego.Presentation.OpenApi.Options;
 using LegacyLego.Presentation.OpenApi.Transformers;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
@@ -30,6 +31,10 @@ public static class OpenApiExtensions
             .GetRequiredService<IOptions<OpenApiUiOptions>>()
             .Value;
 
+        var keycloakOptions = app.ServiceProvider
+            .GetRequiredService<IOptions<KeycloakOptions>>()
+            .Value;
+
         app.MapOpenApi();
 
         app.MapScalarApiReference(uiOptions.RoutePrefix, options =>
@@ -40,7 +45,7 @@ public static class OpenApiExtensions
                 .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
                 .AddAuthorizationCodeFlow("OAuth2", flow =>
                 {
-                    flow.ClientId = uiOptions.ClientId;
+                    flow.ClientId = keycloakOptions.PublicClientId;
                 });
         });
 

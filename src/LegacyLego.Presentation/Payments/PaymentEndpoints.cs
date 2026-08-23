@@ -2,6 +2,7 @@
 using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Presentation.Authentication.Extensions;
 using LegacyLego.Presentation.Mock.Common.Dto.Request;
 using LegacyLego.Presentation.Payments.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -104,14 +105,8 @@ public static class PaymentEndpoints
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        // ⌚ Временно для тестов, пока не настроен JWT:
-        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(clientIdString, out var clientId))
-        {
-            clientId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-        }
 
-        var command = new StartOrderPaymentCommand(OrderId: orderId, ClientId: clientId);
+        var command = new StartOrderPaymentCommand(OrderId: orderId, ClientId: user.GetUserId());
 
         var result = await commandDispatcher.DispatchAsync(command, ct);
 

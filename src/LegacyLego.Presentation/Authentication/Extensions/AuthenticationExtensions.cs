@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using LegacyLego.Presentation.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace LegacyLego.Presentation.Extensions;
+namespace LegacyLego.Presentation.Authentication.Extensions;
 
 public static class AuthenticationExtensions
 {

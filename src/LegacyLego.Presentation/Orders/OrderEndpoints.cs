@@ -4,6 +4,7 @@ using LegacyLego.Application.Orders.Queries.ActiveOrders;
 using LegacyLego.Application.Orders.Queries.OrdersHistory;
 using LegacyLego.Domain.Enums;
 using LegacyLego.Domain.Shared;
+using LegacyLego.Presentation.Authentication.Extensions;
 using LegacyLego.Presentation.Orders.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -19,10 +20,10 @@ public static class OrderEndpoints
             .WithDescription("Управление заказами")
             .WithTags("Orders");
 
-        ordersGroup.MapPost("", Create);
-        ordersGroup.MapGet("/active", GetActiveOrders); // Сделали явный чистый эндпоинт
-        ordersGroup.MapGet("/history", GetOrdersHistory);
-        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails);
+        ordersGroup.MapPost("", Create).RequireAuthorization();
+        ordersGroup.MapGet("/active", GetActiveOrders).RequireAuthorization();
+        ordersGroup.MapGet("/history", GetOrdersHistory).RequireAuthorization();
+        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails).RequireAuthorization();
 
         return app;
     }
@@ -35,20 +36,12 @@ public static class OrderEndpoints
         HttpContext httpContext,
         CancellationToken ct)
     {
-        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        // Временно для тестов, пока не настроен JWT:
-        if (!Guid.TryParse(clientIdString, out var clientId))
-        {
-            clientId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-        }
-
         var command = new CreateOrderCommand(
-            ClientId: clientId,
-            CurrencyCode: request.CurrencyCode,
-            OrderAddress: request.OrderAddress,
-            Items: request.Items
-        );
+         UserProfile: user.ToExternalUserProfile(),
+         CurrencyCode: request.CurrencyCode,
+         OrderAddress: request.OrderAddress,
+         Items: request.Items
+         );
 
         var result = await commandDispatcher.DispatchAsync(command, ct);
 
@@ -76,7 +69,7 @@ public static class OrderEndpoints
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        var query = new GetActiveOrdersQuery(GetClientId(user));
+        var query = new GetActiveOrdersQuery(user.GetUserId());
         var result = await queryDispatcher.DispatchAsync(query, ct);
 
         return ToHttpResponse(result);
@@ -88,7 +81,7 @@ public static class OrderEndpoints
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        var query = new GetOrdersHistoryQuery(GetClientId(user), request);
+        var query = new GetOrdersHistoryQuery(user.GetUserId(), request);
         var result = await queryDispatcher.DispatchAsync(query, ct);
 
         return ToHttpResponse(result);
@@ -100,23 +93,10 @@ public static class OrderEndpoints
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        var query = new GetOrderDetailsQuery(GetClientId(user), orderId);
+        var query = new GetOrderDetailsQuery(user.GetUserId(), orderId);
         var result = await queryDispatcher.DispatchAsync(query, ct);
 
         return ToHttpResponse(result);
-    }
-
-    private static Guid GetClientId(ClaimsPrincipal user)
-    {
-        var clientIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        // Временно для тестов, пока не настроен JWT:
-        if (!Guid.TryParse(clientIdString, out var clientId))
-        {
-            return Guid.Parse("00000000-0000-0000-0000-000000000001");
-        }
-
-        return clientId;
     }
 
     private static IResult ToHttpResponse<T>(Result<T> result)

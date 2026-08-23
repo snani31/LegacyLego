@@ -889,6 +889,42 @@
 			"authenticationFlowBindingOverrides": {},
 			"fullScopeAllowed": true,
 			"nodeReRegistrationTimeout": -1,
+			"protocolMappers": [
+				{
+					"id": "594d32ed-8f7a-4974-a9ce-c37a6711677b",
+					"name": "created_at_mapper",
+					"protocol": "openid-connect",
+					"protocolMapper": "oidc-usermodel-property-mapper",
+					"consentRequired": false,
+					"config": {
+						"introspection.token.claim": "true",
+						"userinfo.token.claim": "true",
+						"user.attribute": "createdTimestamp",
+						"id.token.claim": "true",
+						"lightweight.claim": "true",
+						"access.token.claim": "true",
+						"claim.name": "created_at",
+						"jsonType.label": "String"
+					}
+				},
+				{
+					"id": "17440515-9965-45ee-bfb0-96867e5f9340",
+					"name": "phone_number_mapper",
+					"protocol": "openid-connect",
+					"protocolMapper": "oidc-usermodel-attribute-mapper",
+					"consentRequired": false,
+					"config": {
+						"introspection.token.claim": "true",
+						"userinfo.token.claim": "true",
+						"user.attribute": "phoneNumber",
+						"id.token.claim": "true",
+						"lightweight.claim": "false",
+						"access.token.claim": "true",
+						"claim.name": "phone_number",
+						"jsonType.label": "String"
+					}
+				}
+			],
 			"defaultClientScopes": [
 				"web-origins",
 				"acr",
@@ -1780,14 +1816,14 @@
 				"subComponents": {},
 				"config": {
 					"allowed-protocol-mapper-types": [
-						"oidc-usermodel-property-mapper",
-						"saml-user-property-mapper",
 						"oidc-usermodel-attribute-mapper",
-						"saml-role-list-mapper",
-						"oidc-address-mapper",
-						"oidc-sha256-pairwise-sub-mapper",
 						"saml-user-attribute-mapper",
-						"oidc-full-name-mapper"
+						"oidc-full-name-mapper",
+						"saml-role-list-mapper",
+						"saml-user-property-mapper",
+						"oidc-address-mapper",
+						"oidc-usermodel-property-mapper",
+						"oidc-sha256-pairwise-sub-mapper"
 					]
 				}
 			},
@@ -1866,13 +1902,13 @@
 				"subComponents": {},
 				"config": {
 					"allowed-protocol-mapper-types": [
-						"oidc-usermodel-property-mapper",
-						"oidc-full-name-mapper",
-						"saml-user-attribute-mapper",
-						"saml-user-property-mapper",
-						"saml-role-list-mapper",
 						"oidc-sha256-pairwise-sub-mapper",
+						"saml-user-property-mapper",
+						"oidc-full-name-mapper",
+						"saml-role-list-mapper",
+						"oidc-usermodel-property-mapper",
 						"oidc-usermodel-attribute-mapper",
+						"saml-user-attribute-mapper",
 						"oidc-address-mapper"
 					]
 				}
@@ -2789,7 +2825,7 @@
 		"clientSessionIdleTimeout": "0",
 		"userProfileEnabled": "true",
 		"clientOfflineSessionIdleTimeout": "0",
-		"userProfile": "{\"attributes\":[{\"name\":\"phoneNumber\",\"displayName\":\"Phone Number\",\"validations\":{\"pattern\":{\"pattern\":\"^\\\\+[1-9]\\\\d{6,14}$\",\"error-message\":\"Invalid phone format. Example: +79991234567\"}},\"annotations\":{\"inputType\":\"tel\",\"inputHelperTextBefore\":\"Format: +79991234567\"},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"selector\":{\"scopes\":[\"phone\"]}}]}",
+		"userProfile": "{\"attributes\":[{\"name\":\"phoneNumber\",\"displayName\":\"Phone Number\",\"validations\":{\"pattern\":{\"pattern\":\"^\\\\+[1-9]\\\\d{9,14}$\",\"error-message\":\"Invalid phone format. Example: +79991234567\"}},\"annotations\":{\"inputType\":\"tel\",\"inputHelperTextBefore\":\"Format: +79991234567\"},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"selector\":{\"scopes\":[\"phone\"]}}]}",
 		"cibaInterval": "5",
 		"realmReusableOtpCode": "false",
 		"cibaExpiresIn": "120",

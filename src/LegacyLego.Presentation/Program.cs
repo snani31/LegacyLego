@@ -1,7 +1,7 @@
 using LegacyLego.Application;
 using LegacyLego.Infrastructure;
-using LegacyLego.Presentation.Extensions;
-using LegacyLego.Presentation.JWT;
+using LegacyLego.Presentation.Authentication.Endpoints;
+using LegacyLego.Presentation.Authentication.Extensions;
 using LegacyLego.Presentation.Middleware;
 using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;

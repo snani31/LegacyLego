@@ -11,7 +11,4 @@ public sealed class OpenApiUiOptions
 
     [Required(ErrorMessage = "RoutePrefix не может быть пустым.")]
     public string RoutePrefix { get; set; } = "/docs/scalar";
-
-    [Required(ErrorMessage = "ClientId не может быть пустым.")]
-    public string ClientId { get; set; } = "legacylego-api";
 }
