@@ -1,7 +1,7 @@
 ﻿using LegacyLego.Infrastructure.Options;
+using LegacyLego.Presentation.Authentication.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Security.Claims;
 
 namespace LegacyLego.Presentation.Authentication.Endpoints;
 
@@ -9,7 +9,7 @@ public static class AuthenticationEndpoints
 {
     const string ROUTE_GROUP_NAME = "/auth";
 
-    public static IEndpointRouteBuilder MapTestJwtEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAuthenticationEndpoints(this IEndpointRouteBuilder app)
     {
         var jwtGroup = app.MapGroup(ROUTE_GROUP_NAME)
             .WithDisplayName("Authentication")
@@ -33,11 +33,25 @@ public static class AuthenticationEndpoints
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
 
+        // генерация PKCE
+        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
+
+        // Сохранение verifier в временную HttpOnly куку
+        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
+
         var loginUrl = $"{options.AuthorizationEndpoint}" +
             $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
             $"&response_type=code" +
-            $"&scope=openid";
+            $"&scope=openid" + 
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256";
 
         return Results.Redirect(loginUrl);
     }
@@ -69,6 +83,15 @@ public static class AuthenticationEndpoints
         HttpContext httpContext,
         CancellationToken ct)
     {
+
+        // Считать сохраненный verifier из куки
+        if (!httpContext.Request.Cookies.TryGetValue("pkce_verifier", out var codeVerifier))
+        {
+            return Results.BadRequest("PKCE verifier is missing or expired.");
+        }
+        // Удалить куку после считывания
+        httpContext.Response.Cookies.Delete("pkce_verifier");
+
         var options = keycloakOptions.Value;
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
@@ -81,7 +104,8 @@ public static class AuthenticationEndpoints
             ["grant_type"] = "authorization_code",
             ["client_id"] = options.PublicClientId,
             ["code"] = code,
-            ["redirect_uri"] = redirectUri
+            ["redirect_uri"] = redirectUri,
+            ["code_verifier"] = codeVerifier
         });
 
         var response = await client.PostAsync(tokenEndpoint, content, ct);

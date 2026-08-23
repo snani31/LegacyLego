@@ -7,7 +7,6 @@ using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
 using Microsoft.AspNetCore.HttpOverrides;
-using Scalar.AspNetCore;
 using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -65,7 +64,7 @@ try
     app.MapPaymentEndpoints();
 
     if(app.Environment.IsDevelopment())
-        app.MapTestJwtEndpoints();
+        app.MapAuthenticationEndpoints();
 
     app.Run();
 }
