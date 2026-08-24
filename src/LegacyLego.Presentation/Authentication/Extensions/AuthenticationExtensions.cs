@@ -1,4 +1,5 @@
 ﻿using LegacyLego.Presentation.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace LegacyLego.Presentation.Authentication.Extensions;
@@ -12,7 +13,8 @@ public static class AuthenticationExtensions
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();
 
-        services.AddAuthorization();
+        services.AddApplicationAuthorization();
+
 
         return services;
     }

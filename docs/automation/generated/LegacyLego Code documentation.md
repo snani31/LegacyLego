@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.10.3
+Актуальная версия проекта: 1.10.4
 
 ## Проекты
 
@@ -413,12 +413,18 @@
 │   │   └── UnitOfWork.cs
 │   └── LegacyLego.Presentation
 │       ├── Authentication
+│       │   ├── Common
+│       │   │   └── AuthConstants.cs
 │       │   ├── Endpoints
 │       │   │   └── AuthenticationEndpoints.cs
-│       │   └── Extensions
-│       │       ├── AuthenticationExtensions.cs
-│       │       ├── ClaimsPrincipalExtensions.cs
-│       │       └── ConfigureJwtBearerOptions.cs
+│       │   ├── Extensions
+│       │   │   ├── AuthenticationExtensions.cs
+│       │   │   ├── AuthorizationExtensions.cs
+│       │   │   ├── ClaimsPrincipalExtensions.cs
+│       │   │   ├── ConfigureJwtBearerOptions.cs
+│       │   │   └── EndpointAuthorizationExtensions.cs
+│       │   └── Helpers
+│       │       └── PkceGenerationHelper.cs
 │       ├── Middleware
 │       │   └── DynamicGlobalExceptionHandler.cs
 │       ├── OpenApi
@@ -14347,7 +14353,6 @@ using LegacyLego.Presentation.OpenApi;
 using LegacyLego.Presentation.Orders;
 using LegacyLego.Presentation.Payments;
 using Microsoft.AspNetCore.HttpOverrides;
-using Scalar.AspNetCore;
 using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -14405,7 +14410,7 @@ try
     app.MapPaymentEndpoints();
 
     if(app.Environment.IsDevelopment())
-        app.MapTestJwtEndpoints();
+        app.MapAuthenticationEndpoints();
 
     app.Run();
 }
@@ -14423,13 +14428,36 @@ finally
 
 ### Authentication
 
+#### Common
+
+```cs title="AuthConstants.cs"
+namespace LegacyLego.Presentation.Authentication.Common;
+
+public static class AuthConstants
+{
+    public static class Roles
+    {
+        public const string Client = "client";
+        public const string Admin = "admin";
+    }
+
+    public static class Policies
+    {
+        public const string ClientPolicy = "ClientPolicy";
+        public const string AdminPolicy = "AdminPolicy";
+    }
+}
+```
+
+---
+
 #### Endpoints
 
 ```cs title="AuthenticationEndpoints.cs"
 using LegacyLego.Infrastructure.Options;
+using LegacyLego.Presentation.Authentication.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Security.Claims;
 
 namespace LegacyLego.Presentation.Authentication.Endpoints;
 
@@ -14437,7 +14465,7 @@ public static class AuthenticationEndpoints
 {
     const string ROUTE_GROUP_NAME = "/auth";
 
-    public static IEndpointRouteBuilder MapTestJwtEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAuthenticationEndpoints(this IEndpointRouteBuilder app)
     {
         var jwtGroup = app.MapGroup(ROUTE_GROUP_NAME)
             .WithDisplayName("Authentication")
@@ -14461,11 +14489,25 @@ public static class AuthenticationEndpoints
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
 
+        // генерация PKCE
+        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
+
+        // Сохранение verifier в временную HttpOnly куку
+        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
+
         var loginUrl = $"{options.AuthorizationEndpoint}" +
             $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
             $"&response_type=code" +
-            $"&scope=openid";
+            $"&scope=openid" + 
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256";
 
         return Results.Redirect(loginUrl);
     }
@@ -14479,12 +14521,26 @@ public static class AuthenticationEndpoints
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
 
+        // генерация PKCE
+        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
+
+        // Сохранение verifier в временную HttpOnly куку
+        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
+
         var registrationUrl = $"{options.AuthorizationEndpoint}" +
             $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
             $"&response_type=code" +
             $"&scope=openid" +
-            $"&prompt=create";
+            $"&prompt=create" +
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256";
 
         return Results.Redirect(registrationUrl);
     }
@@ -14497,6 +14553,15 @@ public static class AuthenticationEndpoints
         HttpContext httpContext,
         CancellationToken ct)
     {
+
+        // Считать сохраненный verifier из куки
+        if (!httpContext.Request.Cookies.TryGetValue("pkce_verifier", out var codeVerifier))
+        {
+            return Results.BadRequest("PKCE verifier is missing or expired.");
+        }
+        // Удалить куку после считывания
+        httpContext.Response.Cookies.Delete("pkce_verifier");
+
         var options = keycloakOptions.Value;
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
@@ -14509,7 +14574,8 @@ public static class AuthenticationEndpoints
             ["grant_type"] = "authorization_code",
             ["client_id"] = options.PublicClientId,
             ["code"] = code,
-            ["redirect_uri"] = redirectUri
+            ["redirect_uri"] = redirectUri,
+            ["code_verifier"] = codeVerifier
         });
 
         var response = await client.PostAsync(tokenEndpoint, content, ct);
@@ -14542,6 +14608,7 @@ public static class AuthenticationEndpoints
 
 ```cs title="AuthenticationExtensions.cs"
 using LegacyLego.Presentation.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace LegacyLego.Presentation.Authentication.Extensions;
@@ -14555,7 +14622,30 @@ public static class AuthenticationExtensions
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();
 
-        services.AddAuthorization();
+        services.AddApplicationAuthorization();
+
+
+        return services;
+    }
+}
+```
+
+---
+
+```cs title="AuthorizationExtensions.cs"
+using LegacyLego.Presentation.Authentication.Common;
+
+namespace LegacyLego.Presentation.Authentication.Extensions;
+
+public static class AuthorizationExtensions
+{
+    public static IServiceCollection AddApplicationAuthorization(this IServiceCollection services)
+    {
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthConstants.Policies.ClientPolicy, policy =>
+                policy.RequireRole(AuthConstants.Roles.Client))
+            .AddPolicy(AuthConstants.Policies.AdminPolicy, policy =>
+                policy.RequireRole(AuthConstants.Roles.Admin));
 
         return services;
     }
@@ -14655,12 +14745,79 @@ internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBear
     {
         options.Authority = _jwtOptions.Authority;
         options.RequireHttpsMetadata = _jwtOptions.RequireHttpsMetadata;
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidIssuer = _jwtOptions.ValidIssuer,
-            ValidateAudience = false
+            ValidateAudience = false,
+            RoleClaimType = "roles"
         };
+    }
+}
+```
+
+---
+
+```cs title="EndpointAuthorizationExtensions.cs"
+using LegacyLego.Presentation.Authentication.Common;
+
+namespace LegacyLego.Presentation.Authentication.Extensions;
+
+public static class EndpointAuthorizationExtensions
+{
+    public static TBuilder RequireClientAuthorization<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        return builder.RequireAuthorization(AuthConstants.Policies.ClientPolicy);
+    }
+
+    public static TBuilder RequireAdminAuthorization<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        return builder.RequireAuthorization(AuthConstants.Policies.AdminPolicy);
+    }
+}
+```
+
+---
+
+#### Helpers
+
+```cs title="PkceGenerationHelper.cs"
+using System.Security.Cryptography;
+using System.Text;
+
+namespace LegacyLego.Presentation.Authentication.Helpers;
+
+public static class PkceGenerator
+{
+    public static (string Verifier, string Challenge) GeneratePair()
+    {
+        var verifier = GenerateVerifier();
+        var challenge = GenerateChallenge(verifier);
+        return (verifier, challenge);
+    }
+
+    private static string GenerateVerifier()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Base64UrlEncode(bytes);
+    }
+
+    private static string GenerateChallenge(string codeVerifier)
+    {
+        var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
+        return Base64UrlEncode(challengeBytes);
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 }
 ```
@@ -15001,10 +15158,10 @@ public static class OrderEndpoints
             .WithDescription("Управление заказами")
             .WithTags("Orders");
 
-        ordersGroup.MapPost("", Create).RequireAuthorization();
-        ordersGroup.MapGet("/active", GetActiveOrders).RequireAuthorization();
-        ordersGroup.MapGet("/history", GetOrdersHistory).RequireAuthorization();
-        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails).RequireAuthorization();
+        ordersGroup.MapPost("", Create).RequireClientAuthorization();
+        ordersGroup.MapGet("/active", GetActiveOrders).RequireClientAuthorization();
+        ordersGroup.MapGet("/history", GetOrdersHistory).RequireClientAuthorization();
+        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails).RequireClientAuthorization();
 
         return app;
     }

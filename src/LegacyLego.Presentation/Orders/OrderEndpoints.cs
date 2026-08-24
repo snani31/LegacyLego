@@ -20,10 +20,10 @@ public static class OrderEndpoints
             .WithDescription("Управление заказами")
             .WithTags("Orders");
 
-        ordersGroup.MapPost("", Create).RequireAuthorization();
-        ordersGroup.MapGet("/active", GetActiveOrders).RequireAuthorization();
-        ordersGroup.MapGet("/history", GetOrdersHistory).RequireAuthorization();
-        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails).RequireAuthorization();
+        ordersGroup.MapPost("", Create).RequireClientAuthorization();
+        ordersGroup.MapGet("/active", GetActiveOrders).RequireClientAuthorization();
+        ordersGroup.MapGet("/history", GetOrdersHistory).RequireClientAuthorization();
+        ordersGroup.MapGet("/{orderId:guid}", GetOrderDetails).RequireClientAuthorization();
 
         return app;
     }

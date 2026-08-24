@@ -26,11 +26,13 @@ internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBear
     {
         options.Authority = _jwtOptions.Authority;
         options.RequireHttpsMetadata = _jwtOptions.RequireHttpsMetadata;
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidIssuer = _jwtOptions.ValidIssuer,
-            ValidateAudience = false
+            ValidateAudience = false,
+            RoleClaimType = "roles"
         };
     }
 }
