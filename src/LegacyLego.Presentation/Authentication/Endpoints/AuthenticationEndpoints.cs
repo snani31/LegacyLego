@@ -65,12 +65,26 @@ public static class AuthenticationEndpoints
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
 
+        // генерация PKCE
+        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
+
+        // Сохранение verifier в временную HttpOnly куку
+        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
+
         var registrationUrl = $"{options.AuthorizationEndpoint}" +
             $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
             $"&response_type=code" +
             $"&scope=openid" +
-            $"&prompt=create";
+            $"&prompt=create" +
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256";
 
         return Results.Redirect(registrationUrl);
     }
