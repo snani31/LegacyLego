@@ -128,6 +128,7 @@ services:
       - KK_TO_RMQ_VHOST=/
       - KK_TO_RMQ_EXCHANGE=amq.topic
       - KC_HEALTH_ENABLED=true
+      - KEYCLOAK_API_CLIENT_SECRET=${KEYCLOAK_API_CLIENT_SECRET}
     volumes:
       - ./infrastructure/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
       - ./infrastructure/keycloak/plugins/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbitmq.jar
