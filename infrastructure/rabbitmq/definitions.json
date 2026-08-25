@@ -29,10 +29,28 @@
 			"vhost": "/",
 			"durable": true,
 			"auto_delete": false,
+			"arguments": {
+				"x-dead-letter-exchange": "keycloak-events-dlx"
+			}
+		},
+		{
+			"name": "keycloak-events-dlq",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
 			"arguments": {}
 		}
 	],
-	"exchanges": [],
+	"exchanges": [
+		{
+			"name": "keycloak-events-dlx",
+			"vhost": "/",
+			"type": "fanout",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		}
+	],
 	"bindings": [
 		{
 			"source": "amq.topic",
@@ -40,6 +58,14 @@
 			"destination": "keycloak-events-queue",
 			"destination_type": "queue",
 			"routing_key": "KK.EVENT.*.*.*.*.REGISTER",
+			"arguments": {}
+		},
+		{
+			"source": "keycloak-events-dlx",
+			"vhost": "/",
+			"destination": "keycloak-events-dlq",
+			"destination_type": "queue",
+			"routing_key": "",
 			"arguments": {}
 		}
 	]

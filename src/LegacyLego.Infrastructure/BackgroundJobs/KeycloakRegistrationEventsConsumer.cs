@@ -69,39 +69,63 @@ public class KeycloakEventsConsumer : BackgroundService
 
         _logger.LogDebug("Получено сырое сообщение из RabbitMQ: {Json}", messageJson);
 
+        KeycloakUserRegisteredIntegrationEvent? @event;
+
         try
         {
-            var @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
+            @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Битый JSON в сообщении RabbitMQ. Отправка в DLQ.");
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+            return;
+        }
 
-            if (@event != null && @event.Type == "REGISTER")
+        if (@event is null || @event.Type != "REGISTER")
+        {
+            _logger.LogWarning("Игнорирование сообщения: пустой объект или тип события != REGISTER.");
+            await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
+            return;
+        }
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
+            var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+
+            var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
+
+            if (userProfile is null)
             {
-                _logger.LogDebug("Успешно распаршено событие регистрации для UserId: {UserId}", @event.UserId);
-
-                using var scope = _scopeFactory.CreateScope();
-                var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
-                var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
-
-                // запрос к Keycloak Admin API за полным профилем
-                var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
-
-                if (userProfile is null)
-                    _logger.LogWarning("Не удалось найти профиль пользователя с ID {UserId} в Keycloak", @event.UserId);
-
-                var registrationClientCommand = new RegisterClientCommand(userProfile!);
-                var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
-
-                if (result.IsSuccess)
-                    _logger.LogInformation("Круто,  сработало");
+                _logger.LogError("Профиль пользователя с ID {UserId} не найден в Keycloak. Сброс сообщения в DLQ.", @event.UserId);
+                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+                return;
             }
 
-            // Подтверждение успешной обработки сообщения в RabbitMQ
+            var registrationClientCommand = new RegisterClientCommand(userProfile);
+            var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
+
+            if (result.IsFailure)
+            {
+                _logger.LogError("Не удалось зарегистрировать клиента в базе. Ошибка: {result}. Отправка в DLQ.", result.Error);
+
+                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+                return;
+            }
+
+            _logger.LogInformation("Клиент {UserId} успешно зарегистрирован в системе.", @event.UserId);
             await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Сетевая ошибка при обращении к Keycloak Admin API. Повторная попытка (requeue = true).");
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обработке сообщения из RabbitMQ или запросе к Keycloak Admin API");
-
-            // Возвращаем сообщение обратно в очередь
+            _logger.LogError(ex, "Критическая ошибка при обработке сообщения. Повторная попытка (requeue = true).");
             await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
         }
     }
