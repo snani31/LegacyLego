@@ -21,3 +21,13 @@
         - abbr: MS
           href: https://learn.microsoft.com/en-us/dotnet/
           description: C# & .NET Reference
+    - Regex101:
+        - abbr: RG
+          href: https://regex101.com/
+          description: Online regex tester and debugger
+
+- 🔑 Authentication & Jwt:
+    - Jwt.Io:
+        - abbr: JWT
+          href: https://www.jwt.io/
+          description: JSON Web Token (JWT) Debugger

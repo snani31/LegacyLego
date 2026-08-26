@@ -40,3 +40,22 @@
         href: http://localhost/stats/
         description: Real-time Nginx Traffic Statistics (Nginx Auth)
         container: legacy-lego-prod-goaccess
+
+- 🔐 Authorization:
+    - Keycloak Console:
+        icon: keycloak.png
+        href: http://localhost/auth
+        description: Admin Console
+        container: legacy-lego-prod-keycloak
+    - Client Account:
+        icon: keycloak.png
+        href: http://localhost/auth/realms/legacylego/account
+        description: User Account Management
+        container: legacy-lego-prod-keycloak
+
+- 📫 Messaging:
+    - RabbitMq:
+        icon: rabbitmq.png
+        href: http://localhost/rabbitmq
+        description: Message brocker RabbitMq
+        container: legacy-lego-prod-rabbitmq
