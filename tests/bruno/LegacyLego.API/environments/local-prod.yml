@@ -3,3 +3,21 @@ variables:
   - name: host
     value: http://localhost
     description: ""
+  - name: auth_host
+    value: http://localhost:/auth/
+    description: ""
+  - name: realm
+    value: legacylego
+    description: ""
+  - name: public_client_id
+    value: legacylego-public-client
+    description: ""
+  - name: auth_healt_host
+    value: ""
+    disabled: true
+    description: ""
+  - name: backend_client_id
+    value: legacylego-backend-service
+    description: ""
+  - secret: true
+    name: client_secret

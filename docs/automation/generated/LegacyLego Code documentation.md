@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.10.4
+Актуальная версия проекта: 1.10.5
 
 ## Проекты
 
@@ -105,9 +105,11 @@
 │   ├── keycloak
 │   │   ├── plugins
 │   │   │   └── keycloak-to-rabbit-3.0.5.jar
-│   │   └── realm-config.json
+│   │   ├── realm-config-dev.json
+│   │   └── realm-config-local-prod.json
 │   └── rabbitmq
-│       └── definitions.json
+│       ├── definitions.json
+│       └── rabbitmq.conf
 ├── nginx
 │   ├── static
 │   │   └── favicon
@@ -423,8 +425,9 @@
 │       │   │   ├── ClaimsPrincipalExtensions.cs
 │       │   │   ├── ConfigureJwtBearerOptions.cs
 │       │   │   └── EndpointAuthorizationExtensions.cs
-│       │   └── Helpers
-│       │       └── PkceGenerationHelper.cs
+│       │   ├── Helpers
+│       │   │   └── PkceGenerationHelper.cs
+│       │   └── KeycloakDockerBackchannelHandler.cs
 │       ├── Middleware
 │       │   └── DynamicGlobalExceptionHandler.cs
 │       ├── OpenApi
@@ -451,6 +454,7 @@
 │       │   └── mock-checkout.html
 │       ├── appsettings.Development.json
 │       ├── appsettings.json
+│       ├── appsettings.Production.json
 │       ├── LegacyLego.Presentation.csproj
 │       ├── LegacyLego.Presentation.csproj.user
 │       ├── LegacyLego.Presentation.json
@@ -9320,11 +9324,7 @@ public static class DependencyInjection
 
         #region Keycloak Admin Client
 
-        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<IOptions<KeycloakOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl);
-        });
+        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>();
 
         #endregion
 
@@ -9551,39 +9551,63 @@ public class KeycloakEventsConsumer : BackgroundService
 
         _logger.LogDebug("Получено сырое сообщение из RabbitMQ: {Json}", messageJson);
 
+        KeycloakUserRegisteredIntegrationEvent? @event;
+
         try
         {
-            var @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
+            @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Битый JSON в сообщении RabbitMQ. Отправка в DLQ.");
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+            return;
+        }
 
-            if (@event != null && @event.Type == "REGISTER")
+        if (@event is null || @event.Type != "REGISTER")
+        {
+            _logger.LogWarning("Игнорирование сообщения: пустой объект или тип события != REGISTER.");
+            await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
+            return;
+        }
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
+            var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+
+            var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
+
+            if (userProfile is null)
             {
-                _logger.LogDebug("Успешно распаршено событие регистрации для UserId: {UserId}", @event.UserId);
-
-                using var scope = _scopeFactory.CreateScope();
-                var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
-                var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
-
-                // запрос к Keycloak Admin API за полным профилем
-                var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
-
-                if (userProfile is null)
-                    _logger.LogWarning("Не удалось найти профиль пользователя с ID {UserId} в Keycloak", @event.UserId);
-
-                var registrationClientCommand = new RegisterClientCommand(userProfile!);
-                var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
-
-                if (result.IsSuccess)
-                    _logger.LogInformation("Круто,  сработало");
+                _logger.LogError("Профиль пользователя с ID {UserId} не найден в Keycloak. Сброс сообщения в DLQ.", @event.UserId);
+                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+                return;
             }
 
-            // Подтверждение успешной обработки сообщения в RabbitMQ
+            var registrationClientCommand = new RegisterClientCommand(userProfile);
+            var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
+
+            if (result.IsFailure)
+            {
+                _logger.LogError("Не удалось зарегистрировать клиента в базе. Ошибка: {result}. Отправка в DLQ.", result.Error);
+
+                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
+                return;
+            }
+
+            _logger.LogInformation("Клиент {UserId} успешно зарегистрирован в системе.", @event.UserId);
             await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Сетевая ошибка при обращении к Keycloak Admin API. Повторная попытка (requeue = true).");
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при обработке сообщения из RabbitMQ или запросе к Keycloak Admin API");
-
-            // Возвращаем сообщение обратно в очередь
+            _logger.LogError(ex, "Критическая ошибка при обработке сообщения. Повторная попытка (requeue = true).");
             await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
         }
     }
@@ -10112,9 +10136,10 @@ public class KeycloakAdminApiClient : IIdentityProviderService
         // Получить Bearer token по схеме Client Credentials
         var token = await GetAccessTokenAsync(ct);
 
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"/admin/realms/{_options.Realm}/users/{userId}");
+        // Используем точный абсолютный URL: http://legacy-lego-keycloak:8080/auth/admin/realms/{realm}/users/{userId}
+        var requestUri = $"{_options.AdminUsersEndpoint}/{userId}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -10150,7 +10175,7 @@ public class KeycloakAdminApiClient : IIdentityProviderService
     /// </summary>
     private async Task<string> GetAccessTokenAsync(CancellationToken ct)
     {
-        var tokenEndpoint = $"/realms/{_options.Realm}/protocol/openid-connect/token";
+        var tokenEndpoint = _options.TokenEndpoint;
 
         var content = new FormUrlEncodedContent(new[]
         {
@@ -13866,24 +13891,35 @@ public sealed class KeycloakOptions
 {
     public const string SectionName = "Keycloak";
 
-    [Required(ErrorMessage = "BaseUrl не может быть пустым.")]
-    [Url(ErrorMessage = "BaseUrl должен быть валидным URL.")]
-    public string BaseUrl { get; set; } = String.Empty;
+    // Внутренний URL для Backchannel-запросов (API -> Keycloak в сети Docker)
+    [Required, Url]
+    public string InternalBaseUrl { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Realm не может быть пустым.")]
+    // Публичный URL для Frontchannel-запросов (Браузер -> Nginx -> Keycloak)
+    [Required, Url]
+    public string PublicBaseUrl { get; set; } = string.Empty;
+
+    [Required]
     public string Realm { get; set; } = "master";
 
-    [Required(ErrorMessage = "PublicClientId не может быть пустым.")]
+    [Required]
     public string PublicClientId { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "PrivateApiClientId не может быть пустым.")]
+    [Required]
     public string PrivateApiClientId { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "PrivateApiClientSecret не может быть пустым.")]
+    [Required]
     public string PrivateApiClientSecret { get; set; } = string.Empty;
 
-    public string RealmUrl => $"{BaseUrl.TrimEnd('/')}/realms/{Realm}";
-    public string AuthorizationEndpoint => $"{RealmUrl}/protocol/openid-connect/auth";
+    // Публичные эндпоинты (для браузера)
+    public string PublicRealmUrl => $"{PublicBaseUrl.TrimEnd('/')}/realms/{Realm}";
+    public string AuthorizationEndpoint => $"{PublicRealmUrl}/protocol/openid-connect/auth";
+    public string LogoutEndpoint => $"{PublicRealmUrl}/protocol/openid-connect/logout";
+
+    // Внутренние эндпоинты (для IHttpClientFactory)
+    public string InternalRealmUrl => $"{InternalBaseUrl.TrimEnd('/')}/realms/{Realm}";
+    public string TokenEndpoint => $"{InternalRealmUrl}/protocol/openid-connect/token";
+    public string AdminUsersEndpoint => $"{InternalBaseUrl.TrimEnd('/')}/admin/realms/{Realm}/users";
 }
 ```
 
@@ -14409,8 +14445,7 @@ try
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
 
-    if(app.Environment.IsDevelopment())
-        app.MapAuthenticationEndpoints();
+    app.MapAuthenticationEndpoints();
 
     app.Run();
 }
@@ -14427,6 +14462,45 @@ finally
 ---
 
 ### Authentication
+
+```cs title="KeycloakDockerBackchannelHandler.cs"
+namespace LegacyLego.Presentation.Authentication;
+
+internal sealed class KeycloakDockerBackchannelHandler : DelegatingHandler
+{
+    private readonly string _publicBaseUrl;
+    private readonly string _internalBaseUrl;
+    private readonly bool _shouldRedirect;
+
+    public KeycloakDockerBackchannelHandler(string publicBaseUrl, string internalBaseUrl)
+        : base(new HttpClientHandler())
+    {
+        _publicBaseUrl = publicBaseUrl.TrimEnd('/');
+        _internalBaseUrl = internalBaseUrl.TrimEnd('/');
+
+        // Если урлы совпадают (например, в Dev), флаг будет false
+        _shouldRedirect = !string.Equals(_publicBaseUrl, _internalBaseUrl, StringComparison.OrdinalIgnoreCase);
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (!_shouldRedirect || request.RequestUri == null)
+            return base.SendAsync(request, cancellationToken);
+
+        var uriString = request.RequestUri.ToString();
+
+        if (uriString.StartsWith(_publicBaseUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            var redirectedUrl = uriString.Replace(_publicBaseUrl, _internalBaseUrl, StringComparison.OrdinalIgnoreCase);
+            request.RequestUri = new Uri(redirectedUrl);
+        }
+
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+```
+
+---
 
 #### Common
 
@@ -14463,13 +14537,12 @@ namespace LegacyLego.Presentation.Authentication.Endpoints;
 
 public static class AuthenticationEndpoints
 {
-    const string ROUTE_GROUP_NAME = "/auth";
+    const string ROUTE_GROUP_NAME = "/api/auth";
 
     public static IEndpointRouteBuilder MapAuthenticationEndpoints(this IEndpointRouteBuilder app)
     {
         var jwtGroup = app.MapGroup(ROUTE_GROUP_NAME)
             .WithDisplayName("Authentication")
-            .WithDescription("Авторизация, регистрация и выгрузка токенов")
             .WithTags("Auth");
 
         jwtGroup.MapGet("/login", GetLogin);
@@ -14480,55 +14553,23 @@ public static class AuthenticationEndpoints
         return app;
     }
 
-    // стандартная авторизация OIDC
-    private static IResult GetLogin(
-        IOptions<KeycloakOptions> keycloakOptions,
-        HttpContext httpContext)
-    {
-        var options = keycloakOptions.Value;
-        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-        var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
-
-        // генерация PKCE
-        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
-
-        // Сохранение verifier в временную HttpOnly куку
-        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
-        });
-
-        var loginUrl = $"{options.AuthorizationEndpoint}" +
-            $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
-            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-            $"&response_type=code" +
-            $"&scope=openid" + 
-            $"&code_challenge={codeChallenge}" +
-            $"&code_challenge_method=S256";
-
-        return Results.Redirect(loginUrl);
-    }
-
-    // Форма регистрации (с принудительным открытием регистрации через prompt=create)
     private static IResult GetPublicRegistration(
         IOptions<KeycloakOptions> keycloakOptions,
         HttpContext httpContext)
     {
         var options = keycloakOptions.Value;
+
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
 
-        // генерация PKCE
+        // Генерация криптографической пары PKCE
         var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
 
-        // Сохранение verifier в временную HttpOnly куку
+        // Сохранение verifier во временную HttpOnly куку
         httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false, // Поставить true при переходе на HTTPS в Nginx
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddMinutes(5)
         });
@@ -14545,7 +14586,35 @@ public static class AuthenticationEndpoints
         return Results.Redirect(registrationUrl);
     }
 
-    // Общий колбэк для получения токенов в виде JSON в обмен на код авторизации
+    private static IResult GetLogin(
+        IOptions<KeycloakOptions> keycloakOptions,
+        HttpContext httpContext)
+    {
+        var options = keycloakOptions.Value;
+        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        var redirectUri = $"{baseUrl}{ROUTE_GROUP_NAME}/callback";
+
+        var (codeVerifier, codeChallenge) = PkceGenerator.GeneratePair();
+
+        httpContext.Response.Cookies.Append("pkce_verifier", codeVerifier, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false, // Поставьте true, если Nginx работает по HTTPS
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(5)
+        });
+
+        var loginUrl = $"{options.AuthorizationEndpoint}" +
+            $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
+            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            $"&response_type=code" +
+            $"&scope=openid" +
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256";
+
+        return Results.Redirect(loginUrl);
+    }
+
     private static async Task<IResult> GetCallback(
         [FromQuery] string code,
         IOptions<KeycloakOptions> keycloakOptions,
@@ -14553,13 +14622,10 @@ public static class AuthenticationEndpoints
         HttpContext httpContext,
         CancellationToken ct)
     {
-
-        // Считать сохраненный verifier из куки
         if (!httpContext.Request.Cookies.TryGetValue("pkce_verifier", out var codeVerifier))
         {
             return Results.BadRequest("PKCE verifier is missing or expired.");
         }
-        // Удалить куку после считывания
         httpContext.Response.Cookies.Delete("pkce_verifier");
 
         var options = keycloakOptions.Value;
@@ -14568,7 +14634,6 @@ public static class AuthenticationEndpoints
 
         var client = httpClientFactory.CreateClient();
 
-        var tokenEndpoint = $"{options.RealmUrl}/protocol/openid-connect/token";
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code",
@@ -14578,13 +14643,12 @@ public static class AuthenticationEndpoints
             ["code_verifier"] = codeVerifier
         });
 
-        var response = await client.PostAsync(tokenEndpoint, content, ct);
+        var response = await client.PostAsync(options.TokenEndpoint, content, ct);
         var json = await response.Content.ReadAsStringAsync(ct);
 
         return Results.Content(json, "application/json");
     }
 
-    // Завершение SSO-сессии в Keycloak
     private static IResult GetLogout(
         IOptions<KeycloakOptions> keycloakOptions,
         HttpContext httpContext)
@@ -14593,7 +14657,7 @@ public static class AuthenticationEndpoints
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var postLogoutRedirectUri = $"{baseUrl}/docs/scalar";
 
-        var logoutUrl = $"{options.RealmUrl}/protocol/openid-connect/logout" +
+        var logoutUrl = $"{options.LogoutEndpoint}" +
             $"?client_id={Uri.EscapeDataString(options.PublicClientId)}" +
             $"&post_logout_redirect_uri={Uri.EscapeDataString(postLogoutRedirectUri)}";
 
@@ -14718,6 +14782,7 @@ public static class ClaimsPrincipalExtensions
 
 ```cs title="ConfigureJwtBearerOptions.cs"
 using LegacyLego.Infrastructure.Options;
+using LegacyLego.Presentation.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -14727,10 +14792,14 @@ namespace LegacyLego.Presentation.Extensions;
 internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
 {
     private readonly JwtOptions _jwtOptions;
+    private readonly KeycloakOptions _keycloakOptions;
 
-    public ConfigureJwtBearerOptions(IOptions<JwtOptions> jwtOptions)
+    public ConfigureJwtBearerOptions(
+        IOptions<JwtOptions> jwtOptions,
+        IOptions<KeycloakOptions> keycloakOptions)
     {
         _jwtOptions = jwtOptions.Value;
+        _keycloakOptions = keycloakOptions.Value;
     }
 
     public void Configure(string? name, JwtBearerOptions options)
@@ -14746,6 +14815,12 @@ internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBear
         options.Authority = _jwtOptions.Authority;
         options.RequireHttpsMetadata = _jwtOptions.RequireHttpsMetadata;
         options.MapInboundClaims = false;
+
+        options.BackchannelHttpHandler = new KeycloakDockerBackchannelHandler(
+            _keycloakOptions.PublicBaseUrl,   // "http://localhost/auth"
+            _keycloakOptions.InternalBaseUrl  // "http://legacy-lego-keycloak:8080/auth"
+        );
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
