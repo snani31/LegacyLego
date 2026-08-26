@@ -103,8 +103,8 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/definitions.json"
     volumes:
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
@@ -130,7 +130,7 @@ services:
       - KC_HEALTH_ENABLED=true
       - KEYCLOAK_API_CLIENT_SECRET=${KEYCLOAK_API_CLIENT_SECRET}
     volumes:
-      - ./infrastructure/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
+      - ./infrastructure/keycloak/realm-config-dev.json:/opt/keycloak/data/import/realm-config.json:ro
       - ./infrastructure/keycloak/plugins/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbitmq.jar
     ports:
       - 8084:8080

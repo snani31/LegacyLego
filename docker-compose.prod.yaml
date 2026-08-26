@@ -23,6 +23,7 @@ services:
     build:
       context: .
       dockerfile: Presentation.Dockerfile
+      network: host
     env_file:
       - .env
     networks:
@@ -30,6 +31,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - Database__ConnectionString=Host=legacy-lego-postgres;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
+      - Keycloak__PrivateApiClientId=${KEYCLOAK_API_CLIENT_ID}
+      - Keycloak__PrivateApiClientSecret=${KEYCLOAK_API_CLIENT_SECRET}
       - RedisConnectionString=legacy-lego-redis:6379
       - PaymentProviderOptions__ApiBaseUrl=http://localhost:80/
     expose:
@@ -67,6 +72,7 @@ services:
       context: .
       dockerfile: Presentation.Dockerfile
       target: migrator
+      network: host
     env_file:
       - .env
     networks:
@@ -194,4 +200,74 @@ services:
       - ./infrastructure/dashboard/local-prod/public/credentials.js.example:/app/public/credentials.js.example
     networks:
       - legacy-lego-network-prod
+    restart: unless-stopped
+
+  # Keycloak (OAuth 2.0 & OIDC Identity Provider)
+  legacy-lego-keycloak:
+    image: keycloak/keycloak:26.7
+    container_name: legacy-lego-prod-keycloak
+    env_file:
+      - .env
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+
+      # 1. Говорим Keycloak, что он работает на подмаршруте /auth
+      - KC_HTTP_RELATIVE_PATH=/auth
+
+      # 2. Указываем, что перед нами Nginx, передающий X-Forwarded-* заголовки
+      - KC_PROXY_HEADERS=xforwarded
+
+      # 3. Базовый публичный URL (то, что будет зашиваться в 'iss' токена)
+      - KC_HOSTNAME_URL=http://localhost/auth
+      - KC_HOSTNAME_STRICT=false
+
+      # Конфигурация подключения плагина к RabbitMQ
+      - KK_TO_RMQ_URL=legacy-lego-rabbitmq
+      - KK_TO_RMQ_PORT=5672
+      - KK_TO_RMQ_USERNAME=${RABBITMQ_DEFAULT_USER}
+      - KK_TO_RMQ_PASSWORD=${RABBITMQ_DEFAULT_PASS}
+      - KK_TO_RMQ_VHOST=/
+      - KK_TO_RMQ_EXCHANGE=amq.topic
+      - KC_HEALTH_ENABLED=true
+    volumes:
+      - ./infrastructure/keycloak/realm-config-local-prod.json:/opt/keycloak/data/import/realm-config.json:ro
+      - ./infrastructure/keycloak/plugins/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbitmq.jar
+    expose:
+      - "8080"
+      - "9000"
+    networks:
+      - legacy-lego-network-prod
+    command: [ "start-dev", "--import-realm" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e \"GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q \"UP\"' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      legacy-lego-rabbitmq:
+        condition: service_healthy
+
+  # RabbitMQ (Брокер сообщений)
+  legacy-lego-rabbitmq:
+    container_name: legacy-lego-prod-rabbitmq
+    image: rabbitmq:3-management-alpine
+    networks:
+      - legacy-lego-network-prod
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    expose:
+      - "5672"
+      - "15672" # Management UI
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
