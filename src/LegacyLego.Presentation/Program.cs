@@ -63,8 +63,7 @@ try
     app.MapOrdersEndpoints();
     app.MapPaymentEndpoints();
 
-    if(app.Environment.IsDevelopment())
-        app.MapAuthenticationEndpoints();
+    app.MapAuthenticationEndpoints();
 
     app.Run();
 }

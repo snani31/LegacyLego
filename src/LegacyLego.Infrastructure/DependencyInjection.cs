@@ -221,11 +221,7 @@ public static class DependencyInjection
 
         #region Keycloak Admin Client
 
-        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<IOptions<KeycloakOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl);
-        });
+        services.AddHttpClient<IIdentityProviderService, KeycloakAdminApiClient>();
 
         #endregion
 

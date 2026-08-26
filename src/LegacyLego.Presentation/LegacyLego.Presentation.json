@@ -234,6 +234,76 @@
           { }
         ]
       }
+    },
+    "/api/auth/login": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/auth/callback": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
     }
   },
   "components": {
@@ -451,8 +521,8 @@
         "description": "Keycloak OpenID Connect / OAuth 2.0",
         "flows": {
           "authorizationCode": {
-            "authorizationUrl": "http://localhost:8084/realms/legacylego/protocol/openid-connect/auth",
-            "tokenUrl": "http://localhost:8084/realms/legacylego/protocol/openid-connect/token",
+            "authorizationUrl": "http://localhost/auth/realms/legacylego/protocol/openid-connect/auth",
+            "tokenUrl": "http://localhost/auth/realms/legacylego/protocol/openid-connect/token",
             "scopes": {
               "openid": "OpenID Connect",
               "profile": "Профиль пользователя",
@@ -469,6 +539,9 @@
     },
     {
       "name": "Payments"
+    },
+    {
+      "name": "Auth"
     }
   ]
 }

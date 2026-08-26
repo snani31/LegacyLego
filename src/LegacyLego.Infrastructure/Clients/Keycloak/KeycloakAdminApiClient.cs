@@ -30,9 +30,10 @@ public class KeycloakAdminApiClient : IIdentityProviderService
         // Получить Bearer token по схеме Client Credentials
         var token = await GetAccessTokenAsync(ct);
 
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"/admin/realms/{_options.Realm}/users/{userId}");
+        // Используем точный абсолютный URL: http://legacy-lego-keycloak:8080/auth/admin/realms/{realm}/users/{userId}
+        var requestUri = $"{_options.AdminUsersEndpoint}/{userId}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -68,7 +69,7 @@ public class KeycloakAdminApiClient : IIdentityProviderService
     /// </summary>
     private async Task<string> GetAccessTokenAsync(CancellationToken ct)
     {
-        var tokenEndpoint = $"/realms/{_options.Realm}/protocol/openid-connect/token";
+        var tokenEndpoint = _options.TokenEndpoint;
 
         var content = new FormUrlEncodedContent(new[]
         {
