@@ -9,6 +9,6 @@ internal static class OrderDataFactory
         {
             OrderItem.Create("Item1", 1, Guid.NewGuid(), Price.Create(100m, Currency.Usd).Value).Value
         };
-        return Order.Create(address, Guid.NewGuid(), items).Value;
+        return Order.Create(address, ClientId.New(), items).Value;
     }
 }

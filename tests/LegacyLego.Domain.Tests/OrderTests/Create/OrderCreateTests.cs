@@ -27,7 +27,7 @@ public class OrderCreateTests
         await Assert.That(order.IsSuccess).IsTrue();
         await Assert.That(order.Value)
             .Member(o => o.Address, m => m.IsEqualTo(DefaultAddress))
-            .And.Member(o => o.ClientId, m => m.EqualTo(clientId))
+            .And.Member(o => o.ClientId.Value, m => m.EqualTo(clientId))
             .And.Member(o => o.Items, m => m.IsEquivalentTo(items));
     }
 
@@ -115,19 +115,6 @@ public class OrderCreateTests
     #endregion
 
     #region Validation Invariants
-
-    [Test]
-    public async Task Create_WithClientIdEmpty_ShouldThrowArgumentException()
-    {
-        var order = new OrderBuilder()
-            .WithAddress(DefaultAddress)
-            .WithItems(DefaultItems)
-            .WithEmptyClientId()
-            .BuildResult();
-
-        await Assert.That(order.IsFailure).IsTrue();
-        await Assert.That(order.Error.Code).IsEqualTo(OrderErrors.ClientIdGuidInvalidCode);
-    }
 
     [Test]
     public async Task Create_WithOrderItemsEmptyList_ShouldResultFailure()
