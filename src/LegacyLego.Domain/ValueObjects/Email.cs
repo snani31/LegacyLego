@@ -44,5 +44,5 @@ public sealed partial class Email : ValueObject
 
     public static implicit operator string(Email email) => email.Value;
 
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value;
 }

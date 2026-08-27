@@ -41,7 +41,5 @@ public sealed partial class PhoneNumber : ValueObject
         yield return Value;
     }
 
-    public static implicit operator string(PhoneNumber phoneNumber) => phoneNumber.Value;
-
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value;
 }
