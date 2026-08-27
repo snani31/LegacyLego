@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.10.5
+Актуальная версия проекта: 1.10.6
 
 ## Проекты
 
@@ -484,8 +484,17 @@
 │   │       │   └── init-payment.yml
 │   │       └── opencollection.yml
 │   └── LegacyLego.Domain.Tests
+│       ├── ClientPreferencesTests
+│       │   ├── Create
+│       │   │   └── ClientPreferencesCreateTests.cs
+│       │   └── Equality
+│       │       └── ClientPreferencesEqualityTests.cs
+│       ├── ClientTests
+│       │   └── Create
+│       │       └── CreateClientTests.cs
 │       ├── Common
 │       │   ├── Builders
+│       │   │   ├── ClientBuilder.cs
 │       │   │   └── OrderBuilder.cs
 │       │   └── Factories
 │       │       ├── OrderDataFactory.cs
@@ -496,6 +505,11 @@
 │       │   │   └── CurrencyEqualityTests.cs
 │       │   └── FromCode
 │       │       └── CurrencyFromCodeTests.cs
+│       ├── EmailTests
+│       │   ├── Create
+│       │   │   └── EmailCreateTests.cs
+│       │   └── Equality
+│       │       └── EmailEqualityTests.cs
 │       ├── ExternalSessionTests
 │       │   ├── Create
 │       │   │   └── ExternalSessionCreateTests.cs
@@ -503,6 +517,11 @@
 │       │   │   └── ExternalSessionEqualityTests.cs
 │       │   └── IsExpired
 │       │       └── ExternalSessionCreateTests.cs
+│       ├── LanguageTests
+│       │   ├── Equality
+│       │   │   └── LanguageEqualityTests.cs
+│       │   └── FromCode
+│       │       └── LanguageFromCodeTests.cs
 │       ├── OrderItemTests
 │       │   ├── Create
 │       │   │   └── OrderItemCreateTests.cs
@@ -536,6 +555,11 @@
 │       │   │       └── OrderRefundTests.cs
 │       │   └── TotalPrice
 │       │       └── OrderTotalPriceTests.cs
+│       ├── PhoneNumberTests
+│       │   ├── Create
+│       │   │   └── PhoneNumberCreateTests.cs
+│       │   └── Equality
+│       │       └── PhoneNumberEqualityTests.cs
 │       ├── PriceTests
 │       │   ├── Create
 │       │   │   └── PriceCreateTests.cs
@@ -5149,7 +5173,7 @@ public sealed partial class Email : ValueObject
 
     public static implicit operator string(Email email) => email.Value;
 
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value;
 }
 ```
 
@@ -5503,9 +5527,7 @@ public sealed partial class PhoneNumber : ValueObject
         yield return Value;
     }
 
-    public static implicit operator string(PhoneNumber phoneNumber) => phoneNumber.Value;
-
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value;
 }
 ```
 
@@ -5668,9 +5690,385 @@ global using static LegacyLego.Domain.Tests.Common.Factories.OrderPaymentDataFac
 
 ---
 
+### ClientPreferencesTests
+
+#### Create
+
+```cs title="ClientPreferencesCreateTests.cs"
+namespace LegacyLego.Domain.Tests.ClientPreferencesTests.Create;
+
+public class ClientPreferencesCreateTests
+{
+    [Test]
+    public async Task Create_WithValidLanguageAndCurrency_ShouldReturnSuccessWithCorrectCodes()
+    {
+        var language = Language.Russian;
+        var currency = Currency.Usd;
+
+        var result = ClientPreferences.Create(language, currency);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.LanguageCode).IsEqualTo(language.Code);
+        await Assert.That(result.Value.CurrencyCode).IsEqualTo(currency.Code);
+    }
+
+    [Test]
+    public async Task Create_WithNullLanguage_ShouldThrowArgumentNullException()
+    {
+        var action = () => ClientPreferences.Create(null!, Currency.Usd);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Create_WithNullCurrency_ShouldThrowArgumentNullException()
+    {
+        var action = () => ClientPreferences.Create(Language.Russian, null!);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+}
+```
+
+---
+
+#### Equality
+
+```cs title="ClientPreferencesEqualityTests.cs"
+namespace LegacyLego.Domain.Tests.ClientPreferencesTests.Equality;
+
+public class ClientPreferencesEqualityTests
+{
+    [Test]
+    public async Task Default_ShouldReturnPreferencesWithRussianLanguageAndRubCurrency()
+    {
+        var defaultPreferences = ClientPreferences.Default;
+
+        await Assert.That(defaultPreferences.LanguageCode).IsEqualTo(Language.Russian.Code);
+        await Assert.That(defaultPreferences.CurrencyCode).IsEqualTo(Currency.Rub.Code);
+    }
+
+    [Test]
+    public async Task Equals_WithSameLanguageAndCurrencyCodes_ShouldBeTrue()
+    {
+        var pref1 = ClientPreferences.Create(Language.Russian, Currency.Rub).Value;
+        var pref2 = ClientPreferences.Create(Language.Russian, Currency.Rub).Value;
+
+        await Assert.That(pref1).IsEqualTo(pref2);
+        await Assert.That(pref1 == pref2).IsTrue();
+        await Assert.That(pref1 != pref2).IsFalse();
+    }
+
+    [Test]
+    public async Task Equals_WithDifferentLanguageOrCurrency_ShouldBeFalse()
+    {
+        var pref1 = ClientPreferences.Create(Language.Russian, Currency.Rub).Value;
+        var pref2 = ClientPreferences.Create(Language.Russian, Currency.Usd).Value;
+
+        await Assert.That(pref1).IsNotEqualTo(pref2);
+        await Assert.That(pref1 == pref2).IsFalse();
+        await Assert.That(pref1 != pref2).IsTrue();
+    }
+
+    [Test]
+    public async Task GetHashCode_ForEqualPreferences_ShouldBeSame()
+    {
+        var pref1 = ClientPreferences.Create(Language.Russian, Currency.Rub).Value;
+        var pref2 = ClientPreferences.Create(Language.Russian, Currency.Rub).Value;
+
+        await Assert.That(pref1.GetHashCode()).IsEqualTo(pref2.GetHashCode());
+    }
+}
+```
+
+---
+
+### ClientTests
+
+#### Create
+
+```cs title="CreateClientTests.cs"
+namespace LegacyLego.Domain.Tests.ClientTests.Create;
+
+public class CreateClientTests
+{
+
+    [Test]
+    public async Task Create_WithMinimalValidData_ShouldReturnSuccessWithDefaultPreferences()
+    {
+        // Arrange
+        var id = ClientId.New();
+        var email = Email.Create("test@example.com").Value;
+        var createdAt = DateTime.UtcNow;
+
+        // Act
+        var result = new ClientBuilder()
+            .WithId(id)
+            .WithUsername("clean_code")
+            .WithEmail(email)
+            .WithCreatedAt(createdAt)
+            .WithPreferences(null!)
+            .BuildResult();
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsTrue();
+
+        var client = result.Value;
+        await Assert.That(client.Id).IsEqualTo(id);
+        await Assert.That(client.Username).IsEqualTo("clean_code");
+        await Assert.That(client.Email).IsEqualTo(email);
+        await Assert.That(client.CreatedAtUtc).IsEqualTo(createdAt);
+        await Assert.That(client.Preferences).IsEqualTo(ClientPreferences.Default);
+        await Assert.That(client.FirstName).IsNull();
+        await Assert.That(client.LastName).IsNull();
+        await Assert.That(client.PhoneNumber).IsNull();
+    }
+
+    [Test]
+    public async Task Create_WithFullValidData_ShouldMapAllPropertiesCorrectly()
+    {
+        // Arrange
+        var id = ClientId.New();
+        var email = Email.Create("full@example.com").Value;
+        var phone = PhoneNumber.Create("+79991234567").Value;
+        var preferences = ClientPreferences.Create(Language.Russian, Currency.Usd).Value;
+        var createdAt = DateTime.UtcNow;
+
+        // Act
+        var result = new ClientBuilder()
+            .WithId(id)
+            .WithUsername("full_user")
+            .WithEmail(email)
+            .WithCreatedAt(createdAt)
+            .WithPreferences(preferences)
+            .WithFirstName("Ivan")
+            .WithLastName("Ivanov")
+            .WithPhoneNumber(phone)
+            .BuildResult();
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsTrue();
+
+        var client = result.Value;
+        await Assert.That(client.Id).IsEqualTo(id);
+        await Assert.That(client.Username).IsEqualTo("full_user");
+        await Assert.That(client.FirstName).IsEqualTo("Ivan");
+        await Assert.That(client.LastName).IsEqualTo("Ivanov");
+        await Assert.That(client.Email).IsEqualTo(email);
+        await Assert.That(client.PhoneNumber).IsEqualTo(phone);
+        await Assert.That(client.Preferences).IsEqualTo(preferences);
+    }
+
+
+    [Test]
+    public async Task Create_WithNullId_ShouldThrowArgumentNullException()
+    {
+        var action = () => new ClientBuilder().WithNullId().BuildResult();
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>()
+            .WithParameterName("id");
+    }
+
+    [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task Create_WithNullOrWhiteSpaceUsername_ShouldThrowArgumentException(string? invalidUsername)
+    {
+        var action = () => new ClientBuilder().WithUsername(invalidUsername!).BuildResult();
+
+        await Assert.That(action).Throws<ArgumentException>();
+    }
+
+    [Test]
+    public async Task Create_WithNullEmail_ShouldThrowArgumentNullException()
+    {
+        var action = () => new ClientBuilder().WithNullEmail().BuildResult();
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>()
+            .WithParameterName("email");
+    }
+
+    [Test]
+    public async Task Create_WithDefaultCreatedAt_ShouldThrowArgumentException()
+    {
+        var action = () => new ClientBuilder().WithCreatedAt(default).BuildResult();
+
+        await Assert.That(action).ThrowsExactly<ArgumentException>()
+            .WithParameterName("createdAt");
+    }
+
+
+    [Test]
+    public async Task Create_WithNonUtcCreatedAt_ShouldReturnCreationTimeWasNotUtcError()
+    {
+        var localTime = DateTime.Now; 
+
+        var result = new ClientBuilder().WithCreatedAt(localTime).BuildResult();
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(ClientErrors.GetCreationTimeWasNotUtcError(localTime).Code);
+    }
+
+    [Test]
+    public async Task Create_WithFirstNameLongerThan100Chars_ShouldReturnInvalidLengthError()
+    {
+        var longFirstName = new string('a', 101);
+
+        var result = new ClientBuilder().WithFirstName(longFirstName).BuildResult();
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(ClientErrors.GetCreateFirstNameInvalieLengthError(longFirstName).Code);
+    }
+
+    [Test]
+    public async Task Create_WithLastNameLongerThan100Chars_ShouldReturnInvalidLengthError()
+    {
+        var longLastName = new string('a', 101);
+
+        var result = new ClientBuilder().WithLastName(longLastName).BuildResult();
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(ClientErrors.GetCreateLastNameInvalieLengthError(longLastName).Code);
+    }
+
+
+    [Test]
+    public async Task Create_OnSuccess_ShouldRaiseClientCreatedDomainEvent()
+    {
+        var id = ClientId.New();
+        var email = Email.Create("event@example.com").Value;
+        var createdAt = DateTime.UtcNow;
+
+        var client = new ClientBuilder()
+            .WithId(id)
+            .WithEmail(email)
+            .WithCreatedAt(createdAt)
+            .BuildValue();
+
+        await Assert.That(client.DomainEvents).Count().IsEqualTo(1);
+
+        var domainEvent = client.DomainEvents.Single() as ClientCreatedDomainEvent;
+        await Assert.That(domainEvent).IsNotNull();
+        await Assert.That(domainEvent!.ClientId).IsEqualTo(id);
+        await Assert.That(domainEvent.Email).IsEqualTo(email.Value);
+    }
+}
+```
+
+---
+
 ### Common
 
 #### Builders
+
+```cs title="ClientBuilder.cs"
+namespace LegacyLego.Domain.Tests.Common.Builders;
+
+internal class ClientBuilder
+{
+    private ClientId _id = ClientId.New();
+    private string _username = "johndoe";
+    private DateTime _createdAtUtc = DateTime.UtcNow;
+    private Email _email = Email.Create("john.doe@example.com").Value;
+    private ClientPreferences? _preferences = null;
+    private string? _firstName = null;
+    private string? _lastName = null;
+    private PhoneNumber? _phoneNumber = null;
+
+    public ClientBuilder WithId(ClientId id)
+    {
+        _id = id;
+        return this;
+    }
+
+    public ClientBuilder WithNullId()
+    {
+        _id = null!;
+        return this;
+    }
+
+    public ClientBuilder WithUsername(string username)
+    {
+        _username = username;
+        return this;
+    }
+
+    public ClientBuilder WithNullOrEmptyUsername(string? username)
+    {
+        _username = username!;
+        return this;
+    }
+
+    public ClientBuilder WithCreatedAt(DateTime createdAtUtc)
+    {
+        _createdAtUtc = createdAtUtc;
+        return this;
+    }
+
+    public ClientBuilder WithEmail(Email email)
+    {
+        _email = email;
+        return this;
+    }
+
+    public ClientBuilder WithNullEmail()
+    {
+        _email = null!;
+        return this;
+    }
+
+    public ClientBuilder WithPreferences(ClientPreferences preferences)
+    {
+        _preferences = preferences;
+        return this;
+    }
+
+    public ClientBuilder WithDefoultPreferences()
+    {
+        _preferences = ClientPreferences.Default;
+        return this;
+    }
+
+    public ClientBuilder WithFirstName(string? firstName)
+    {
+        _firstName = firstName;
+        return this;
+    }
+
+    public ClientBuilder WithLastName(string? lastName)
+    {
+        _lastName = lastName;
+        return this;
+    }
+
+    public ClientBuilder WithPhoneNumber(PhoneNumber? phoneNumber)
+    {
+        _phoneNumber = phoneNumber;
+        return this;
+    }
+
+    public Result<Client> BuildResult()
+    {
+        return Client.Create(
+            _id,
+            _username,
+            _createdAtUtc,
+            _email,
+            _preferences,
+            _firstName,
+            _lastName,
+            _phoneNumber);
+    }
+
+    public Client BuildValue() => BuildResult().Value;
+}
+```
+
+---
 
 ```cs title="OrderBuilder.cs"
 namespace LegacyLego.Domain.Tests.Common.Builders;
@@ -5757,7 +6155,7 @@ internal static class OrderDataFactory
         {
             OrderItem.Create("Item1", 1, Guid.NewGuid(), Price.Create(100m, Currency.Usd).Value).Value
         };
-        return Order.Create(address, Guid.NewGuid(), items).Value;
+        return Order.Create(address, ClientId.New(), items).Value;
     }
 }
 ```
@@ -6004,6 +6402,146 @@ public class CurrencyFromCodeTests
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(result.Value.Symbol).IsEqualTo(symbol);
         await Assert.That(result.Value.Scale).IsEqualTo(scale);
+    }
+}
+```
+
+---
+
+### EmailTests
+
+#### Create
+
+```cs title="EmailCreateTests.cs"
+namespace LegacyLego.Domain.Tests.EmailTests.Create;
+
+public class EmailCreateTests
+{
+    [Test]
+    [Arguments("test@example.com", "test@example.com", "test", "example.com")]
+    [Arguments("  USER@DOMAIN.COM  ", "user@domain.com", "user", "domain.com")]
+    [Arguments("First.Last@Sub.Domain.org", "first.last@sub.domain.org", "first.last", "sub.domain.org")]
+    public async Task Create_WithValidEmail_ShouldReturnSuccessAndSetCorrectProperties(
+        string input,
+        string expectedValue,
+        string expectedLocalPart,
+        string expectedDomain)
+    {
+        var result = Email.Create(input);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Value).IsEqualTo(expectedValue);
+        await Assert.That(result.Value.LocalPart).IsEqualTo(expectedLocalPart);
+        await Assert.That(result.Value.Domain).IsEqualTo(expectedDomain);
+    }
+
+    [Test]
+    public async Task Create_WithNullValue_ShouldThrowArgumentNullException()
+    {
+        var action = () => Email.Create(null!);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task Create_WithEmptyOrWhiteSpace_ShouldThrowArgumentException(string input)
+    {
+        var action = () => Email.Create(input);
+
+        await Assert.That(action).Throws<ArgumentException>();
+    }
+
+    [Test]
+    public async Task Create_WithValueExceeding256Characters_ShouldReturnTooLongError()
+    {
+        var longLocalPart = new string('a', 245);
+        var longEmail = $"{longLocalPart}@example.com";
+
+        var result = Email.Create(longEmail);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(EmailErrors.CreateValueTooLongCode);
+    }
+
+    [Test]
+    [Arguments("plainaddress")]
+    [Arguments("#@%^%#$@#$@#.com")]
+    [Arguments("@example.com")]
+    [Arguments("Joe Smith <email@example.com>")]
+    [Arguments("email.example.com")]
+    [Arguments("email@example@example.com")]
+    [Arguments("email@example.")]
+    [Arguments("email@")]
+    public async Task Create_WithInvalidRegexFormat_ShouldReturnRegexInvalidFormatError(string invalidEmail)
+    {
+        var result = Email.Create(invalidEmail);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(EmailErrors.CreateValueRegexFailureCode);
+    }
+}
+```
+
+---
+
+#### Equality
+
+```cs title="EmailEqualityTests.cs"
+namespace LegacyLego.Domain.Tests.EmailTests.Equality;
+
+public class EmailEqualityTests
+{
+    [Test]
+    public async Task Equals_WithSameUnnormalizedValue_ShouldBeTrue()
+    {
+        var email1 = Email.Create("user@example.com").Value;
+        var email2 = Email.Create("USER@EXAMPLE.COM").Value; // Проверяем с учетом нормализации
+
+        await Assert.That(email1).IsEqualTo(email2);
+        await Assert.That(email1 == email2).IsTrue();
+        await Assert.That(email1 != email2).IsFalse();
+    }
+
+    [Test]
+    public async Task Equals_WithDifferentValue_ShouldBeFalse()
+    {
+        var email1 = Email.Create("user1@example.com").Value;
+        var email2 = Email.Create("user2@example.com").Value;
+
+        await Assert.That(email1).IsNotEqualTo(email2);
+        await Assert.That(email1 == email2).IsFalse();
+        await Assert.That(email1 != email2).IsTrue();
+    }
+
+    [Test]
+    public async Task GetHashCode_WithSameNormalizedValue_ShouldBeSame()
+    {
+        var email1 = Email.Create("user@domain.com").Value;
+        var email2 = Email.Create("  USER@DOMAIN.COM ").Value;
+
+        await Assert.That(email1.GetHashCode()).IsEqualTo(email2.GetHashCode());
+    }
+
+    [Test]
+    public async Task ImplicitConversion_ToString_ShouldReturnCorrectStringValue()
+    {
+        var email = Email.Create("user@domain.com").Value;
+
+        string rawEmail = email;
+
+        await Assert.That(rawEmail).IsEqualTo("user@domain.com");
+    }
+
+    [Test]
+    public async Task ToString_ShouldReturnValue()
+    {
+        var email = Email.Create("user@domain.com").Value;
+
+        await Assert.That(email.ToString()).IsEqualTo("user@domain.com");
     }
 }
 ```
@@ -6395,6 +6933,152 @@ public class ExternalSessionIsExpiredTests
         session.IsExpired(time); 
 
         await Assert.That(session.ExpiresAtUtc).IsEquivalentTo(expiresAt);
+    }
+}
+```
+
+---
+
+### LanguageTests
+
+#### Equality
+
+```cs title="LanguageEqualityTests.cs"
+namespace LegacyLego.Domain.Tests.LanguageTests.Equality;
+
+public class LanguageEqualityTests
+{
+    [Test]
+    public async Task Equals_WithSameCode_ShouldBeTrue()
+    {
+        var l1 = Language.FromCode("RU-RU").Value;
+        var l2 = Language.FromCode("ru-ru").Value;
+
+        await Assert.That(l1.Equals(l2)).IsTrue();
+    }
+
+    [Test]
+    public async Task Equals_WithDifferentCode_ShouldBeFalse()
+    {
+        var rus = Language.FromCode("RU-RU").Value;
+        var eng = Language.FromCode("EN-US").Value;
+
+        await Assert.That(rus.Equals(eng)).IsFalse();
+    }
+
+    [Test]
+    public async Task Equals_ShouldBeConsistentWithEqualsOperator()
+    {
+        var l1 = Language.FromCode("RU-RU").Value;
+        var l2 = Language.FromCode("RU-RU").Value;
+
+        await Assert.That(l1 == l2).IsTrue();
+    }
+
+    [Test]
+    public async Task Equals_ShouldBeConsistentWithNotEqualsOperator()
+    {
+        var l1 = Language.FromCode("RU-RU").Value;
+        var l2 = Language.FromCode("EN-US").Value;
+
+        await Assert.That(l1 != l2).IsTrue();
+    }
+
+    [Test]
+    public async Task GetHashCode_ForEqualObjects_ShouldBeSame()
+    {
+        var l1 = Language.FromCode("RU-RU").Value;
+        var l2 = Language.FromCode("ru-ru").Value;
+
+        await Assert.That(l1.GetHashCode()).IsEqualTo(l2.GetHashCode());
+    }
+
+    [Test]
+    public async Task Equals_ShouldDependOnlyOnCode()
+    {
+        var rus = Language.FromCode("RU-RU").Value;
+
+        await Assert.That(rus.Code).IsEqualTo("RU-RU");
+    }
+}
+```
+
+---
+
+#### FromCode
+
+```cs title="LanguageFromCodeTests.cs"
+namespace LegacyLego.Domain.Tests.LanguageTests.FromCode;
+
+public class LanguageFromCodeTests
+{
+    [Test]
+    public async Task FromCode_WithValidENCode_ShouldReturnSuccess()
+    {
+        var result = Language.FromCode("EN-US");
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Language.English);
+        await Assert.That(result.Value).IsSameReferenceAs(Language.English);
+    }
+
+    [Test]
+    public async Task FromCode_WithUnknownValidCode_ShouldReturnNotSupported()
+    {
+        var result = Language.FromCode("ABC");
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error).Member(error => error.Code, name => name.EqualTo(LanguageErrors.NotSupportedCode));
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments(" ")]
+    public async Task FromCode_WithEmptyString_ShouldThrowArgumentNullException(string whiteSpace)
+    {
+        var exception = await Assert.That(() => Language.FromCode(whiteSpace)).ThrowsExactly<ArgumentException>();
+    }
+
+    [Test]
+    public async Task FromCode_WithNullCode_ShouldThrowArgumentNullException()
+    {
+        var exception = await Assert.That(() => Language.FromCode(null!)).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [Arguments("RU-Ru")]
+    [Arguments("Ru-RU")]
+    [Arguments("ru-ru")]
+    [Arguments("rU-RU")]
+    [Arguments("RU-rU")]
+    public async Task FromCode_WithLowerCaseValidCode_ShouldReturnSuccess(string inputLowerCode)
+    {
+        var result = Language.FromCode(inputLowerCode);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Language.Russian);
+        await Assert.That(result.Value).IsSameReferenceAs(Language.Russian);
+    }
+
+    [Test]
+    public async Task FromCode_WithValidUntrimmedCode_ShouldReturnSuccess()
+    {
+        var result = Language.FromCode("    RU-RU  ");
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Language.Russian);
+        await Assert.That(result.Value).IsSameReferenceAs(Language.Russian);
+    }
+
+    [Test]
+    [Arguments("RU-RU")]
+    [Arguments("EN-US")]
+    public async Task FromCode_ShouldReturnLanguageWithCorrectProperties(string code)
+    {
+        var result = Language.FromCode(code);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Code).IsEqualTo(code);
     }
 }
 ```
@@ -7709,7 +8393,7 @@ public class OrderCreateTests
         await Assert.That(order.IsSuccess).IsTrue();
         await Assert.That(order.Value)
             .Member(o => o.Address, m => m.IsEqualTo(DefaultAddress))
-            .And.Member(o => o.ClientId, m => m.EqualTo(clientId))
+            .And.Member(o => o.ClientId.Value, m => m.EqualTo(clientId))
             .And.Member(o => o.Items, m => m.IsEquivalentTo(items));
     }
 
@@ -7797,19 +8481,6 @@ public class OrderCreateTests
     #endregion
 
     #region Validation Invariants
-
-    [Test]
-    public async Task Create_WithClientIdEmpty_ShouldThrowArgumentException()
-    {
-        var order = new OrderBuilder()
-            .WithAddress(DefaultAddress)
-            .WithItems(DefaultItems)
-            .WithEmptyClientId()
-            .BuildResult();
-
-        await Assert.That(order.IsFailure).IsTrue();
-        await Assert.That(order.Error.Code).IsEqualTo(OrderErrors.ClientIdGuidInvalidCode);
-    }
 
     [Test]
     public async Task Create_WithOrderItemsEmptyList_ShouldResultFailure()
@@ -8495,6 +9166,123 @@ public class OrderTotalPriceTests
         var total = order.TotalPrice;
 
         await Assert.That(total).IsNotNull();
+    }
+}
+```
+
+---
+
+### PhoneNumberTests
+
+#### Create
+
+```cs title="PhoneNumberCreateTests.cs"
+namespace LegacyLego.Domain.Tests.PhoneNumberTests.Create;
+
+public class PhoneNumberCreateTests
+{
+    [Test]
+    [Arguments("+7 (999) 123-45-67", "+79991234567")]
+    [Arguments("+1-202-555-0143", "+12025550143")]
+    [Arguments("  +49 30 123456  ", "+4930123456")]
+    [Arguments("+380 (44) 123 45 67", "+380441234567")]
+    public async Task Create_WithValidFormattedPhone_ShouldNormalizeAndReturnSuccess(
+        string input,
+        string expectedNormalized)
+    {
+        var result = PhoneNumber.Create(input);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(result.Value.Value).IsEqualTo(expectedNormalized);
+    }
+
+    [Test]
+    public async Task Create_WithNullValue_ShouldThrowArgumentNullException()
+    {
+        var action = () => PhoneNumber.Create(null!);
+
+        await Assert.That(action).ThrowsExactly<ArgumentNullException>();
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task Create_WithEmptyOrWhiteSpace_ShouldThrowArgumentException(string input)
+    {
+        var action = () => PhoneNumber.Create(input);
+
+        await Assert.That(action).Throws<ArgumentException>();
+    }
+
+    [Test]
+    [Arguments("89991234567")]          // Отсутствует ведущий '+'
+    [Arguments("+09991234567")]         // Код страны начинается с 0 (запрещено ^\+[1-9])
+    [Arguments("+123456789")]           // Всего 9 цифр после '+' (меньше лимита в 10)
+    [Arguments("+1234567890123456")]    // 16 цифр после '+' (больше лимита в 15)
+    [Arguments("+7 (999) ABC-45-67")]   // Буквенный номер (буквы вырезаются, остается < 10 цифр)
+    [Arguments("invalid_phone_string")] // Полностью невалидная строка
+    public async Task Create_WithInvalidPhoneFormat_ShouldReturnRegexInvalidFormatError(string invalidPhone)
+    {
+        var result = PhoneNumber.Create(invalidPhone);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error.Code)
+            .IsEqualTo(PhoneNumberErrors.GetCreateValueRegexInvalidFormatError(invalidPhone).Code);
+    }
+
+}
+```
+
+---
+
+#### Equality
+
+```cs title="PhoneNumberEqualityTests.cs"
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace LegacyLego.Domain.Tests.PhoneNumberTests.Equality;
+
+public class PhoneNumberEqualityTests
+{
+    [Test]
+    public async Task Equals_WithSameNormalizedValue_ShouldBeTrue()
+    {
+        var phone1 = PhoneNumber.Create("+7 (999) 123-45-67").Value;
+        var phone2 = PhoneNumber.Create("+79991234567").Value;
+
+        await Assert.That(phone1).IsEqualTo(phone2);
+        await Assert.That(phone1 == phone2).IsTrue();
+        await Assert.That(phone1 != phone2).IsFalse();
+    }
+
+    [Test]
+    public async Task Equals_WithDifferentValues_ShouldBeFalse()
+    {
+        var phone1 = PhoneNumber.Create("+79991234567").Value;
+        var phone2 = PhoneNumber.Create("+79991234568").Value;
+
+        await Assert.That(phone1).IsNotEqualTo(phone2);
+        await Assert.That(phone1 == phone2).IsFalse();
+        await Assert.That(phone1 != phone2).IsTrue();
+    }
+
+    [Test]
+    public async Task GetHashCode_ForEqualPhoneNumbers_ShouldBeSame()
+    {
+        var phone1 = PhoneNumber.Create("+7 (999) 123-45-67").Value;
+        var phone2 = PhoneNumber.Create("+79991234567").Value;
+
+        await Assert.That(phone1.GetHashCode()).IsEqualTo(phone2.GetHashCode());
+    }
+
+    [Test]
+    public async Task ToString_ShouldReturnValue()
+    {
+        var phone = PhoneNumber.Create("+7 (999) 123-45-67").Value;
+
+        await Assert.That(phone.ToString()).IsEqualTo("+79991234567");
     }
 }
 ```
