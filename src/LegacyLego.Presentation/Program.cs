@@ -18,60 +18,63 @@ configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), true);
 builder.Logging.ClearProviders();
 
 builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+		configuration.ReadFrom.Configuration(context.Configuration));
 
 Serilog.Debugging.SelfLog.Enable(Console.Error);
 
 try
 {
-    Log.Information("Запуск приложения LegacyLego...");
+	Log.Information("Запуск приложения LegacyLego...");
 
-    builder.Services.ConfigureHttpJsonOptions(options =>
-    {
-        // превращает целочисленный указатель enum в строковое представление значения
-        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+	builder.Services.ConfigureHttpJsonOptions(options =>
+	{
+		// превращает целочисленный указатель enum в строковое представление значения
+		options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+	});
 
-    builder.Services.AddApplication()
-        .AddInfrastructure(configuration)
-        .AddPresentationOpenApi(configuration)
-        .AddWebAuthentication();
+	builder.Services.AddApplication()
+			.AddInfrastructure(configuration)
+			.AddPresentationOpenApi(configuration)
+			.AddWebAuthentication();
 
-    builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
-    builder.Services.AddProblemDetails();
-    builder.Services.AddHealthChecks();
+	builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
+	builder.Services.AddProblemDetails();
+	builder.Services.AddHealthChecks();
 
-    var app = builder.Build();
+	var app = builder.Build();
 
-    app.UseExceptionHandler(); // стоит самый первый в пайплайне
+	app.UseExceptionHandler(); // стоит самый первый в пайплайне
 
-    app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
+	app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
+	{
+		ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+	});
 
-    if (app.Environment.IsDevelopment())
-        app.MapPresentationDocumentation();
+	if (app.Environment.IsDevelopment())
+		app.MapPresentationDocumentation();
 
-    app.UseStaticFiles();
+	app.UseStaticFiles();
 
-    app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
-    app.UseAuthorization();  // Что тебе можно? (Проверяем права)
+	app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
+	app.UseAuthorization();  // Что тебе можно? (Проверяем права)
 
-    app.MapHealthChecks("/healthz");
+	app.MapHealthChecks("/healthz");
 
-    app.MapOrdersEndpoints();
-    app.MapPaymentEndpoints();
+	app.MapOrdersEndpoints();
+	app.MapPaymentEndpoints();
 
-    app.MapAuthenticationEndpoints();
+	app.MapAuthenticationEndpoints();
 
-    app.Run();
+	app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Приложение LegacyLego аварийно завершило работу во время запуска");
+	Log.Fatal(ex, "Приложение LegacyLego аварийно завершило работу во время запуска");
 }
 finally
 {
-    Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
+	Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
 }
+
+// для интеграционных тестов (позволит тестировочной фабрике приложения использовать класс Program как точку входа)
+public partial class Program { }

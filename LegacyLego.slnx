@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LegacyLego.Domain.Tests/LegacyLego.Domain.Tests.csproj" />
+    <Project Path="tests/LegacyLego.IntegrationTests/LegacyLego.IntegrationTests/LegacyLego.IntegrationTests.csproj" Id="45b5ceb1-bdda-459b-8c37-17ccf9b787ea" />
   </Folder>
 </Solution>
