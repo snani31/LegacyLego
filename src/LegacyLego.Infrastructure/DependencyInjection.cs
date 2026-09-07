@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using EntityFramework.Exceptions.PostgreSQL;
+using Hangfire;
 using Hangfire.PostgreSql;
 using LegacyLego.Application.Abstractions.Data;
 using LegacyLego.Application.Abstractions.ExceptionHandling;
@@ -124,7 +125,11 @@ public static class DependencyInjection
                         maxRetryCount: dbOptions.MaxRetryCount,
                         maxRetryDelay: TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds),
                         errorCodesToAdd: null);
-                });
+                })
+                // Обработчик исключений EntityFrameworkCore.Exceptions.PostgreSQL
+                // чтобы явным образоом ловить исключения UniqueConstraintException и др
+                // без надобности просматривать их значения InnerException
+                .UseExceptionProcessor(); 
 
                 if (dbOptions.EnableSensitiveDataLogging)
                 {
