@@ -62,7 +62,7 @@ public static class ProcessPaymentErrors
     public static Error GetPaymentNotFoundForWebhookError(string webhookExternalSessionId, string? webhookTransactionId)
     {
         return new(
-            Code: TransactionConflictCode,
+            Code: PaymentNotFoundForWebhookCode,
             Message: $"Payment was not fount for this webhook with " +
             $"ExternalSessionId: {webhookExternalSessionId} and" +
             $"TransactionId: {webhookTransactionId ?? "null"}");
