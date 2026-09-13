@@ -29,12 +29,14 @@ using LegacyLego.Infrastructure.Messaging.Publishers;
 using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Repositories;
 using LegacyLego.Infrastructure.Services;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using StackExchange.Redis;
+using System.Net.Mime;
 using Order = LegacyLego.Domain.Aggregates.Order;
 
 namespace LegacyLego.Infrastructure;
@@ -204,24 +206,46 @@ public static class DependencyInjection
         });
         #endregion
 
-        #region RabbitMq
-        var rabbitMqOptions= configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
-                              ?? new RabbitMqOptions();
+        #region MassTransit & RabbitMQ
 
-        services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+        services.AddMassTransit(x =>
         {
+            x.AddConsumer<KeycloakEventsConsumer>();
 
-            return new ConnectionFactory
+            x.UsingRabbitMq((context, cfg) =>
             {
-                HostName = rabbitMqOptions.Host,
-                Port = rabbitMqOptions.Port,
-                UserName = rabbitMqOptions.Username,
-                Password = rabbitMqOptions.Password,
-                VirtualHost = rabbitMqOptions.VirtualHost
-            };
+                var options = context.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+
+                // Настройка подключения к брокеру (RabbitMQ)
+                cfg.Host(options.Host, (ushort)options.Port, options.VirtualHost, h =>
+                {
+                    h.Username(options.Username);
+                    h.Password(options.Password);
+                });
+
+                cfg.UseRawJsonSerializer(RawSerializerOptions.All);
+
+                // Динамическая настройка политики повторов
+                if (options.RetryCount > 0)
+                    cfg.UseMessageRetry(r =>
+                    {
+                        r.Interval(options.RetryCount, TimeSpan.FromSeconds(options.RetryIntervalSeconds));
+                        r.Ignore<KeycloakUserProfileNotFoundException>();
+                        r.Ignore<ClientRegistrationFailedException>();
+                    });
+
+                cfg.ReceiveEndpoint(options.KeycloakEventQueue, e =>
+                {
+                    e.ConfigureConsumeTopology = false;
+                    e.SetQueueArgument("x-dead-letter-exchange", "keycloak-events-dlx");
+                    e.DefaultContentType = new ContentType("application/json");
+
+                    e.ConfigureConsumer<KeycloakEventsConsumer>(context);
+                });
+
+            });
         });
 
-        services.AddHostedService<KeycloakEventsConsumer>();
         #endregion
 
         #region Keycloak Admin Client
