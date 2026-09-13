@@ -11,14 +11,10 @@ using System.Net.Http.Json;
 namespace LegacyLego.IntegrationTests.Tests.BaseCases.Orders;
 
 [ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-Pool-1")]
-public class CreateOrderTests : BaseIntegrationTest
+public class CreateOrderTests : BaseIntegrationTest<DefaultWebApplicationFactory>
 {
     // TUnit автоматически внедрит DefaultWebApplicationFactory через конструктор
-    public CreateOrderTests(DefaultWebApplicationFactory factory)
-        : base(factory)
-    {
-
-    }
+    public CreateOrderTests(DefaultWebApplicationFactory factory): base(factory) { }
 
     [Test]
     public async Task CreateOrder_WithValidRequest_ReturnsCreatedAndSavesToDatabase()

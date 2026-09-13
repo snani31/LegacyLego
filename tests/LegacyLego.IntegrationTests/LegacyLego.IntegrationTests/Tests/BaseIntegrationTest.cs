@@ -7,27 +7,26 @@ using System.Net.Http.Headers;
 
 namespace LegacyLego.IntegrationTests.Tests;
 
-public abstract class BaseIntegrationTest : IAsyncDisposable
+public abstract class BaseIntegrationTest<TFactory> : IAsyncDisposable
+    where TFactory : BaseWebApplicationFactory
 {
     private readonly IServiceScope _scope;
-    protected readonly BaseWebApplicationFactory Factory;
 
-    // Стандартный клиент с ролью Client по умолчанию
+    // Теперь Factory имеет точный тип конкретной фабрики!
+    protected readonly TFactory Factory;
+
     protected readonly HttpClient Client;
     protected readonly OrderContext DbContext;
 
-    protected BaseIntegrationTest(BaseWebApplicationFactory factory)
+    protected BaseIntegrationTest(TFactory factory)
     {
         Factory = factory;
-        Client = CreateClient(); // Дефолтный клиент (Role = Client)
+        Client = CreateClient();
 
         _scope = factory.Services.CreateScope();
         DbContext = _scope.ServiceProvider.GetRequiredService<OrderContext>();
     }
 
-    /// <summary>
-    /// Создает авторизованный HttpClient с возможностью переопределить роль и UserId
-    /// </summary>
     protected HttpClient CreateClient(string? role = null, Guid? userId = null)
     {
         var client = Factory.CreateClient();
@@ -46,9 +45,6 @@ public abstract class BaseIntegrationTest : IAsyncDisposable
         return client;
     }
 
-    /// <summary>
-    /// Создает чистый неавторизованный HttpClient (без заголовка Authorization)
-    /// </summary>
     protected HttpClient CreateUnauthenticatedClient()
     {
         return Factory.CreateClient();

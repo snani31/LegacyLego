@@ -7,7 +7,7 @@ using System.Net.Http.Json;
 namespace LegacyLego.IntegrationTests.Tests.BaseCases.Orders;
 
 [ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-Pool-1")]
-public class OrdersAuthorizationTests : BaseIntegrationTest
+public class OrdersAuthorizationTests : BaseIntegrationTest<DefaultWebApplicationFactory>
 {
     public OrdersAuthorizationTests(DefaultWebApplicationFactory factory) : base(factory) { }
 
