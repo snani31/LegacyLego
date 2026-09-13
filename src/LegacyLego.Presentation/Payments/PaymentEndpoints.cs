@@ -2,6 +2,7 @@
 using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Domain.Errors;
 using LegacyLego.Presentation.Authentication.Extensions;
 using LegacyLego.Presentation.Mock.Common.Dto.Request;
 using LegacyLego.Presentation.Payments.Dto;
@@ -21,7 +22,7 @@ public static class PaymentEndpoints
             .WithTags("Payments");
 
         mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
-        mockGroup.MapPost("/{orderId:guid}/pay", StartPayment);
+        mockGroup.MapPost("/{orderId:guid}/pay", StartPayment).RequireClientAuthorization();
 
         return app;
     }
@@ -29,7 +30,8 @@ public static class PaymentEndpoints
     private static async Task<Results<
         Ok<ProcessPaymentDetails>,
         BadRequest<ProblemDetails>,
-        Conflict<ProblemDetails>>> HandleWebhook(
+        Conflict<ProblemDetails>,
+        NotFound<ProblemDetails>>> HandleWebhook(
             [FromBody] PaymentProviderWebhookRequest request,
             ICommandDispatcher commandDispatcher,
             CancellationToken ct)
@@ -82,6 +84,14 @@ public static class PaymentEndpoints
                         Detail = error.Message
                     }),
 
+                ProcessPaymentErrors.PaymentNotFoundForWebhookCode =>
+                TypedResults.NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = error.Code,
+                    Detail = error.Message
+                }),
+
                 _ => TypedResults.BadRequest(new ProblemDetails
                 {
                     Status = StatusCodes.Status400BadRequest,
@@ -128,7 +138,8 @@ public static class PaymentEndpoints
                         Detail = error.Message
                     }),
 
-                StartOrderPaymentErrors.CanNotFindPendingPaymentAfterCheckConstraintCode =>
+                StartOrderPaymentErrors.CanNotFindPendingPaymentAfterCheckConstraintCode or
+                OrderErrors.NotFoundByOrderId =>
                     TypedResults.NotFound(new ProblemDetails
                     {
                         Status = StatusCodes.Status404NotFound,

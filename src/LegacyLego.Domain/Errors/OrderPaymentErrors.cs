@@ -28,7 +28,7 @@ public static class OrderPaymentErrors
     {
         return new(
             Code: WrongTransactionIdExchangeCode,
-            Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId} в MarkAsSucceeded операции");
+            Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId}");
     }
 
 

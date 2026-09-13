@@ -1,4 +1,6 @@
-﻿using LegacyLego.Application.Abstractions.Data;
+﻿using EntityFramework.Exceptions.Common;
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Exceptions;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Context;
@@ -32,10 +34,20 @@ public sealed class UnitOfWork: IUnitOfWork
 
         var modifiedEntities = GetModifiedEntities();
 
-        // 3. Сохраняем всё в БД в рамках единой транзакции
-        var result = await _orderContext.SaveChangesAsync(cancellationToken);
+        int result;
 
-        // 4. Если запись в БД прошла успешно — запускаем конвейер инвалидации
+        try
+        {
+            result = await _orderContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (UniqueConstraintException)
+        {
+            _orderContext.ChangeTracker.Clear();
+
+            throw new UniqueConstraintViolation(
+                new ExceptionalError("UnitOfWork", "Конфликт уникального индекса в БД Postgres"));
+        }
+
         if (result > 0 && modifiedEntities.Any())
         {
             await _cacheInvalidator.InvalidateAsync(modifiedEntities, cancellationToken);
