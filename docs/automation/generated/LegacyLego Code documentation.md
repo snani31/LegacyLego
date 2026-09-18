@@ -9,7 +9,7 @@
 
 ## Версия
 
-Актуальная версия проекта: 1.10.6
+Актуальная версия проекта: 1.11.0
 
 ## Проекты
 
@@ -19,7 +19,8 @@
 2) **LegacyLego.Domain.Tests** - Содержит модульные тесты **LegacyLego.Domain**;
 3) **LegacyLego.Application** - Описывает use-case сценарии, обеспечивающие логистику и оркестрацию системы в отношении данных и базовые контракты для будущей инфраструктуры;
 4) **LegacyLego.Infrastructure** - Предназначается в первую очередь для описания персистентной модели, реализации базовых контрактов доменных и уровня приложения. Сопряжения с внешними сервисами (внешней инфраструктурой);
-5) **LegacyLego.Presentation** - Является точкой входа (Program.cs) в API, описывает эндпоинты и регистрирует инфраструктурные сервисы через DI механизм.  
+5) **LegacyLego.Presentation** - Является точкой входа (Program.cs) в API, описывает эндпоинты и регистрирует инфраструктурные сервисы через DI механизм;
+6) **LegacyLego.IntegrationTests** - Определяет наборы интеграционных тестов уровня http запросов (взаимодействие с API через ендпоинты), так и логику аутентификации и кэширования и потока сообщений.
 
 ---
 
@@ -319,7 +320,6 @@
 │   ├── LegacyLego.Infrastructure
 │   │   ├── BackgroundJobs
 │   │   │   ├── HangfireCommandBackgroundJobService.cs
-│   │   │   ├── KeycloakRegistrationEventsConsumer.cs
 │   │   │   └── OutboxBackgroundWorker.cs
 │   │   ├── Caching
 │   │   │   ├── Abstractions
@@ -373,6 +373,7 @@
 │   │   │   ├── Bus
 │   │   │   │   └── InMemoryIntegrationEventBus.cs
 │   │   │   ├── Consumers
+│   │   │   │   ├── KeycloakRegistrationEventsConsumer.cs
 │   │   │   │   └── OrderPaymentRefundRequestedIntegrationConsumer.cs
 │   │   │   ├── Dispatchers
 │   │   │   │   ├── CommandDispatcher.cs
@@ -483,94 +484,140 @@
 │   │       │   ├── folder.yml
 │   │       │   └── init-payment.yml
 │   │       └── opencollection.yml
-│   └── LegacyLego.Domain.Tests
-│       ├── ClientPreferencesTests
-│       │   ├── Create
-│       │   │   └── ClientPreferencesCreateTests.cs
-│       │   └── Equality
-│       │       └── ClientPreferencesEqualityTests.cs
-│       ├── ClientTests
-│       │   └── Create
-│       │       └── CreateClientTests.cs
-│       ├── Common
-│       │   ├── Builders
-│       │   │   ├── ClientBuilder.cs
-│       │   │   └── OrderBuilder.cs
-│       │   └── Factories
-│       │       ├── OrderDataFactory.cs
-│       │       ├── OrderPaymentDataFactory.cs
-│       │       └── PriceDataFactory.cs
-│       ├── CurrencyTests
-│       │   ├── Equality
-│       │   │   └── CurrencyEqualityTests.cs
-│       │   └── FromCode
-│       │       └── CurrencyFromCodeTests.cs
-│       ├── EmailTests
-│       │   ├── Create
-│       │   │   └── EmailCreateTests.cs
-│       │   └── Equality
-│       │       └── EmailEqualityTests.cs
-│       ├── ExternalSessionTests
-│       │   ├── Create
-│       │   │   └── ExternalSessionCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── ExternalSessionEqualityTests.cs
-│       │   └── IsExpired
-│       │       └── ExternalSessionCreateTests.cs
-│       ├── LanguageTests
-│       │   ├── Equality
-│       │   │   └── LanguageEqualityTests.cs
-│       │   └── FromCode
-│       │       └── LanguageFromCodeTests.cs
-│       ├── OrderItemTests
-│       │   ├── Create
-│       │   │   └── OrderItemCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── OrderItemEqualityTests.cs
-│       │   └── GetTotalPriceTests
-│       │       └── OrderItemGetTotalPriceTests.cs
-│       ├── OrderPaymentTests
-│       │   ├── AttachSession
-│       │   │   └── OrderPaymentAttachSessionTests.cs
-│       │   ├── Create
-│       │   │   └── OrderPaymentCreateTests.cs
-│       │   └── StateTransitions
-│       │       ├── MarkAsFailed
-│       │       │   └── OrderPaymentMarkAsFailedTests.cs
-│       │       ├── MarkAsRefunded
-│       │       │   └── OrderPaymentMarkAsRefundedTests.cs
-│       │       └── RegisterPaymentReceipt
-│       │           └── OrderPaymentRegisterPaymentReceiptTests.cs
-│       ├── OrderTests
-│       │   ├── Create
-│       │   │   └── OrderCreateTests.cs
-│       │   ├── StateTransitions
-│       │   │   ├── Cancel
-│       │   │   │   └── OrderCancelTests.cs
-│       │   │   ├── Expire
-│       │   │   │   └── OrderExpireTests.cs
-│       │   │   ├── Pay
-│       │   │   │   └── OrderPayTests.cs
-│       │   │   └── Refund
-│       │   │       └── OrderRefundTests.cs
-│       │   └── TotalPrice
-│       │       └── OrderTotalPriceTests.cs
-│       ├── PhoneNumberTests
-│       │   ├── Create
-│       │   │   └── PhoneNumberCreateTests.cs
-│       │   └── Equality
-│       │       └── PhoneNumberEqualityTests.cs
-│       ├── PriceTests
-│       │   ├── Create
-│       │   │   └── PriceCreateTests.cs
-│       │   ├── Equality
-│       │   │   └── PriceEqualityTests.cs
-│       │   ├── MultiplyByQuantity
-│       │   │   └── PriceMultiplyByQuantityTests.cs
-│       │   └── Plus
-│       │       └── PricePlusTests.cs
-│       ├── GlobalUsings.cs
-│       └── LegacyLego.Domain.Tests.csproj
+│   ├── LegacyLego.Domain.Tests
+│   │   ├── ClientPreferencesTests
+│   │   │   ├── Create
+│   │   │   │   └── ClientPreferencesCreateTests.cs
+│   │   │   └── Equality
+│   │   │       └── ClientPreferencesEqualityTests.cs
+│   │   ├── ClientTests
+│   │   │   └── Create
+│   │   │       └── CreateClientTests.cs
+│   │   ├── Common
+│   │   │   ├── Builders
+│   │   │   │   ├── ClientBuilder.cs
+│   │   │   │   └── OrderBuilder.cs
+│   │   │   └── Factories
+│   │   │       ├── OrderDataFactory.cs
+│   │   │       ├── OrderPaymentDataFactory.cs
+│   │   │       └── PriceDataFactory.cs
+│   │   ├── CurrencyTests
+│   │   │   ├── Equality
+│   │   │   │   └── CurrencyEqualityTests.cs
+│   │   │   └── FromCode
+│   │   │       └── CurrencyFromCodeTests.cs
+│   │   ├── EmailTests
+│   │   │   ├── Create
+│   │   │   │   └── EmailCreateTests.cs
+│   │   │   └── Equality
+│   │   │       └── EmailEqualityTests.cs
+│   │   ├── ExternalSessionTests
+│   │   │   ├── Create
+│   │   │   │   └── ExternalSessionCreateTests.cs
+│   │   │   ├── Equality
+│   │   │   │   └── ExternalSessionEqualityTests.cs
+│   │   │   └── IsExpired
+│   │   │       └── ExternalSessionCreateTests.cs
+│   │   ├── LanguageTests
+│   │   │   ├── Equality
+│   │   │   │   └── LanguageEqualityTests.cs
+│   │   │   └── FromCode
+│   │   │       └── LanguageFromCodeTests.cs
+│   │   ├── OrderItemTests
+│   │   │   ├── Create
+│   │   │   │   └── OrderItemCreateTests.cs
+│   │   │   ├── Equality
+│   │   │   │   └── OrderItemEqualityTests.cs
+│   │   │   └── GetTotalPriceTests
+│   │   │       └── OrderItemGetTotalPriceTests.cs
+│   │   ├── OrderPaymentTests
+│   │   │   ├── AttachSession
+│   │   │   │   └── OrderPaymentAttachSessionTests.cs
+│   │   │   ├── Create
+│   │   │   │   └── OrderPaymentCreateTests.cs
+│   │   │   └── StateTransitions
+│   │   │       ├── MarkAsFailed
+│   │   │       │   └── OrderPaymentMarkAsFailedTests.cs
+│   │   │       ├── MarkAsRefunded
+│   │   │       │   └── OrderPaymentMarkAsRefundedTests.cs
+│   │   │       └── RegisterPaymentReceipt
+│   │   │           └── OrderPaymentRegisterPaymentReceiptTests.cs
+│   │   ├── OrderTests
+│   │   │   ├── Create
+│   │   │   │   └── OrderCreateTests.cs
+│   │   │   ├── StateTransitions
+│   │   │   │   ├── Cancel
+│   │   │   │   │   └── OrderCancelTests.cs
+│   │   │   │   ├── Expire
+│   │   │   │   │   └── OrderExpireTests.cs
+│   │   │   │   ├── Pay
+│   │   │   │   │   └── OrderPayTests.cs
+│   │   │   │   └── Refund
+│   │   │   │       └── OrderRefundTests.cs
+│   │   │   └── TotalPrice
+│   │   │       └── OrderTotalPriceTests.cs
+│   │   ├── PhoneNumberTests
+│   │   │   ├── Create
+│   │   │   │   └── PhoneNumberCreateTests.cs
+│   │   │   └── Equality
+│   │   │       └── PhoneNumberEqualityTests.cs
+│   │   ├── PriceTests
+│   │   │   ├── Create
+│   │   │   │   └── PriceCreateTests.cs
+│   │   │   ├── Equality
+│   │   │   │   └── PriceEqualityTests.cs
+│   │   │   ├── MultiplyByQuantity
+│   │   │   │   └── PriceMultiplyByQuantityTests.cs
+│   │   │   └── Plus
+│   │   │       └── PricePlusTests.cs
+│   │   ├── GlobalUsings.cs
+│   │   └── LegacyLego.Domain.Tests.csproj
+│   └── LegacyLego.IntegrationTests
+│       └── LegacyLego.IntegrationTests
+│           ├── Infrastructure
+│           │   ├── Authentication
+│           │   │   └── TestAuthHandler.cs
+│           │   ├── Extensions
+│           │   │   ├── HttpResponseMessageExtensions.cs
+│           │   │   └── ServiceCollectionExtensions.cs
+│           │   ├── Factories
+│           │   │   ├── ClientFactory.cs
+│           │   │   ├── KeycloakEventFactory.cs
+│           │   │   ├── OrderFactory.cs
+│           │   │   └── OrderPaymentFactory.cs
+│           │   ├── Fakes
+│           │   │   └── FakeIdentityProviderService.cs
+│           │   ├── Helpers
+│           │   │   └── PhoneNumberGenerator.cs
+│           │   ├── Messaging
+│           │   │   └── RabbitMqPublisherTestExtensions.cs
+│           │   ├── Pulling
+│           │   │   └── TestPoller.cs
+│           │   ├── Stubs
+│           │   │   └── StubCacheInvalidator.cs
+│           │   └── BaseWebApplicationFactory.cs
+│           ├── Tests
+│           │   ├── BaseCases
+│           │   │   ├── Fixtures
+│           │   │   │   ├── DefaultWebApplicationFactory.cs
+│           │   │   │   └── RabbitMqWebApplicationFactory.cs
+│           │   │   ├── OrderPayment
+│           │   │   │   ├── OrderPaymentAuthorizationTests.cs
+│           │   │   │   ├── ProcessPaymentWebhookTests.cs
+│           │   │   │   └── StartOrderPaymentTests.cs
+│           │   │   ├── Orders
+│           │   │   │   ├── CreateOrderTests.cs
+│           │   │   │   └── OrdersAuthorizationTests.cs
+│           │   │   └── Registration
+│           │   │       └── KeycloakConsumerRegistrationTests.cs
+│           │   ├── Cache
+│           │   │   ├── Fixtures
+│           │   │   │   └── CacheWebApplicationFactory.cs
+│           │   │   └── Order
+│           │   │       ├── OrderDetailsCacheTests.cs
+│           │   │       └── OrdersHistoryCacheTests.cs
+│           │   └── BaseIntegrationTest.cs
+│           └── LegacyLego.IntegrationTests.csproj
 ├── tools
 │   └── update-project-listing-docs.ps1
 ├── docker-compose.prod.yaml
@@ -2500,7 +2547,7 @@ public static class ProcessPaymentErrors
     public static Error GetPaymentNotFoundForWebhookError(string webhookExternalSessionId, string? webhookTransactionId)
     {
         return new(
-            Code: TransactionConflictCode,
+            Code: PaymentNotFoundForWebhookCode,
             Message: $"Payment was not fount for this webhook with " +
             $"ExternalSessionId: {webhookExternalSessionId} and" +
             $"TransactionId: {webhookTransactionId ?? "null"}");
@@ -4315,7 +4362,7 @@ public static class OrderPaymentErrors
     {
         return new(
             Code: WrongTransactionIdExchangeCode,
-            Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId} в MarkAsSucceeded операции");
+            Message: $"Недопустимая замена текущего TransactionId:{currentId} на {nextId}");
     }
 
 
@@ -9855,8 +9902,10 @@ public class PricePlusTests
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EntityFrameworkCore.Exceptions.PostgreSQL" Version="10.0.1" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.10" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
@@ -9889,6 +9938,7 @@ public class PricePlusTests
 ---
 
 ```cs title="DependencyInjection.cs"
+using EntityFramework.Exceptions.PostgreSQL;
 using Hangfire;
 using Hangfire.PostgreSql;
 using LegacyLego.Application.Abstractions.Data;
@@ -9919,12 +9969,14 @@ using LegacyLego.Infrastructure.Messaging.Publishers;
 using LegacyLego.Infrastructure.Options;
 using LegacyLego.Infrastructure.Repositories;
 using LegacyLego.Infrastructure.Services;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using StackExchange.Redis;
+using System.Net.Mime;
 using Order = LegacyLego.Domain.Aggregates.Order;
 
 namespace LegacyLego.Infrastructure;
@@ -10015,7 +10067,11 @@ public static class DependencyInjection
                         maxRetryCount: dbOptions.MaxRetryCount,
                         maxRetryDelay: TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds),
                         errorCodesToAdd: null);
-                });
+                })
+                // Обработчик исключений EntityFrameworkCore.Exceptions.PostgreSQL
+                // чтобы явным образоом ловить исключения UniqueConstraintException и др
+                // без надобности просматривать их значения InnerException
+                .UseExceptionProcessor(); 
 
                 if (dbOptions.EnableSensitiveDataLogging)
                 {
@@ -10090,24 +10146,46 @@ public static class DependencyInjection
         });
         #endregion
 
-        #region RabbitMq
-        var rabbitMqOptions= configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>()
-                              ?? new RabbitMqOptions();
+        #region MassTransit & RabbitMQ
 
-        services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+        services.AddMassTransit(x =>
         {
+            x.AddConsumer<KeycloakEventsConsumer>();
 
-            return new ConnectionFactory
+            x.UsingRabbitMq((context, cfg) =>
             {
-                HostName = rabbitMqOptions.Host,
-                Port = rabbitMqOptions.Port,
-                UserName = rabbitMqOptions.Username,
-                Password = rabbitMqOptions.Password,
-                VirtualHost = rabbitMqOptions.VirtualHost
-            };
+                var options = context.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+
+                // Настройка подключения к брокеру (RabbitMQ)
+                cfg.Host(options.Host, (ushort)options.Port, options.VirtualHost, h =>
+                {
+                    h.Username(options.Username);
+                    h.Password(options.Password);
+                });
+
+                cfg.UseRawJsonSerializer(RawSerializerOptions.All);
+
+                // Динамическая настройка политики повторов
+                if (options.RetryCount > 0)
+                    cfg.UseMessageRetry(r =>
+                    {
+                        r.Interval(options.RetryCount, TimeSpan.FromSeconds(options.RetryIntervalSeconds));
+                        r.Ignore<KeycloakUserProfileNotFoundException>();
+                        r.Ignore<ClientRegistrationFailedException>();
+                    });
+
+                cfg.ReceiveEndpoint(options.KeycloakEventQueue, e =>
+                {
+                    e.ConfigureConsumeTopology = false;
+                    e.SetQueueArgument("x-dead-letter-exchange", "keycloak-events-dlx");
+                    e.DefaultContentType = new ContentType("application/json");
+
+                    e.ConfigureConsumer<KeycloakEventsConsumer>(context);
+                });
+
+            });
         });
 
-        services.AddHostedService<KeycloakEventsConsumer>();
         #endregion
 
         #region Keycloak Admin Client
@@ -10124,7 +10202,9 @@ public static class DependencyInjection
 ---
 
 ```cs title="UnitOfWork.cs"
+using EntityFramework.Exceptions.Common;
 using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Exceptions;
 using LegacyLego.Domain.Shared;
 using LegacyLego.Infrastructure.Caching.Abstractions;
 using LegacyLego.Infrastructure.Context;
@@ -10158,10 +10238,20 @@ public sealed class UnitOfWork: IUnitOfWork
 
         var modifiedEntities = GetModifiedEntities();
 
-        // 3. Сохраняем всё в БД в рамках единой транзакции
-        var result = await _orderContext.SaveChangesAsync(cancellationToken);
+        int result;
 
-        // 4. Если запись в БД прошла успешно — запускаем конвейер инвалидации
+        try
+        {
+            result = await _orderContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (UniqueConstraintException)
+        {
+            _orderContext.ChangeTracker.Clear();
+
+            throw new UniqueConstraintViolation(
+                new ExceptionalError("UnitOfWork", "Конфликт уникального индекса в БД Postgres"));
+        }
+
         if (result > 0 && modifiedEntities.Any())
         {
             await _cacheInvalidator.InvalidateAsync(modifiedEntities, cancellationToken);
@@ -10263,158 +10353,6 @@ public sealed class HangfireCommandBackgroundJobService : ICommandBackgroundJobS
         _jobClient.Create(methodCall, state);
     }
 }
-```
-
----
-
-```cs title="KeycloakRegistrationEventsConsumer.cs"
-using LegacyLego.Application.Abstractions.ExternalServices;
-using LegacyLego.Application.Abstractions.Messaging;
-using LegacyLego.Application.Orders.Commands.Create;
-using LegacyLego.Infrastructure.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace LegacyLego.Infrastructure.BackgroundJobs;
-
-public class KeycloakEventsConsumer : BackgroundService
-{
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
-    private readonly ILogger<KeycloakEventsConsumer> _logger;
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IConnectionFactory _connectionFactory;
-    private readonly RabbitMqOptions _options;
-
-    public KeycloakEventsConsumer(
-        ILogger<KeycloakEventsConsumer> logger,
-        IServiceScopeFactory scopeFactory,
-        IConnectionFactory connectionFactory,
-        IOptions<RabbitMqOptions> options)
-    {
-        _logger = logger;
-        _scopeFactory = scopeFactory;
-        _connectionFactory = connectionFactory;
-        _options = options.Value;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken ct)
-    {
-        using var connection = await _connectionFactory.CreateConnectionAsync(ct);
-        using var channel = await connection.CreateChannelAsync(cancellationToken: ct);
-
-        await channel.BasicQosAsync(
-            prefetchSize: 0,
-            prefetchCount: 1,
-            global: false,
-            cancellationToken: ct);
-
-        var consumer = new AsyncEventingBasicConsumer(channel);
-
-        consumer.ReceivedAsync += (sender, ea) => OnMessageReceivedAsync(channel, ea, ct);
-
-        await channel.BasicConsumeAsync(
-            queue: _options.KeycloakEventQueue,
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: ct);
-
-        await Task.Delay(Timeout.Infinite, ct);
-    }
-
-    private async Task OnMessageReceivedAsync(IChannel channel, BasicDeliverEventArgs ea, CancellationToken ct)
-    {
-        var body = ea.Body.ToArray();
-        var messageJson = Encoding.UTF8.GetString(body);
-
-        _logger.LogDebug("Получено сырое сообщение из RabbitMQ: {Json}", messageJson);
-
-        KeycloakUserRegisteredIntegrationEvent? @event;
-
-        try
-        {
-            @event = JsonSerializer.Deserialize<KeycloakUserRegisteredIntegrationEvent>(messageJson, JsonSerializerOptions);
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Битый JSON в сообщении RabbitMQ. Отправка в DLQ.");
-            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
-            return;
-        }
-
-        if (@event is null || @event.Type != "REGISTER")
-        {
-            _logger.LogWarning("Игнорирование сообщения: пустой объект или тип события != REGISTER.");
-            await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
-            return;
-        }
-
-        try
-        {
-            using var scope = _scopeFactory.CreateScope();
-            var keycloakClient = scope.ServiceProvider.GetRequiredService<IIdentityProviderService>();
-            var commandDispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
-
-            var userProfile = await keycloakClient.GetUserProfileByIdAsync(@event.UserId, ct);
-
-            if (userProfile is null)
-            {
-                _logger.LogError("Профиль пользователя с ID {UserId} не найден в Keycloak. Сброс сообщения в DLQ.", @event.UserId);
-                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
-                return;
-            }
-
-            var registrationClientCommand = new RegisterClientCommand(userProfile);
-            var result = await commandDispatcher.DispatchAsync(registrationClientCommand);
-
-            if (result.IsFailure)
-            {
-                _logger.LogError("Не удалось зарегистрировать клиента в базе. Ошибка: {result}. Отправка в DLQ.", result.Error);
-
-                await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: ct);
-                return;
-            }
-
-            _logger.LogInformation("Клиент {UserId} успешно зарегистрирован в системе.", @event.UserId);
-            await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: ct);
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogWarning(ex, "Сетевая ошибка при обращении к Keycloak Admin API. Повторная попытка (requeue = true).");
-            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Критическая ошибка при обработке сообщения. Повторная попытка (requeue = true).");
-            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: ct);
-        }
-    }
-}
-public record KeycloakUserRegisteredIntegrationEvent(
-    [property: JsonPropertyName("userId")] Guid UserId,
-    [property: JsonPropertyName("time")] long Timestamp,
-    [property: JsonPropertyName("type")] string Type,
-    [property: JsonPropertyName("realmId")] string RealmId,
-    [property: JsonPropertyName("clientId")] string ClientId,
-    [property: JsonPropertyName("details")] KeycloakEventDetailsDto? Details
-);
-
-public record KeycloakEventDetailsDto(
-    [property: JsonPropertyName("username")] string? Username,
-    [property: JsonPropertyName("email")] string? Email,
-    [property: JsonPropertyName("first_name")] string? FirstName,
-    [property: JsonPropertyName("last_name")] string? LastName
-);
 ```
 
 ---
@@ -10721,20 +10659,22 @@ public sealed class OrderEntityInvalidator : IEntityInvalidator<Order>
         var batch = db.CreateBatch();
         var groupTtl = TimeSpan.FromDays(_cacheOptions.CurrentValue.OrderGroupDaysTtl);
 
+        var redisTasks = new List<Task>();
+
         foreach (var order in entities)
         {
             var userVersionKey = $"orders:{order.ClientId}:version";
             var orderVersionKey = $"order:{order.Id.Value}:version";
 
-            _ = batch.StringIncrementAsync(userVersionKey);
-            _ = batch.StringIncrementAsync(orderVersionKey);
+            redisTasks.Add(batch.StringIncrementAsync(userVersionKey));
+            redisTasks.Add(batch.StringIncrementAsync(orderVersionKey));
 
-            _ = batch.KeyExpireAsync(userVersionKey, groupTtl);
-            _ = batch.KeyExpireAsync(orderVersionKey, groupTtl);
+            redisTasks.Add(batch.KeyExpireAsync(userVersionKey, groupTtl));
+            redisTasks.Add(batch.KeyExpireAsync(orderVersionKey, groupTtl));
         }
 
         batch.Execute();
-        await Task.CompletedTask;
+        await Task.WhenAll(redisTasks); // Фиксируем отправку в Redis до выхода из инвалидатора
     }
 }
 ```
@@ -12219,6 +12159,102 @@ file sealed class IntegrationEventWrapper<TIntegrationEvent> : IntegrationEventW
 ---
 
 #### Consumers
+
+```cs title="KeycloakRegistrationEventsConsumer.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Abstractions.Messaging;
+using LegacyLego.Application.Orders.Commands.Create;
+using Microsoft.Extensions.Logging;
+using System.Text.Json.Serialization;
+using MassTransit;
+
+namespace LegacyLego.Infrastructure.BackgroundJobs;
+
+public class KeycloakEventsConsumer : IConsumer<KeycloakUserRegisteredIntegrationEvent>
+{
+    private readonly ILogger<KeycloakEventsConsumer> _logger;
+    private readonly IIdentityProviderService _keycloakClient;
+    private readonly ICommandDispatcher _commandDispatcher;
+
+    public KeycloakEventsConsumer(
+        ILogger<KeycloakEventsConsumer> logger,
+        IIdentityProviderService keycloakClient,
+        ICommandDispatcher commandDispatcher)
+    {
+        _logger = logger;
+        _keycloakClient = keycloakClient;
+        _commandDispatcher = commandDispatcher;
+    }
+
+    public async Task Consume(ConsumeContext<KeycloakUserRegisteredIntegrationEvent> context)
+    {
+        var @event = context.Message;
+
+        _logger.LogDebug("Получено событие из RabbitMQ для пользователя: {UserId}", @event.UserId);
+
+        if (@event.Type != "REGISTER")
+        {
+            _logger.LogWarning("Игнорирование сообщения: тип события '{Type}' != REGISTER.", @event.Type);
+            // Успешный выход -> MassTransit автоматически отправляет ACK
+            return;
+        }
+
+        // Запрос к Keycloak API.
+        // HttpRequestException НЕ ловим локально — даем ему вылететь, 
+        // чтобы MassTransit применил Retry Policy (повторные попытки при сетевом сбое).
+        var userProfile = await _keycloakClient.GetUserProfileByIdAsync(@event.UserId, context.CancellationToken);
+
+        if (userProfile is null)
+        {
+            _logger.LogError("Профиль пользователя с ID {UserId} не найден в Keycloak. Отправка в DLQ.", @event.UserId);
+            // Бросаем исключение, чтобы MassTransit убрал сообщение в DLQ без повторов
+            throw new KeycloakUserProfileNotFoundException(@event.UserId);
+        }
+
+        var registrationClientCommand = new RegisterClientCommand(userProfile);
+        var result = await _commandDispatcher.DispatchAsync(registrationClientCommand);
+
+        if (result.IsFailure)
+        {
+            _logger.LogError("Не удалось зарегистрировать клиента в базе. Ошибка: {Error}. Отправка в DLQ.", result.Error);
+            throw new ClientRegistrationFailedException(result.Error.ToString());
+        }
+
+        _logger.LogInformation("Клиент {UserId} успешно зарегистрирован в системе.", @event.UserId);
+    }
+}
+
+// Кастомные исключения для разграничения бизнес-ошибок и сетевых сбоев в политиках MassTransit
+public class KeycloakUserProfileNotFoundException : Exception
+{
+    public KeycloakUserProfileNotFoundException(Guid userId)
+        : base($"UserProfile for userId {userId} was not found in Keycloak.") { }
+}
+
+public class ClientRegistrationFailedException : Exception
+{
+    public ClientRegistrationFailedException(string reason)
+        : base($"Failed to register client: {reason}") { }
+}
+
+public record KeycloakUserRegisteredIntegrationEvent(
+    [property: JsonPropertyName("userId")] Guid UserId,
+    [property: JsonPropertyName("time")] long Timestamp,
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("realmId")] string RealmId,
+    [property: JsonPropertyName("clientId")] string ClientId,
+    [property: JsonPropertyName("details")] KeycloakEventDetailsDto? Details
+);
+
+public record KeycloakEventDetailsDto(
+    [property: JsonPropertyName("username")] string? Username,
+    [property: JsonPropertyName("email")] string? Email,
+    [property: JsonPropertyName("first_name")] string? FirstName,
+    [property: JsonPropertyName("last_name")] string? LastName
+);
+```
+
+---
 
 ```cs title="OrderPaymentRefundRequestedIntegrationConsumer.cs"
 using LegacyLego.Application.Abstractions.ExternalServices;
@@ -14803,6 +14839,12 @@ public sealed class RabbitMqOptions
 
     [Required(ErrorMessage = "KeycloakEventQueue не может быть пустым.")]
     public string KeycloakEventQueue { get; set; } = string.Empty;
+
+    [Range(0, 10, ErrorMessage = "Количество ретраев должно быть от 0 до 10.")]
+    public int RetryCount { get; set; } = 3;
+
+    [Range(1, 60, ErrorMessage = "Интервал ретраев должен быть от 1 до 60 секунд.")]
+    public int RetryIntervalSeconds { get; set; } = 1;
 }
 ```
 
@@ -15115,6 +15157,2050 @@ file sealed record ExternalStripeWebhookSimulation(
 
 ---
 
+## LegacyLego.IntegrationTests
+
+```xml title="LegacyLego.IntegrationTests.csproj"
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TUnit_Parallel>true</TUnit_Parallel>
+    <TUnit_DefaultTimeout>00:05:00</TUnit_DefaultTimeout>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFrameworkCore.Exceptions.PostgreSQL" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.9.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
+    <PackageReference Include="Respawn" Version="7.0.0" />
+    <PackageReference Include="Testcontainers.Keycloak" Version="4.14.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.14.0" />
+    <PackageReference Include="Testcontainers.RabbitMq" Version="4.14.0" />
+    <PackageReference Include="Testcontainers.Redis" Version="4.14.0" />
+    <PackageReference Include="TUnit" Version="1.65.68" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LegacyLego.Application\LegacyLego.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\LegacyLego.Domain\LegacyLego.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\LegacyLego.Infrastructure\LegacyLego.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\LegacyLego.Presentation\LegacyLego.Presentation.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\..\infrastructure\rabbitmq\definitions.json">
+			<Link>infrastructure\rabbitmq\definitions.json</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\..\infrastructure\rabbitmq\rabbitmq.conf">
+			<Link>infrastructure\rabbitmq\rabbitmq.conf</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>
+```
+
+---
+
+### Infrastructure
+
+```cs title="BaseWebApplicationFactory.cs"
+using LegacyLego.Infrastructure.Context;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Testcontainers.PostgreSql;
+using TUnit.Core.Interfaces;
+
+namespace LegacyLego.IntegrationTests.Infrastructure;
+
+public abstract class BaseWebApplicationFactory : WebApplicationFactory<Program>, IAsyncInitializer, IAsyncDisposable
+{
+    public virtual async Task InitializeAsync()
+    {
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+    }
+}
+```
+
+---
+
+#### Authentication
+
+```cs title="TestAuthHandler.cs"
+using LegacyLego.IntegrationTests.Infrastructure.Helpers;
+using LegacyLego.Presentation.Authentication.Common;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Authentication;
+
+public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    public const string SchemeName = "TestScheme";
+    public static readonly Guid TestUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+    // Константы для заголовков
+    public const string RoleHeader = "X-Test-Role";
+
+    public const string UserIdHeader = "X-Test-UserId";
+
+    public TestAuthHandler(
+            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder) : base(options, logger, encoder) { }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        // Нет Authorization заголовка -> 401 Unauthorized
+        if (!Request.Headers.ContainsKey("Authorization"))
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
+        var role = Request.Headers.TryGetValue(RoleHeader, out var roleValues)
+                ? roleValues.ToString()
+                : AuthConstants.Roles.Client;
+
+        var userId = Request.Headers.TryGetValue(UserIdHeader, out var userValues) && Guid.TryParse(userValues, out var parsedGuid)
+                ? parsedGuid
+                : TestUserId;
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Name, $"testuser_{userId:N}"),
+            new Claim(ClaimTypes.Email, $"user_{userId:N}@legacylego.local"),
+            new Claim(ClaimTypes.GivenName, "Test"),
+            new Claim(ClaimTypes.Surname, "User"),
+            new Claim(ClaimTypes.MobilePhone, PhoneNumberGenerator.GeneratePhoneNumber(userId)),
+            new Claim("created_at", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()),
+            new Claim(ClaimTypes.Role, role)
+        };
+
+        var identity = new ClaimsIdentity(claims, SchemeName);
+        var principal = new ClaimsPrincipal(identity);
+
+        return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));
+    }
+}
+
+public static class TestAuthExtensions
+{
+    public static IServiceCollection AddTestAuth(this IServiceCollection services)
+    {
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+            options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+        })
+        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
+
+        return services;
+    }
+}
+```
+
+---
+
+#### Extensions
+
+```cs title="HttpResponseMessageExtensions.cs"
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Extensions;
+
+public static class HttpResponseMessageExtensions
+{
+    private static readonly JsonSerializerOptions DefaultOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    public static Task<T?> ReadJsonAsync<T>(this HttpResponseMessage response, JsonSerializerOptions? options = null)
+    {
+        return response.Content.ReadFromJsonAsync<T>(options ?? DefaultOptions);
+    }
+}
+```
+
+---
+
+```cs title="ServiceCollectionExtensions.cs"
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Extensions;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection RemoveHostedServices(this IServiceCollection services)
+    {
+        var hostedServices = services.Where(d => d.ServiceType == typeof(IHostedService)).ToList();
+        foreach (var service in hostedServices)
+        {
+            services.Remove(service);
+        }
+        return services;
+    }
+}
+```
+
+---
+
+#### Factories
+
+```cs title="ClientFactory.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+namespace LegacyLego.IntegrationTests.Infrastructure.Factories;
+
+public static class ClientFactory
+{
+    public static Client Create(
+        Guid? id = null,
+        string? username = null,
+        string? email = null,
+        string? firstName = "Test",
+        string? lastName = "User")
+    {
+        var targetId = id ?? Guid.NewGuid();
+        var clientId = ClientId.From(targetId).Value;
+
+        // Автоматически генерируем уникальные username и email, если они не переданы явно
+        var uniqueUsername = username ?? $"user_{targetId:N}";
+        var uniqueEmail = email ?? $"user_{targetId:N}@legacylego.local";
+
+        var emailObj = Email.Create(uniqueEmail).Value;
+
+        var result = Client.Create(
+            id: clientId,
+            username: uniqueUsername,
+            createdAt: DateTime.UtcNow,
+            email: emailObj,
+            preferences: ClientPreferences.Default,
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: null);
+
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Не удалось создать тестового клиента: {result.Error.Message}");
+        }
+
+        return result.Value;
+    }
+}
+```
+
+---
+
+```cs title="KeycloakEventFactory.cs"
+using LegacyLego.Application.Dto;
+using LegacyLego.Infrastructure.BackgroundJobs;
+using LegacyLego.IntegrationTests.Infrastructure.Helpers;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Factories;
+
+public static class KeycloakEventFactory
+{
+    public static KeycloakUserRegisteredIntegrationEvent CreateUserRegistered(
+        Guid? userId = null,
+        string? username = null,
+        string? email = null,
+        string? firstName = "John",
+        string? lastName = "Doe")
+    {
+        var id = userId ?? Guid.NewGuid();
+        var uniqueUsername = username ?? $"user_{id:N}";
+        var uniqueEmail = email ?? $"user_{id:N}@legacylego.local";
+
+        return new KeycloakUserRegisteredIntegrationEvent(
+            UserId: id,
+            Timestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Type: "REGISTER",
+            RealmId: "legacy-lego-realm",
+            ClientId: "legacy-lego-app",
+            Details: new KeycloakEventDetailsDto(
+                Username: uniqueUsername,
+                Email: uniqueEmail,
+                FirstName: firstName,
+                LastName: lastName
+            )
+        );
+    }
+
+    public static KeycloakUserRegisteredIntegrationEvent CreateUserRegisteredWithInvalidEmail(
+        Guid? userId = null)
+    {
+        return CreateUserRegistered(
+            userId: userId,
+            email: "invalid-email-format");
+    }
+
+    public static ExternalUserProfile ToExternalUserProfile(
+        this KeycloakUserRegisteredIntegrationEvent @event)
+    {
+        return new ExternalUserProfile(
+            UserId: @event.UserId,
+            Username: @event.Details?.Username ?? $"user_{@event.UserId:N}",
+            Email: @event.Details?.Email ?? string.Empty,
+            FirstName: @event.Details?.FirstName,
+            LastName: @event.Details?.LastName,
+            PhoneNumber: PhoneNumberGenerator.GeneratePhoneNumber(@event.UserId),
+            CreatedAtUtc: DateTime.UtcNow
+        );
+    }
+}
+```
+
+---
+
+```cs title="OrderFactory.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Factories;
+
+public static class OrderFactory
+{
+    public static Order CreatePendingOrder(
+        Guid clientId,
+        string currencyCode = "USD",
+        decimal priceAmount = 799.99m)
+    {
+        var targetClientId = ClientId.From(clientId);
+        var currency = Currency.FromCode(currencyCode).Value;
+
+        var address = OrderAddress.Create("USA", "New York", "5th Avenue", "10001").Value;
+        var price = Price.Create(priceAmount, currency).Value;
+
+        var item = OrderItem.Create(
+            title: "Lego Star Wars Millenium Falcon",
+            quantity: 1,
+            productId: Guid.NewGuid(),
+            unitPrice: price).Value;
+
+        var orderResult = Order.Create(address, targetClientId.Value, new List<OrderItem>() { item });
+
+        if (orderResult.IsFailure)
+        {
+            throw new InvalidOperationException($"Не удалось создать тестовый заказ: {orderResult.Error.Message}");
+        }
+
+        return orderResult.Value;
+    }
+}
+```
+
+---
+
+```cs title="OrderPaymentFactory.cs"
+using LegacyLego.Domain.Aggregates;
+using LegacyLego.Domain.ValueObjects;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Factories;
+
+public static class OrderPaymentFactory
+{
+    public static OrderPayment CreatePendingPayment(
+        OrderId orderId,
+        Price expectedAmount,
+        string? externalSessionId = null)
+    {
+        var now = DateTime.UtcNow;
+        var paymentResult = OrderPayment.Create(orderId, expectedAmount, now);
+
+        if (paymentResult.IsFailure)
+        {
+            throw new InvalidOperationException($"Не удалось создать OrderPayment: {paymentResult.Error.Message}");
+        }
+
+        var payment = paymentResult.Value;
+        var sessionId = externalSessionId ?? $"ext_{Guid.NewGuid():N}";
+
+        // Создаем тестовую сессию с запасом по времени жизни
+        var sessionResult = ExternalSession.Create(
+            externalId: sessionId,
+            checkoutUrl: "https://checkout.mock.local/pay",
+            expiresAtUtc: now.AddMinutes(15));
+
+        payment.AttachSession(sessionResult.Value, now);
+
+        return payment;
+    }
+}
+```
+
+---
+
+#### Fakes
+
+```cs title="FakeIdentityProviderService.cs"
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Dto;
+using System.Collections.Concurrent;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Fakes;
+
+public class FakeIdentityProviderService : IIdentityProviderService
+{
+    private readonly ConcurrentDictionary<Guid, ExternalUserProfile> _profiles = new();
+
+    private readonly ConcurrentDictionary<Guid, int> _callCounts = new();
+
+    private readonly ConcurrentDictionary<Guid, Exception> _errors = new();
+
+    // Метод для тестов: закидываем нужные данные по userId
+    public void SetupProfile(ExternalUserProfile profile)
+    {
+        _profiles[profile.UserId] = profile;
+    }
+
+    public Task<ExternalUserProfile?> GetUserProfileByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        _callCounts.AddOrUpdate(userId, 1, (_, count) => count + 1);
+
+        if (!_profiles.TryGetValue(userId, out var profile))
+            if (_errors.TryGetValue(userId, out var error))
+                throw error;
+
+        return Task.FromResult(profile);
+    }
+
+    public bool WasCalledFor(Guid userId) => _callCounts.ContainsKey(userId);
+
+    public int GetCallCountFor(Guid userId) =>
+        _callCounts.TryGetValue(userId, out var count) ? count : 0;
+
+    public void SimulateErrorFor(Guid userId, Exception exception) => _errors[userId] = exception;
+}
+```
+
+---
+
+#### Helpers
+
+```cs title="PhoneNumberGenerator.cs"
+namespace LegacyLego.IntegrationTests.Infrastructure.Helpers;
+
+internal class PhoneNumberGenerator
+{
+    internal static string GeneratePhoneNumber(Guid userId)
+    {
+        // Преобразуем первые 8 байт GUID в 64-битное число и берем остаток для 10 цифр
+        var bytes = userId.ToByteArray();
+        var number = BitConverter.ToUInt64(bytes, 0) % 10_000_000_000UL;
+
+        // Форматируем с ведущими нулями (ровно 10 цифр)
+        var tenDigits = number.ToString("D10");
+
+        // +1 (код страны) + 10 цифр = 11 цифр после +. 
+        // 1 - входит в [1-9], 10 цифр - входят в \d{9,14}
+        return $"+1{tenDigits}";
+    }
+}
+```
+
+---
+
+#### Messaging
+
+```cs title="RabbitMqPublisherTestExtensions.cs"
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Messaging;
+
+public static class RabbitMqTestExtensions
+{
+    public static async Task PublishEventAsync<TEvent>(
+        this KeycloakRegistrationWebApplicationFactory factory,
+        string exchange,
+        string routingKey,
+        TEvent eventPayload)
+    {
+        var connectionFactory = factory.Services.GetRequiredService<IConnectionFactory>();
+
+        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var channel = await connection.CreateChannelAsync();
+
+        var json = JsonSerializer.Serialize(eventPayload);
+        var body = Encoding.UTF8.GetBytes(json);
+
+        await channel.BasicPublishAsync(
+            exchange: exchange,
+            routingKey: routingKey,
+            mandatory: false,
+            body: body);
+    }
+}
+```
+
+---
+
+#### Pulling
+
+```cs title="TestPoller.cs"
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Pulling;
+
+public static class TestPoller
+{
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan DebuggerTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    /// Ожидает выполнения произвольного синхронного условия.
+    /// </summary>
+    public static Task<bool> WaitForAsync(
+        Func<bool> predicate,
+        TimeSpan? timeout = null,
+        TimeSpan? pollInterval = null,
+        CancellationToken cancellationToken = default)
+    {
+        return WaitForAsync(() => Task.FromResult(predicate()), timeout, pollInterval, cancellationToken);
+    }
+
+    /// <summary>
+    /// Ожидает выполнения произвольного асинхронного условия.
+    /// </summary>
+    public static async Task<bool> WaitForAsync(
+        Func<Task<bool>> predicate,
+        TimeSpan? timeout = null,
+        TimeSpan? pollInterval = null,
+        CancellationToken cancellationToken = default)
+    {
+        var effectiveTimeout = timeout ?? (Debugger.IsAttached ? DebuggerTimeout : DefaultTimeout);
+        var interval = pollInterval ?? DefaultPollInterval;
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(effectiveTimeout);
+
+        try
+        {
+            while (!cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    if (await predicate())
+                    {
+                        return true;
+                    }
+                }
+                catch when (!cts.Token.IsCancellationRequested)
+                {
+                    // Игнорируем временные сбои во время поллинга
+                }
+
+                await Task.Delay(interval, cts.Token);
+            }
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // Таймаут истек, предикат так и не вернул true -> возвращаем false
+            return false;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Ожидает выполнения условия внутри короткоживущего Scoped DbContext.
+    /// </summary>
+    public static Task<bool> WaitForDbContextAsync<TContext>(
+        IServiceProvider serviceProvider,
+        Func<TContext, Task<bool>> predicate,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+        where TContext : DbContext
+    {
+        return WaitForAsync(async () =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
+            return await predicate(dbContext);
+        }, timeout, cancellationToken: cancellationToken);
+    }
+}
+```
+
+---
+
+#### Stubs
+
+```cs title="StubCacheInvalidator.cs"
+using LegacyLego.Infrastructure.Caching.Abstractions;
+using LegacyLego.IntegrationTests.Infrastructure.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace LegacyLego.IntegrationTests.Infrastructure.Stubs;
+
+public sealed class StubCacheInvalidator : ICacheInvalidator
+{
+    public Task InvalidateAsync(IEnumerable<object> entities, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+public static class StubCacheInvalidatorExtensions
+{
+    public static IServiceCollection AddStubCacheInvalidator(this IServiceCollection services)
+    {
+        services.RemoveAll<ICacheInvalidator>();
+        services.AddScoped<ICacheInvalidator, StubCacheInvalidator>();
+
+        return services;
+    }
+}
+```
+
+---
+
+### Tests
+
+```cs title="BaseIntegrationTest.cs"
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.IntegrationTests.Infrastructure;
+using LegacyLego.IntegrationTests.Infrastructure.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Headers;
+
+namespace LegacyLego.IntegrationTests.Tests;
+
+public abstract class BaseIntegrationTest<TFactory> : IAsyncDisposable
+    where TFactory : BaseWebApplicationFactory
+{
+    private readonly IServiceScope _scope;
+
+    // Теперь Factory имеет точный тип конкретной фабрики!
+    protected readonly TFactory Factory;
+
+    protected readonly HttpClient Client;
+    protected readonly OrderContext DbContext;
+
+    protected BaseIntegrationTest(TFactory factory)
+    {
+        Factory = factory;
+        Client = CreateClient();
+
+        _scope = factory.Services.CreateScope();
+        DbContext = _scope.ServiceProvider.GetRequiredService<OrderContext>();
+    }
+
+    protected HttpClient CreateClient(string? role = null, Guid? userId = null)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.SchemeName);
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            client.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, role);
+        }
+
+        if (userId.HasValue)
+        {
+            client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.Value.ToString());
+        }
+
+        return client;
+    }
+
+    protected HttpClient CreateUnauthenticatedClient()
+    {
+        return Factory.CreateClient();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        DbContext.Dispose();
+        _scope.Dispose();
+        await Task.CompletedTask;
+    }
+}
+```
+
+---
+
+#### BaseCases
+
+##### Fixtures
+
+```cs title="DefaultWebApplicationFactory.cs"
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Options;
+using LegacyLego.IntegrationTests.Infrastructure;
+using LegacyLego.IntegrationTests.Infrastructure.Authentication;
+using LegacyLego.IntegrationTests.Infrastructure.Extensions;
+using LegacyLego.IntegrationTests.Infrastructure.Stubs;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using Testcontainers.PostgreSql;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+
+public class DefaultWebApplicationFactory : BaseWebApplicationFactory
+{
+    protected readonly PostgreSqlContainer DbContainer = new PostgreSqlBuilder("postgres:16-alpine")
+        .WithDatabase("legacy_lego_test")
+        .WithUsername("postgres")
+        .WithPassword("postgres")
+        .Build();
+
+    public override async Task InitializeAsync()
+    {
+        await DbContainer.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveHostedServices();
+            services.AddStubCacheInvalidator();
+            services.AddTestAuth();
+
+            services.Configure<DatabaseOptions>(options =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(DbContainer.GetConnectionString())
+                {
+                    IncludeErrorDetail = true
+                };
+
+                options.ConnectionString = builder.ConnectionString;
+                options.EnableDetailedErrors = true;
+                options.EnableSensitiveDataLogging = true;
+
+            });
+        });
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await DbContainer.DisposeAsync();
+        await base.DisposeAsync();
+    }
+}
+```
+
+---
+
+```cs title="RabbitMqWebApplicationFactory.cs"
+using Docker.DotNet.Models;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Infrastructure.BackgroundJobs;
+using LegacyLego.Infrastructure.Options;
+using LegacyLego.IntegrationTests.Infrastructure.Fakes;
+using MassTransit;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using NSubstitute;
+using RabbitMQ.Client;
+using Testcontainers.RabbitMq;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+
+public class KeycloakRegistrationWebApplicationFactory : DefaultWebApplicationFactory
+{
+    public FakeIdentityProviderService IdentityProviderFake { get; } = new();
+
+    public RabbitMqOptions RabbitMqOptions { get; private set; } = null!;
+
+    private static readonly string DefinitionsPath = Path.Combine(
+        AppContext.BaseDirectory, "infrastructure", "rabbitmq", "definitions.json");
+
+    private static readonly string ConfigPath = Path.Combine(
+        AppContext.BaseDirectory, "infrastructure", "rabbitmq", "rabbitmq.conf");
+
+    public readonly RabbitMqContainer RabbitContainer = new RabbitMqBuilder("rabbitmq:3-management-alpine")
+    .WithUsername("Rabbit")
+    .WithPassword("RabbitPwd")
+    .WithBindMount(ConfigPath, "/etc/rabbitmq/rabbitmq.conf", AccessMode.ReadOnly)
+    .WithBindMount(DefinitionsPath, "/etc/rabbitmq/definitions.json", AccessMode.ReadOnly)
+    .Build();
+
+    public override async Task InitializeAsync()
+    {
+        await RabbitContainer.StartAsync();
+
+        await base.InitializeAsync();
+
+        RabbitMqOptions = Services.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+
+        // Запуск шины MassTransit для всей группы тестов
+        var busControl = Services.GetRequiredService<IBusControl>();
+        await busControl.StartAsync();
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        // Базовый вызов сделает RemoveHostedServices() и настроит Postgres + StubCache
+        base.ConfigureWebHost(builder);
+
+        builder.ConfigureTestServices(services =>
+        {
+            // Переопределить для RabbitMqOptions только порт и хост из Testcontainers
+            services.PostConfigure<RabbitMqOptions>(options =>
+            {
+                options.Host = RabbitContainer.Hostname;
+                options.Port = RabbitContainer.GetMappedPublicPort(5672);
+            });
+
+            services.RemoveAll<IConnectionFactory>();
+            services.AddSingleton<IConnectionFactory>(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+                return new ConnectionFactory
+                {
+                    HostName = options.Host,
+                    Port = options.Port,
+                    UserName = options.Username,
+                    Password = options.Password,
+                    VirtualHost = options.VirtualHost
+                };
+            });
+
+            // Используем фейк вместо настоящего IIdentityProviderService
+            services.RemoveAll<IIdentityProviderService>();
+            services.AddSingleton<IIdentityProviderService>(IdentityProviderFake);
+        });
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await RabbitContainer.DisposeAsync();
+        await base.DisposeAsync();
+    }
+}
+```
+
+---
+
+##### OrderPayment
+
+```cs title="OrderPaymentAuthorizationTests.cs"
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using System.Net;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.OrderPayment;
+
+[ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-OrderPatyment")]
+public class OrderPaymentAuthorizationTests : BaseIntegrationTest<DefaultWebApplicationFactory>
+{
+    public OrderPaymentAuthorizationTests(DefaultWebApplicationFactory factory) : base(factory) { }
+
+    [Test]
+    public async Task StartPayment_WithWrongRole_ReturnsForbidden()
+    {
+        // ARRANGE: Клиент с неподходящей ролью 
+        var wrongAuthClient = CreateClient("not-client");
+
+        // ACT
+        var response = await wrongAuthClient.PostAsync($"/mock/{Guid.NewGuid()}/pay", content: null);
+
+        // ASSERT: Проверяем 403 Forbidden
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task StartPayment_WithoutAuth_ReturnsUnauthorized()
+    {
+        // ARRANGE: Полностью неавторизованный клиент
+        var anonymousClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await anonymousClient.PostAsync($"/mock/{Guid.NewGuid()}/pay", content: null);
+
+        // ASSERT: Проверяем 401 Unauthorized
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+    }
+
+    [Test]
+    public async Task StartPayment_WhenOrderBelongsToAnotherClient_ReturnsForbidden()
+    {
+        // ARRANGE
+        var ownerUserId = Guid.NewGuid();
+        var attackerUserId = Guid.NewGuid();
+
+        // Запрос будет отправляться от лица attackerUserId
+        var attackerClient = CreateClient(userId: attackerUserId);
+
+        // Но заказ в БД создается для ownerUserId
+        var owner = ClientFactory.Create(id: ownerUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: owner.Id.Value);
+
+        DbContext.Clients.Add(owner);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // ACT: Атакующий пытается оплатить заказ владельца
+        var response = await attackerClient.PostAsync($"/mock/{order.Id.Value}/pay", content: null);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
+    }
+}
+```
+
+---
+
+```cs title="ProcessPaymentWebhookTests.cs"
+using LegacyLego.Domain.Enums;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using LegacyLego.Presentation.Mock.Common.Dto.Request;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Http.Json;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.OrderPayment;
+
+[ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-OrderPatyment")]
+public class ProcessPaymentWebhookTests : BaseIntegrationTest<DefaultWebApplicationFactory>
+{
+    public ProcessPaymentWebhookTests(DefaultWebApplicationFactory factory): base(factory) { }
+
+    [Test]
+    public async Task HandleWebhook_WithValidSuccessStatus_UpdatesPaymentToSucceeded()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: externalSessionId,
+            TransactionId: transactionId,
+            OrderId: order.Id.Value,
+            Amount: 799.99m,
+            Currency: "USD",
+            Status: "success"
+        );
+
+        // Вебхуки шлются внешним провайдером без заголовков пользователя
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT: Проверка HTTP-ответа
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        // ASSERT: Проверка состояния агрегата OrderPayment в БД
+        var updatedPayment = await DbContext.OrderPayments
+            .FirstOrDefaultAsync(p => p.Id == payment.Id);
+
+        await Assert.That(updatedPayment).IsNotNull();
+        await Assert.That(updatedPayment!.Status).IsEqualTo(PaymentStatus.Succeeded);
+        await Assert.That(updatedPayment.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(updatedPayment.ActualAmount).IsEqualTo(expectedPrice);
+    }
+
+    [Test]
+    public async Task HandleWebhook_WithValidReapetedRequest_IdempotencyWithSucceed()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: externalSessionId,
+            TransactionId: transactionId,
+            OrderId: order.Id.Value,
+            Amount: 799.99m,
+            Currency: "USD",
+            Status: "success"
+        );
+
+        // Вебхуки шлются внешним провайдером без заголовков пользователя
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+        // Второй аналогичный запрос
+        var secondResponse = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+        // Если ранее идентичный запрос уже был обработан как OK, то и этот OK (идемпотентная операция)
+        await Assert.That(secondResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var updatedPayment = await DbContext.OrderPayments
+            .FirstOrDefaultAsync(p => p.Id == payment.Id);
+
+        await Assert.That(updatedPayment).IsNotNull();
+        await Assert.That(updatedPayment!.Status).IsEqualTo(PaymentStatus.Succeeded);
+        await Assert.That(updatedPayment.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(updatedPayment.ActualAmount).IsEqualTo(expectedPrice);
+    }
+
+    [Test]
+    public async Task HandleWebhook_WithValidFailedStatus_UpdatesPaymentToFailed()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: externalSessionId,
+            TransactionId: null, // для неудачной операции оплаты не создаётся TransactionId
+            OrderId: order.Id.Value,
+            Amount: 799.99m,
+            Currency: "USD",
+            Status: "fail"
+        );
+
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var updatedPayment = await DbContext.OrderPayments
+            .FirstOrDefaultAsync(p => p.Id == payment.Id);
+
+        await Assert.That(updatedPayment).IsNotNull();
+        await Assert.That(updatedPayment!.Status).IsEqualTo(PaymentStatus.Failed);
+        await Assert.That(updatedPayment.TransactionId).IsNull();
+        await Assert.That(updatedPayment.ActualAmount).IsNull(); // так как оплаты не было, то ActualAmount не должен быть инициализирован
+    }
+
+    [Test]
+    public async Task HandleWebhook_WithUnknownStatus_ReturnsBadRequest()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: externalSessionId,
+            TransactionId: transactionId,
+            OrderId: order.Id.Value,
+            Amount: 799.99m,
+            Currency: "USD",
+            Status: "unknown-status" // Неизвестный статус вэбхука
+        );
+
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+    }
+
+    [Test]
+    public async Task HandleWebhook_WithUnknownIdentifiers_ReturnsNotFound()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: "unknown", //  неизвестные идентификаторы
+            TransactionId: "unknown",
+            OrderId: order.Id.Value,
+            Amount: 799.99m,
+            Currency: "USD",
+            Status: "success" 
+        );
+
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // ACT
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+    }
+
+    [Test]
+    public async Task HandleWebhook_WithMismatchedAmount_UpdatesPaymentToRefundRequestedAndReturnsConflict()
+    {
+        // ARRANGE
+        var client = ClientFactory.Create();
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        var expectedPrice = Price.Create(799.99m, Currency.FromCode("USD").Value).Value;
+        var externalSessionId = $"ext_{Guid.NewGuid():N}";
+        var transactionId = $"tx_{Guid.NewGuid():N}";
+
+        var payment = OrderPaymentFactory.CreatePendingPayment(order.Id, expectedPrice, externalSessionId);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        DbContext.OrderPayments.Add(payment);
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Неверная сумма: 500.00m вместо 799.99m
+        var webhookPayload = new PaymentProviderWebhookRequest(
+            ExternalSessionId: externalSessionId,
+            TransactionId: transactionId,
+            OrderId: order.Id.Value,
+            Amount: 500.00m,
+            Currency: "USD",
+            Status: "success"
+        );
+
+        var webhookClient = CreateUnauthenticatedClient();
+
+        // 
+        var response = await webhookClient.PostAsJsonAsync("/mock/api/webhooks/payment", webhookPayload);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var updatedPayment = await DbContext.OrderPayments
+            .FirstOrDefaultAsync(p => p.Id == payment.Id);
+
+        await Assert.That(updatedPayment).IsNotNull();
+        await Assert.That(updatedPayment!.Status).IsEqualTo(PaymentStatus.RefundRequested);
+        await Assert.That(updatedPayment.ActualAmount).IsNotNull()
+            .And.Member(a => a.Sum, s => s.IsEqualTo(500.00m));
+    }
+}
+```
+
+---
+
+```cs title="StartOrderPaymentTests.cs"
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using LegacyLego.Presentation.Payments.Dto;
+using System.Net;
+using System.Net.Http.Json;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.OrderPayment;
+
+[ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-OrderPatyment")]
+public class StartOrderPaymentTests : BaseIntegrationTest<DefaultWebApplicationFactory>
+{
+    public StartOrderPaymentTests(DefaultWebApplicationFactory factory): base(factory) { }
+
+    [Test]
+    public async Task StartPayment_WithValidPendingOrder_ReturnsOkWithCheckoutUrl()
+    {
+        // ARRANGE
+
+        var currentUserId = Guid.NewGuid();
+        var testClient = CreateClient(userId: currentUserId);
+
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        // Очистка ChangeTracker, чтобы EF Core не отдавал объект из кеша памяти при запросах внутри контроллера
+        DbContext.ChangeTracker.Clear();
+
+        // ACT
+        var response = await testClient.PostAsync($"/mock/{order.Id.Value}/pay", content: null);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var paymentResponse = await response.Content.ReadFromJsonAsync<StartPaymentResponse>();
+
+        await Assert.That(paymentResponse).IsNotNull();
+        await Assert.That(paymentResponse!.CheckoutUrl).IsNotEmpty();
+        await Assert.That(paymentResponse.ExpiresAtUtc).IsGreaterThan(DateTime.UtcNow);
+    }
+
+    [Test]
+    public async Task StartPayment_WhenOrderDoesNotExist_ReturnsNotFound()
+    {
+        // ARRANGE
+        var nonExistentOrderId = Guid.NewGuid();
+
+        // ACT: Можно использовать стандартный Client, так как до проверки владельца код даже не дойдет
+        var response = await Client.PostAsync($"/mock/{nonExistentOrderId}/pay", content: null);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+    }
+
+    [Test]
+    public async Task StartPayment_WithAlreadyPaidOrder_ReturnsConflict()
+    {
+        // ARRANGE
+
+        var currentUserId = Guid.NewGuid();
+        var testClient = CreateClient(userId: currentUserId);
+
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        // Очистка ChangeTracker, чтобы EF Core не отдавал объект из кеша памяти при запросах внутри контроллера
+        DbContext.ChangeTracker.Clear();
+
+        // ACT
+        var response = await testClient.PostAsync($"/mock/{order.Id.Value}/pay", content: null);
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
+    }
+
+}
+```
+
+---
+
+##### Orders
+
+```cs title="CreateOrderTests.cs"
+using Docker.DotNet.Models;
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.IntegrationTests.Infrastructure.Authentication;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using LegacyLego.Presentation.Orders.Dto;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Http.Json;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.Orders;
+
+[ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-Pool-1")]
+public class CreateOrderTests : BaseIntegrationTest<DefaultWebApplicationFactory>
+{
+    // TUnit автоматически внедрит DefaultWebApplicationFactory через конструктор
+    public CreateOrderTests(DefaultWebApplicationFactory factory): base(factory) { }
+
+    [Test]
+    public async Task CreateOrder_WithValidRequest_ReturnsCreatedAndSavesToDatabase()
+    {
+        // ARRANGE
+        var request = new CreateOrderRequest(
+            CurrencyCode: "USD",
+            OrderAddress: new OrderAddressDto("USA", "New York", "5th Avenue", "10001"),
+            Items: new List<OrderItemDto>
+            {
+                new OrderItemDto("Lego Star Wars Millenium Falcon", 1, Guid.NewGuid(), 799.99m)
+            }
+        );
+
+        // ACT
+        var response = await Client.PostAsJsonAsync("/orders", request);
+
+        if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"API Error Output: {errorDetails}");
+        }
+
+        // ASSERT: Проверяем HTTP-ответ
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var createdOrderId = await response.Content.ReadFromJsonAsync<Guid>();
+        await Assert.That(createdOrderId).IsNotEqualTo(Guid.Empty);
+
+        var savedOrder = await DbContext.Orders
+            .FirstOrDefaultAsync(o => o.Id == OrderId.From(createdOrderId));
+
+        await Assert.That(savedOrder).IsNotNull();
+        await Assert.That(savedOrder!.ClientId.Value).IsEqualTo(TestAuthHandler.TestUserId);
+    }
+
+    [Test]
+    public async Task CreateOrder_WithEmptyItems_ReturnsBadRequest()
+    {
+        // ARRANGE: Корзина пуста
+        var request = new CreateOrderRequest("USD", new OrderAddressDto("USA", "NY", "St", "100"), Items: new());
+
+        // ACT
+        var response = await Client.PostAsJsonAsync("/orders", request);
+
+        if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
+        {
+            var errorDetails = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"API Error Output: {errorDetails}");
+        }
+
+        // ASSERT
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+    }
+}
+```
+
+---
+
+```cs title="OrdersAuthorizationTests.cs"
+using LegacyLego.Application.Orders.Common;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using LegacyLego.Presentation.Orders.Dto;
+using System.Net;
+using System.Net.Http.Json;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.Orders;
+
+[ClassDataSource<DefaultWebApplicationFactory>(Shared = SharedType.Keyed, Key = "Postgres-Pool-1")]
+public class OrdersAuthorizationTests : BaseIntegrationTest<DefaultWebApplicationFactory>
+{
+    public OrdersAuthorizationTests(DefaultWebApplicationFactory factory) : base(factory) { }
+
+    [Test]
+    public async Task CreateOrder_WithWrongRole_ReturnsForbidden()
+    {
+        // ARRANGE: Клиент с неподходящей ролью 
+        var wrongAuthClient = CreateClient("not-client");
+
+        // ARRANGE
+        var request = new CreateOrderRequest(
+            CurrencyCode: "USD",
+            OrderAddress: new OrderAddressDto("USA", "New York", "5th Avenue", "10001"),
+            Items: new List<OrderItemDto>
+            {
+                new OrderItemDto("Lego Star Wars Millenium Falcon", 1, Guid.NewGuid(), 799.99m)
+            }
+        );
+
+        // ACT
+        var response = await wrongAuthClient.PostAsJsonAsync("/orders", request);
+
+        // ASSERT: Проверяем 403 Forbidden
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task CreateOrder_WithoutAuth_ReturnsUnauthorized()
+    {
+        // ARRANGE: Полностью неавторизованный клиент
+        var anonymousClient = CreateUnauthenticatedClient();
+
+        // ARRANGE
+        var request = new CreateOrderRequest(
+            CurrencyCode: "USD",
+            OrderAddress: new OrderAddressDto("USA", "New York", "5th Avenue", "10001"),
+            Items: new List<OrderItemDto>
+            {
+                new OrderItemDto("Lego Star Wars Millenium Falcon", 1, Guid.NewGuid(), 799.99m)
+            }
+        );
+
+        // ACT
+        var response = await anonymousClient.PostAsJsonAsync("/orders", request);
+
+        // ASSERT: Проверяем 401 Unauthorized
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+    }
+}
+```
+
+---
+
+##### Registration
+
+```cs title="KeycloakConsumerRegistrationTests.cs"
+using LegacyLego.Application.Dto;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Options;
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Infrastructure.Messaging;
+using LegacyLego.IntegrationTests.Infrastructure.Pulling;
+using LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+namespace LegacyLego.IntegrationTests.Tests.BaseCases.Registration;
+
+[ClassDataSource<KeycloakRegistrationWebApplicationFactory>(Shared = SharedType.Keyed, Key = "RabbitMQ-Registration")]
+public class KeycloakConsumerRegistrationTests : BaseIntegrationTest<KeycloakRegistrationWebApplicationFactory>
+{
+    private const string TOPIC_EXCHANGE_NAME = "amq.topic";
+    private const string REGISTRATION_ROUTING_KEY = "KK.EVENT.INTEGRATION.TEST.LOCAL.USER.REGISTER";
+
+    public KeycloakConsumerRegistrationTests(KeycloakRegistrationWebApplicationFactory factory) : base(factory) { }
+
+    [Test]
+    public async Task OnRegisterEventReceived_CreatesNewClientInDatabase()
+    {
+        // ARRANGE
+        var registerEvent = KeycloakEventFactory.CreateUserRegistered();
+        var userId = registerEvent.UserId;
+        var expectedEmail = registerEvent.Details!.Email;
+
+        // Регистрация данных по конкретному UserId (100% Thread-Safe)
+        Factory.IdentityProviderFake.SetupProfile(registerEvent.ToExternalUserProfile());
+
+        // ACT
+        await Factory.PublishEventAsync(
+            exchange: TOPIC_EXCHANGE_NAME,
+            routingKey: REGISTRATION_ROUTING_KEY,
+            eventPayload: registerEvent);
+
+        // ASSERT проверяем наличие записи клиента в бд
+        var isCreated = await TestPoller.WaitForDbContextAsync<OrderContext>(
+            Factory.Services,
+            dbContext => dbContext.Clients.AnyAsync(c => c.Id == userId));
+
+        await Assert.That(isCreated).IsTrue();
+
+        var createdClient = await DbContext.Clients.FirstOrDefaultAsync(c => c.Id == userId);
+        await Assert.That(createdClient).IsNotNull();
+        await Assert.That(createdClient!.Email.Value).IsEqualTo(expectedEmail);
+
+        await Assert.That(Factory.IdentityProviderFake.WasCalledFor(userId)).IsTrue();
+    }
+
+    [Test]
+    public async Task OnRegisterEventReceived_DuplicateEvent_IsIdempotentAndDoesNotDuplicate()
+    {
+        // ARRANGE
+        var registerEvent = KeycloakEventFactory.CreateUserRegistered();
+        var userId = registerEvent.UserId;
+
+        Factory.IdentityProviderFake.SetupProfile(registerEvent.ToExternalUserProfile());
+
+        // ACT — Отправляем событие дубликатом дважды
+        await Factory.PublishEventAsync(
+            exchange: TOPIC_EXCHANGE_NAME,
+            routingKey: REGISTRATION_ROUTING_KEY,
+            eventPayload: registerEvent);
+        await Factory.PublishEventAsync(
+            exchange: TOPIC_EXCHANGE_NAME,
+            routingKey: REGISTRATION_ROUTING_KEY,
+            eventPayload: registerEvent);
+
+        var isCreated = await TestPoller.WaitForDbContextAsync<OrderContext>(
+            Factory.Services,
+            async dbContext => await dbContext.Clients.CountAsync(c => c.Id == userId) == 1);
+
+        await Assert.That(isCreated).IsTrue();
+        var clientCount = await DbContext.Clients.CountAsync(c => c.Id == userId);
+        await Assert.That(clientCount).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task OnRegisterEventReceived_WhenIdentityProviderFails_DoesNotCreateClient()
+    {
+        var registerEvent = KeycloakEventFactory.CreateUserRegistered();
+        var userId = registerEvent.UserId;
+
+        Factory.IdentityProviderFake.SimulateErrorFor(userId, new HttpRequestException("Keycloak unavailable"));
+
+        // количество ретраев после отказа + первое обращение до отказа
+        var expectedCallCount = Factory.RabbitMqOptions.RetryCount + 1;
+        var maxRetryDurationSeconds = (Factory.RabbitMqOptions.RetryCount * Factory.RabbitMqOptions.RetryIntervalSeconds) + 3;
+
+        // ACT
+        await Factory.PublishEventAsync(
+            exchange: TOPIC_EXCHANGE_NAME,
+            routingKey: REGISTRATION_ROUTING_KEY,
+            eventPayload: registerEvent);
+
+        // ASSERT Проверяем выполнение политики ретраев с динамическим таймаутом и числом попыток
+        var processedAllRetries = await TestPoller.WaitForAsync(
+            predicate: () => Factory.IdentityProviderFake.GetCallCountFor(userId) == expectedCallCount,
+            timeout: TimeSpan.FromSeconds(maxRetryDurationSeconds));
+
+        await Assert.That(processedAllRetries)
+            .IsTrue()
+            .Because($"Expected {expectedCallCount} calls to IdentityProvider " +
+            $"(1 initial + {Factory.RabbitMqOptions.RetryCount} retries based on configuration)");
+
+        using var scope = Factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        var clientExists = await dbContext.Clients.AnyAsync(c => c.Id == userId);
+        
+        // проверяем отсутствие записи клиента в бд (в случае неудачного сценария)
+        await Assert.That(clientExists).IsFalse();
+    }
+
+    [Test]
+    public async Task OnRegisterEventReceived_WhenDomainInvariantFails_DoesNotCreateClientAndDoesNotRetry()
+    {
+        // ARRANGE
+        var rabbitOptions = Factory.Services.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+
+        var registerEvent = KeycloakEventFactory.CreateUserRegisteredWithInvalidEmail();
+        var userId = registerEvent.UserId;
+
+        // От провайдера придёт набор данных с навалидным значением (email)
+        Factory.IdentityProviderFake.SetupProfile(registerEvent.ToExternalUserProfile());
+
+        // ACT
+        await Factory.PublishEventAsync(
+            exchange: TOPIC_EXCHANGE_NAME,
+            routingKey: REGISTRATION_ROUTING_KEY,
+            eventPayload: registerEvent);
+
+        // ASSERT 
+        var wasCalled = await TestPoller.WaitForAsync(
+            predicate: () => Factory.IdentityProviderFake.WasCalledFor(userId),
+            timeout: TimeSpan.FromSeconds(3));
+
+        await Assert.That(wasCalled).IsTrue();
+
+        var callCount = Factory.IdentityProviderFake.GetCallCountFor(userId);
+        await Assert.That(callCount)
+            .IsEqualTo(1)
+            .Because("Business/Domain errors should not trigger MassTransit retries");
+
+        using var scope = Factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        var clientExists = await dbContext.Clients.AnyAsync(c => c.Id == userId);
+
+        await Assert.That(clientExists).IsFalse();
+    }
+}
+```
+
+---
+
+#### Cache
+
+##### Fixtures
+
+```cs title="CacheWebApplicationFactory.cs"
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.Infrastructure.Options;
+using LegacyLego.IntegrationTests.Infrastructure;
+using LegacyLego.IntegrationTests.Infrastructure.Authentication;
+using LegacyLego.IntegrationTests.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
+using StackExchange.Redis;
+using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
+
+namespace LegacyLego.IntegrationTests.Tests.Cache.Fixtures;
+
+public class CacheWebApplicationFactory : BaseWebApplicationFactory
+{
+    protected readonly PostgreSqlContainer DbContainer = new PostgreSqlBuilder("postgres:16-alpine")
+        .WithDatabase("legacy_lego_test")
+        .WithUsername("postgres")
+        .WithPassword("postgres")
+        .Build();
+
+    protected readonly RedisContainer RedisContainer = new RedisBuilder("redis:7-alpine")
+        .Build();
+
+    public IConnectionMultiplexer Redis => Services.GetRequiredService<IConnectionMultiplexer>();
+
+    public override async Task InitializeAsync()
+    {
+        await DbContainer.StartAsync();
+        await RedisContainer.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveHostedServices();
+            services.AddTestAuth();
+
+            services.Configure<DatabaseOptions>(options =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(DbContainer.GetConnectionString())
+                {
+                    IncludeErrorDetail = true
+                };
+
+                options.ConnectionString = builder.ConnectionString;
+                options.EnableDetailedErrors = true;
+                options.EnableSensitiveDataLogging = true;
+
+            });
+
+            services.RemoveAll<IConnectionMultiplexer>();
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(RedisContainer.GetConnectionString()));
+        });
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await DbContainer.DisposeAsync();
+        await RedisContainer.DisposeAsync();
+        await base.DisposeAsync();
+    }
+
+    public async Task<string?> GetRedisStringAsync(string key)
+    {
+        var db = Redis.GetDatabase();
+        var value = await db.StringGetAsync(key);
+        return value.HasValue ? value.ToString() : null;
+    }
+
+    public async Task<bool> KeyExistsInRedisAsync(string key)
+    {
+        var db = Redis.GetDatabase();
+        return await db.KeyExistsAsync(key);
+    }
+}
+```
+
+---
+
+##### Order
+
+```cs title="OrderDetailsCacheTests.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Orders.Queries.OrderDetails;
+using LegacyLego.Domain.ValueObjects;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.IntegrationTests.Infrastructure.Extensions;
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Tests.Cache.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Json;
+
+namespace LegacyLego.IntegrationTests.Tests.Cache.Order;
+
+[ClassDataSource<CacheWebApplicationFactory>(Shared = SharedType.Keyed, Key = "OrderDetails-Cache-Pool")]
+public class OrderDetailsCacheTests : BaseIntegrationTest<CacheWebApplicationFactory>
+{
+    public OrderDetailsCacheTests(CacheWebApplicationFactory factory) : base(factory) { }
+
+    [Test]
+    public async Task GetOrderDetails_WhenCacheIsEmpty_PopulatesRedisCache()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // ACT
+        var response = await httpClient.GetAsync($"/orders/{order.Id.Value}");
+        var details = await response.ReadJsonAsync<OrderDetailsDto>();
+
+        // ASSERT
+        await Assert.That(response.IsSuccessStatusCode).IsTrue();
+        await Assert.That(details!.OrderId).IsEqualTo(order.Id.Value);
+
+        var version = await Factory.GetRedisStringAsync($"order:{order.Id.Value}:version");
+        var hasCacheKey = await Factory.KeyExistsInRedisAsync($"order:{order.Id.Value}:v1:details");
+
+        await Assert.That(version).IsEqualTo("1");
+        await Assert.That(hasCacheKey).IsTrue();
+    }
+
+    [Test]
+    public async Task GetOrderDetails_WhenCacheIsWarmed_ReturnsDataFromCacheWithoutReadingDb()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // Прогреваем кэш первичным запросом
+        await httpClient.GetAsync($"/orders/{order.Id.Value}");
+
+        // "Портим" данные в БД напрямую
+        var dirtyAddress = OrderAddress.Create("Ruined City", "Ghost Street", "13", "00000").Value;
+        await DbContext.Orders
+            .Where(o => o.Id == order.Id)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Address, dirtyAddress));
+
+        // ACT
+        var response = await httpClient.GetAsync($"/orders/{order.Id.Value}");
+        var details = await response.ReadJsonAsync<OrderDetailsDto>();
+
+        // ASSERT: из кэша вернулся старый адрес "New York"
+        await Assert.That(response.IsSuccessStatusCode).IsTrue();
+        await Assert.That(details!.DeliveryAddress.City).IsEqualTo("New York");
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_OnOrderUpdate_IncrementsCacheVersionInRedis()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+        await httpClient.GetAsync($"/orders/{order.Id.Value}"); // Версия становится "1"
+
+        // ACT: меняем состояние через UoW
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var scopedDb = scope.ServiceProvider.GetRequiredService<OrderContext>();
+
+            var orderToUpdate = await scopedDb.Orders.FirstAsync(o => o.Id == order.Id);
+            orderToUpdate.Refund();
+
+            await uow.SaveChangesAsync();
+        }
+
+        // ASSERT: версия в Redis инкрементировалась до "2"
+        var version = await Factory.GetRedisStringAsync($"order:{order.Id.Value}:version");
+        await Assert.That(version).IsEqualTo("2");
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_OnSingleOrderUpdate_DoesNotIncrementOtherOrdersVersion()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+
+        var orderA = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        var orderB = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        orderA.Pay();
+        orderB.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.AddRange(orderA, orderB);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // Прогреваем кэш обоих заказов (оба получают версию "1")
+        await httpClient.GetAsync($"/orders/{orderA.Id.Value}");
+        await httpClient.GetAsync($"/orders/{orderB.Id.Value}");
+
+        // ACT: меняем состояние ТОЛЬКО первого заказа через UoW
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var scopedDb = scope.ServiceProvider.GetRequiredService<OrderContext>();
+
+            var orderToUpdate = await scopedDb.Orders.FirstAsync(o => o.Id == orderA.Id);
+            orderToUpdate.Refund();
+
+            // группа заказа A обновлена версия +1 (с 1 до 2)
+            // группа списка заказов текущего клиента обновлена версия +1 (с 0 до 1)
+            await uow.SaveChangesAsync();
+        }
+
+        // ASSERT
+        var versionOrderA = await Factory.GetRedisStringAsync($"order:{orderA.Id.Value}:version");
+        var versionOrderB = await Factory.GetRedisStringAsync($"order:{orderB.Id.Value}:version");
+        var versionUserGroup = await Factory.GetRedisStringAsync($"orders:{client.Id.Value}:version");
+
+        // Заказ A и группа обновлены
+        await Assert.That(versionOrderA).IsEqualTo("2");
+        await Assert.That(versionUserGroup).IsEqualTo("1");
+
+        // Заказ B остался нетронутым в кэше
+        await Assert.That(versionOrderB).IsEqualTo("1");
+    }
+}
+```
+
+---
+
+```cs title="OrdersHistoryCacheTests.cs"
+using LegacyLego.Application.Abstractions.Data;
+using LegacyLego.Application.Abstractions.ExternalServices;
+using LegacyLego.Application.Orders.Queries.OrdersHistory;
+using LegacyLego.Infrastructure.Context;
+using LegacyLego.IntegrationTests.Infrastructure.Extensions;
+using LegacyLego.IntegrationTests.Infrastructure.Factories;
+using LegacyLego.IntegrationTests.Tests.Cache.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace LegacyLego.IntegrationTests.Tests.Cache.Order;
+
+[ClassDataSource<CacheWebApplicationFactory>(Shared = SharedType.Keyed, Key = "OrderDetails-Cache-Pool")]
+public class OrdersHistoryCacheTests : BaseIntegrationTest<CacheWebApplicationFactory>
+{
+    public OrdersHistoryCacheTests(CacheWebApplicationFactory factory) : base(factory) { }
+
+    [Test]
+    public async Task GetOrdersHistory_WhenCacheIsEmpty_PopulatesRedisCacheWithDefaultCursor()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // ACT
+        var response = await httpClient.GetAsync("/orders/history");
+        var history = await response.ReadJsonAsync<OrdersHistoryResponse>();
+
+        // ASSERT
+        await Assert.That(response.IsSuccessStatusCode).IsTrue();
+        await Assert.That(history!.Orders).Count().IsEqualTo(1);
+
+        var groupVersion = await Factory.GetRedisStringAsync($"orders:{currentUserId}:version");
+        var hasDefaultCacheKey = await Factory.KeyExistsInRedisAsync($"orders:{currentUserId}:v1:cursor:first");
+
+        await Assert.That(groupVersion).IsEqualTo("1");
+        await Assert.That(hasDefaultCacheKey).IsTrue();
+    }
+
+    [Test]
+    public async Task GetOrdersHistory_WhenCacheIsWarmed_ReturnsCachedListWithoutReadingDb()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // Прогреваем кэш (сохраняется список из 1 заказа)
+        await httpClient.GetAsync("/orders/history");
+
+        // Добавляем второй заказ напрямую в БД в обход UoW (без инвалидации)
+        var newOrder = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        DbContext.Orders.Add(newOrder);
+        await DbContext.SaveChangesAsync();
+
+        // ACT
+        var response = await httpClient.GetAsync("/orders/history");
+        var history = await response.ReadJsonAsync<OrdersHistoryResponse>();
+
+        // ASSERT: Из кэша возвращается старый список из 1 заказа
+        await Assert.That(response.IsSuccessStatusCode).IsTrue();
+        await Assert.That(history!.Orders).Count().IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_OnOrderUpdate_IncrementsGroupCacheVersionInRedis()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var httpClient = CreateClient(userId: currentUserId);
+        await httpClient.GetAsync("/orders/history"); // Кэшируется под версией "1"
+
+        // ACT: меняем заказ через UoW (триггерит инвалидатор группы)
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var scopedDb = scope.ServiceProvider.GetRequiredService<OrderContext>();
+
+            var orderToUpdate = await scopedDb.Orders.FirstAsync(o => o.Id == order.Id);
+            orderToUpdate.Refund();
+
+            await uow.SaveChangesAsync();
+        }
+
+        // ASSERT: Версия группы пользователя выросла до "2"
+        var groupVersion = await Factory.GetRedisStringAsync($"orders:{currentUserId}:version");
+        await Assert.That(groupVersion).IsEqualTo("2");
+
+        // Повторный запрос прогревает свежий кэш v2
+        var response = await httpClient.GetAsync("/orders/history");
+        await Assert.That(response.IsSuccessStatusCode).IsTrue();
+
+        var hasV2CacheKey = await Factory.KeyExistsInRedisAsync($"orders:{currentUserId}:v2:cursor:first");
+        await Assert.That(hasV2CacheKey).IsTrue();
+    }
+
+    [Test]
+    public async Task GetOrdersHistory_WithDifferentCursors_CachesSeparatelyUnderSameGroupVersion()
+    {
+        // ARRANGE
+        var currentUserId = Guid.NewGuid();
+        var client = ClientFactory.Create(id: currentUserId);
+        var order = OrderFactory.CreatePendingOrder(clientId: client.Id.Value);
+        order.Pay();
+
+        DbContext.Clients.Add(client);
+        DbContext.Orders.Add(order);
+        await DbContext.SaveChangesAsync();
+
+        var serializer = Factory.Services.GetRequiredService<ICursorSerializer>();
+        var nextCursor = serializer.Serialize((order.CreationDateUtc, order.Id.Value));
+
+        var httpClient = CreateClient(userId: currentUserId);
+
+        // ACT: делаем два запроса с разными курсорами
+        await httpClient.GetAsync("/orders/history"); // cursor:first
+        await httpClient.GetAsync($"/orders/history?cursor={Uri.EscapeDataString(nextCursor)}");
+
+        // ASSERT: В рамках ОДНОЙ версии v1 создались два независимых кэш-ключа
+        var hasFirstPageCache = await Factory.KeyExistsInRedisAsync($"orders:{currentUserId}:v1:cursor:first");
+        var hasNextPageCache = await Factory.KeyExistsInRedisAsync($"orders:{currentUserId}:v1:cursor:{nextCursor}");
+
+        await Assert.That(hasFirstPageCache).IsTrue();
+        await Assert.That(hasNextPageCache).IsTrue();
+    }
+}
+```
+
+---
+
 ## LegacyLego.Presentation
 
 ```xml title="LegacyLego.Presentation.csproj"
@@ -15188,63 +17274,66 @@ configuration.AddUserSecrets(Assembly.GetExecutingAssembly(), true);
 builder.Logging.ClearProviders();
 
 builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+		configuration.ReadFrom.Configuration(context.Configuration));
 
 Serilog.Debugging.SelfLog.Enable(Console.Error);
 
 try
 {
-    Log.Information("Запуск приложения LegacyLego...");
+	Log.Information("Запуск приложения LegacyLego...");
 
-    builder.Services.ConfigureHttpJsonOptions(options =>
-    {
-        // превращает целочисленный указатель enum в строковое представление значения
-        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+	builder.Services.ConfigureHttpJsonOptions(options =>
+	{
+		// превращает целочисленный указатель enum в строковое представление значения
+		options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+	});
 
-    builder.Services.AddApplication()
-        .AddInfrastructure(configuration)
-        .AddPresentationOpenApi(configuration)
-        .AddWebAuthentication();
+	builder.Services.AddApplication()
+			.AddInfrastructure(configuration)
+			.AddPresentationOpenApi(configuration)
+			.AddWebAuthentication();
 
-    builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
-    builder.Services.AddProblemDetails();
-    builder.Services.AddHealthChecks();
+	builder.Services.AddExceptionHandler<DynamicGlobalExceptionHandler>();
+	builder.Services.AddProblemDetails();
+	builder.Services.AddHealthChecks();
 
-    var app = builder.Build();
+	var app = builder.Build();
 
-    app.UseExceptionHandler(); // стоит самый первый в пайплайне
+	app.UseExceptionHandler(); // стоит самый первый в пайплайне
 
-    app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
+	app.UseForwardedHeaders(new ForwardedHeadersOptions // для Nginx
+	{
+		ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+	});
 
-    if (app.Environment.IsDevelopment())
-        app.MapPresentationDocumentation();
+	if (app.Environment.IsDevelopment())
+		app.MapPresentationDocumentation();
 
-    app.UseStaticFiles();
+	app.UseStaticFiles();
 
-    app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
-    app.UseAuthorization();  // Что тебе можно? (Проверяем права)
+	app.UseAuthentication(); // Кто ты? (Расшифровываем токен)
+	app.UseAuthorization();  // Что тебе можно? (Проверяем права)
 
-    app.MapHealthChecks("/healthz");
+	app.MapHealthChecks("/healthz");
 
-    app.MapOrdersEndpoints();
-    app.MapPaymentEndpoints();
+	app.MapOrdersEndpoints();
+	app.MapPaymentEndpoints();
 
-    app.MapAuthenticationEndpoints();
+	app.MapAuthenticationEndpoints();
 
-    app.Run();
+	app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Приложение LegacyLego аварийно завершило работу во время запуска");
+	Log.Fatal(ex, "Приложение LegacyLego аварийно завершило работу во время запуска");
 }
 finally
 {
-    Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
+	Log.CloseAndFlush(); // Гарантирует, что все логи из буфера долетят до инфраструктурной базы логгов перед закрытием
 }
+
+// для интеграционных тестов (позволит тестировочной фабрике приложения использовать класс Program как точку входа)
+public partial class Program { }
 ```
 
 ---
@@ -16133,6 +18222,7 @@ using LegacyLego.Application.Abstractions.Messaging;
 using LegacyLego.Application.Orders.Errors;
 using LegacyLego.Application.Payments.Commands.PocessPaymentWebhook;
 using LegacyLego.Application.Payments.Commands.StartPayment;
+using LegacyLego.Domain.Errors;
 using LegacyLego.Presentation.Authentication.Extensions;
 using LegacyLego.Presentation.Mock.Common.Dto.Request;
 using LegacyLego.Presentation.Payments.Dto;
@@ -16152,7 +18242,7 @@ public static class PaymentEndpoints
             .WithTags("Payments");
 
         mockGroup.MapPost("/api/webhooks/payment", HandleWebhook);
-        mockGroup.MapPost("/{orderId:guid}/pay", StartPayment);
+        mockGroup.MapPost("/{orderId:guid}/pay", StartPayment).RequireClientAuthorization();
 
         return app;
     }
@@ -16160,7 +18250,8 @@ public static class PaymentEndpoints
     private static async Task<Results<
         Ok<ProcessPaymentDetails>,
         BadRequest<ProblemDetails>,
-        Conflict<ProblemDetails>>> HandleWebhook(
+        Conflict<ProblemDetails>,
+        NotFound<ProblemDetails>>> HandleWebhook(
             [FromBody] PaymentProviderWebhookRequest request,
             ICommandDispatcher commandDispatcher,
             CancellationToken ct)
@@ -16213,6 +18304,14 @@ public static class PaymentEndpoints
                         Detail = error.Message
                     }),
 
+                ProcessPaymentErrors.PaymentNotFoundForWebhookCode =>
+                TypedResults.NotFound(new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = error.Code,
+                    Detail = error.Message
+                }),
+
                 _ => TypedResults.BadRequest(new ProblemDetails
                 {
                     Status = StatusCodes.Status400BadRequest,
@@ -16259,7 +18358,8 @@ public static class PaymentEndpoints
                         Detail = error.Message
                     }),
 
-                StartOrderPaymentErrors.CanNotFindPendingPaymentAfterCheckConstraintCode =>
+                StartOrderPaymentErrors.CanNotFindPendingPaymentAfterCheckConstraintCode or
+                OrderErrors.NotFoundByOrderId =>
                     TypedResults.NotFound(new ProblemDetails
                     {
                         Status = StatusCodes.Status404NotFound,
