@@ -25,19 +25,21 @@ public sealed class OrderEntityInvalidator : IEntityInvalidator<Order>
         var batch = db.CreateBatch();
         var groupTtl = TimeSpan.FromDays(_cacheOptions.CurrentValue.OrderGroupDaysTtl);
 
+        var redisTasks = new List<Task>();
+
         foreach (var order in entities)
         {
             var userVersionKey = $"orders:{order.ClientId}:version";
             var orderVersionKey = $"order:{order.Id.Value}:version";
 
-            _ = batch.StringIncrementAsync(userVersionKey);
-            _ = batch.StringIncrementAsync(orderVersionKey);
+            redisTasks.Add(batch.StringIncrementAsync(userVersionKey));
+            redisTasks.Add(batch.StringIncrementAsync(orderVersionKey));
 
-            _ = batch.KeyExpireAsync(userVersionKey, groupTtl);
-            _ = batch.KeyExpireAsync(orderVersionKey, groupTtl);
+            redisTasks.Add(batch.KeyExpireAsync(userVersionKey, groupTtl));
+            redisTasks.Add(batch.KeyExpireAsync(orderVersionKey, groupTtl));
         }
 
         batch.Execute();
-        await Task.CompletedTask;
+        await Task.WhenAll(redisTasks); // Фиксируем отправку в Redis до выхода из инвалидатора
     }
 }
