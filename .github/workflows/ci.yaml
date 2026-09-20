@@ -12,8 +12,10 @@ env:
   DOTNET_VERSION: "10.0.x"
 
 jobs:
-  # Сборка и прогон Юнит-тестов (Domain)
-  build-and-test:
+  # =========================================================================
+  # JOB 1: Сборка и прогон Юнит-тестов (Domain)
+  # =========================================================================
+  domain-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,9 +34,35 @@ jobs:
         run: dotnet restore
 
       # Шаг 4: Компиляция no-restore резила только для домена
-      - name: Build solution
+      - name: Build Domain Unit Tests
         run: dotnet build tests/LegacyLego.Domain.Tests/LegacyLego.Domain.Tests.csproj --configuration Release --no-restore
 
       # Шаг 5: Прогон доменных тестов LegacyLego.Domain.Tests
       - name: Run Domain Unit Tests
         run: dotnet tests/LegacyLego.Domain.Tests/bin/Release/net10.0/LegacyLego.Domain.Tests.dll
+
+  # =========================================================================
+  # JOB 2: Сборка и прогон Интеграционных тестов (Testcontainers + Docker)
+  # Запускается после успешного прохождения domain-tests
+  # =========================================================================
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: domain-tests # Гарантирует порядок выполнения
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Integration Tests
+        run: dotnet build tests/LegacyLego.IntegrationTests/LegacyLego.IntegrationTests/LegacyLego.IntegrationTests.csproj --configuration Release --no-restore -p:OpenApiGenerateDocumentsOnBuild=false
+
+      - name: Run Integration Tests
+        run: dotnet tests/LegacyLego.IntegrationTests/LegacyLego.IntegrationTests/bin/Release/net10.0/LegacyLego.IntegrationTests.dll
