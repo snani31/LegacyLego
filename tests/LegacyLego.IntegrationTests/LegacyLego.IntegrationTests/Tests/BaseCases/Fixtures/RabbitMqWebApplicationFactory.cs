@@ -19,6 +19,9 @@ namespace LegacyLego.IntegrationTests.Tests.BaseCases.Fixtures;
 
 public class KeycloakRegistrationWebApplicationFactory : DefaultWebApplicationFactory
 {
+    private const string RABBIT_USER = "Rabbit";
+    private const string RABBIT_PASSWORD = "RabbitPwd";
+
     public FakeIdentityProviderService IdentityProviderFake { get; } = new();
 
     public RabbitMqOptions RabbitMqOptions { get; private set; } = null!;
@@ -30,8 +33,8 @@ public class KeycloakRegistrationWebApplicationFactory : DefaultWebApplicationFa
         AppContext.BaseDirectory, "infrastructure", "rabbitmq", "rabbitmq.conf");
 
     public readonly RabbitMqContainer RabbitContainer = new RabbitMqBuilder("rabbitmq:3-management-alpine")
-    .WithUsername("Rabbit")
-    .WithPassword("RabbitPwd")
+    .WithUsername(RABBIT_USER)
+    .WithPassword(RABBIT_PASSWORD)
     .WithBindMount(ConfigPath, "/etc/rabbitmq/rabbitmq.conf", AccessMode.ReadOnly)
     .WithBindMount(DefinitionsPath, "/etc/rabbitmq/definitions.json", AccessMode.ReadOnly)
     .Build();
@@ -61,6 +64,8 @@ public class KeycloakRegistrationWebApplicationFactory : DefaultWebApplicationFa
             {
                 options.Host = RabbitContainer.Hostname;
                 options.Port = RabbitContainer.GetMappedPublicPort(5672);
+                options.Username = RABBIT_USER;
+                options.Password = RABBIT_PASSWORD;
             });
 
             services.RemoveAll<IConnectionFactory>();
